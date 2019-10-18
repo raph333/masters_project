@@ -1,0 +1,78 @@
+% !TEX TS-program = xelatex
+% !TEX encoding = UTF-8 Unicode
+% -*- coding: UTF-8; -*-
+% vim: set fenc=utf-8
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Thesis.tex
+%% <https://github.com/zachscrivena/simple-thesis-dissertation>
+%% This is free and unencumbered software released into the
+%% public domain; see <http://unlicense.org> for details.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% See "README.md" for instructions on compiling this document.
+
+\documentclass[letterpaper,nonstopmode]{simplethesisdissertation}
+% Class options:
+% a4paper, letterpaper, nonstopmode, draftmode.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PREAMBLE.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Document properties.
+\def\DocumentTitle{Deep Neural Networks for predicting molecular properties}
+\def\AuthorName{Raphael Peer}
+
+% PDF settings and properties.
+\hypersetup{
+pdftitle={\DocumentTitle},
+pdfauthor={\AuthorName},
+pdfsubject={Master's Thesis, University of Salzburg, 2019},
+pdfcreator={XeLaTeX},
+pdfproducer={},
+pdfkeywords={},
+unicode=true,
+bookmarks=true,
+bookmarksopen=true,
+pdfstartview=FitH,
+pdfpagelayout=OneColumn,
+pdfpagemode=UseOutlines,
+hidelinks,
+breaklinks,
+bookmarksnumbered}
+
+% Accent colors.
+\definecolor{AccentOne}{RGB}{0,68,186} % blue
+
+% Macros:
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\renewcommand{\binom}[2]{\left(\genfrac{}{}{0pt}{}{#1}{#2}\right)}
+\newcommand{\ceil}[1]{{\left\lceil{#1}\right\rceil}}
+%\newcommand{\ffrac}[2]{{\nicefrac{#1}{#2}}}
+%\newcommand{\fffrac}[2]{{\left.{#1}\middle/{#2}\right.}}
+\newcommand{\floor}[1]{{\left\lfloor{#1}\right\rfloor}}
+\DeclareMathOperator{\lcm}{lcm}
+\newcommand{\ZZ}{{\mathbb{Z}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ACTUAL DOCUMENT.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\input{FrontMatter.tex}
+
+\input{Chapter-Intro.tex}
+
+%\input{Chapter-ChapAbbr.tex}
+\input{Chapter-Results.tex}
+
+\input{Chapter-Discussion.tex}
+
+\input{Chapter-Conclusion.tex}
+
+\input{BackMatter.tex}
+
+\end{document}
