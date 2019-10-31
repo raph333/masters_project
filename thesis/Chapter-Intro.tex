@@ -3,4 +3,45 @@
 
 \section{Predicting molecular properties}
 
+\textit{} Briefly the applications of computational chemistry and computational structural biology
+
 \section{Graph neural networks}
+
+{\itshape
+\noindent Explain the reasoning behind graph neural networks:
+
+\begin{itemize}
+	\item no order => permutation invariance required
+	\item no fixed dimension: a node can have 0 to n neighbors => need aggregation function
+\end{itemize}
+
+\noindent Nomenclature:\\
+1) graph conv: complicated but compares well with computer vision\\
+2) message passing: simple, but not analogous to cv
+}
+
+\section{Limitations of Graph neural networks for molecular structures}
+
+\subsection{Lack of 3D structure representation}
+
+{\itshape
+	
+subsubsection: different structural arrangements can lead to same graph => same results
+
+what does not work:\\
+* adding coordinates: not invariant to translations and rotations\\
+* adding relative positions as edge-features: invariant to translations but not to rotations
+=> opposite case to above: now to equivalent structures can be represented with different edge-features
+
+subsubsection: no downsampling
+
+this goes hand in hand with: no graph-level or graph-part-level features; only node-features - even when higher level
+
+compare with computer vision
+
+see: results
+	}
+	
+	
+
+
