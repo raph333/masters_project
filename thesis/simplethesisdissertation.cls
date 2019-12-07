@@ -75,39 +75,40 @@ footskip=6mm] % footer skip, below text body
 \RequirePackage{xltxtra} % Extra customizations for XeLaTeX.
 \RequirePackage{lmodern} % For Latin Modern fonts.
 
+% OUTCOMMENTED BECAUSE FONTS NOT AVAILABLE IN STANDARD TEXLIVE - INSTALL OR SWITCH FONTS IF NECESSARY
 % Font: Main font, \textnormal{}, \normalfont.
-\setmainfont
-[Path=./Fonts/tinos/,
-ItalicFont=Tinos-Italic,
-BoldFont=Tinos-Bold,
-BoldItalicFont=Tinos-BoldItalic,
-Scale=1.00]
-{Tinos-Regular.ttf}
-
-% Font: Roman font, \textrm{}, \rmfamily.
-\setromanfont
-[Path=./Fonts/tinos/,
-ItalicFont=Tinos-Italic,
-BoldFont=Tinos-Bold,
-BoldItalicFont=Tinos-BoldItalic,
-Scale=1.00]
-{Tinos-Regular.ttf}
-
-% Font: Sans-serif font, \textsf{}, \sffamily.
-\setsansfont
-[Path=./Fonts/carlito/,
-ItalicFont=Carlito-Italic,
-BoldFont=Carlito-Bold,
-BoldItalicFont=Carlito-BoldItalic,
-Scale=0.95]
-{Carlito-Regular.ttf}
-
-% Font: Monospace font, \texttt{}, \ttfamily.
-\setmonofont
-[Path=./Fonts/mplus/,
-BoldFont=mplus-1m-bold,
-Scale=0.95]
-{mplus-1m-regular.ttf}
+%\setmainfont
+%[Path=./Fonts/tinos/,
+%ItalicFont=Tinos-Italic,
+%BoldFont=Tinos-Bold,
+%BoldItalicFont=Tinos-BoldItalic,
+%Scale=1.00]
+%{Tinos-Regular.ttf}
+%
+%% Font: Roman font, \textrm{}, \rmfamily.
+%\setromanfont
+%[Path=./Fonts/tinos/,
+%ItalicFont=Tinos-Italic,
+%BoldFont=Tinos-Bold,
+%BoldItalicFont=Tinos-BoldItalic,
+%Scale=1.00]
+%{Tinos-Regular.ttf}
+%
+%% Font: Sans-serif font, \textsf{}, \sffamily.
+%\setsansfont
+%[Path=./Fonts/carlito/,
+%ItalicFont=Carlito-Italic,
+%BoldFont=Carlito-Bold,
+%BoldItalicFont=Carlito-BoldItalic,
+%Scale=0.95]
+%{Carlito-Regular.ttf}
+%
+%% Font: Monospace font, \texttt{}, \ttfamily.
+%\setmonofont
+%[Path=./Fonts/mplus/,
+%BoldFont=mplus-1m-bold,
+%Scale=0.95]
+%{mplus-1m-regular.ttf}
 
 % Symbols.
 \RequirePackage{textcomp} % For symbols.

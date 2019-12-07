@@ -4,6 +4,8 @@ data
 *ipynb_checkpoints
 *__pycache__
 *.Rhistory
+.idea
+notes.md
 
 *.out
 *.log
@@ -21,3 +23,4 @@ thesis/Figures/Figure-SampleVectorGraphic.*
 thesis/Fonts
 thesis/Example.bib
 thesis/structure.md
+thesis/install-getnonfreefonts
