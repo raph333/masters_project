@@ -6,6 +6,7 @@ import urllib.request
 import zipfile
 import typing
 from typing import Tuple
+from itertools import product
 
 import numpy as np
 import pandas as pd
@@ -21,44 +22,22 @@ from rdkit import RDConfig
 SET_NAMES = ('dev', 'valid', 'test')
 
 
-# def download(data_dir: str,
-#              base_url='https://alchemy.tencent.com/data/{}_v20190730.zip',
-#              unzip=True):
-#     """
-#     :param data_dir: download alchemy data-set into this dir. Create if it does not yet exist.
-#     :param base_url: base url-format
-#     :param unzip: unzip dev-, valid- and test-set and remove zip-archives if True
-#     :return: None
-#     """
-#     if not os.path.exists(data_dir):
-#         os.makedirs(data_dir)
-#     print(f'Alchemy dataset-directory: {data_dir}')
-#
-#     for set_ in SET_NAMES:
-#         url = base_url.format(set_)
-#         print(f'Downloading {set_}-set from {url} ...')
-#         urllib.request.urlretrieve(url, join(data_dir, f'{set_}.zip'))
-#     print('Download finished.')
-#
-#     if unzip:
-#         unzip_datasets(data_dir)
-#         print('Unzipped datasets.')
-#
-#
-# def unzip_datasets(data_dir: str, remove_zips=True):
-#     """
-#     Unzip downloaded alchemy data-set
-#     """
-#     for set_ in SET_NAMES:
-#         zip_path = join(data_dir, f'{set_}.zip')
-#         assert os.path.exists(zip_path), ''
-#
-#         print(f'unzipping {zip_path} ...')
-#         with zipfile.ZipFile(zip_path) as zip_ref:
-#             zip_ref.extractall(data_dir)
-#
-#         if remove_zips:
-#             os.remove(zip_path)
+class FullyConnected(object):
+
+    def __call__(self, graph: Data) -> Data:
+        num_bond_features = graph.edge_attr.shape[1]
+        edge_features = torch.zeros(graph.num_nodes**2, num_bond_features).long()
+
+        bond_index = graph.edge_index[0] * graph.num_nodes + graph.edge_index[1]
+        edge_features[bond_index] = graph.edge_attr
+
+        all_edges = list(product(range(graph.num_nodes), range(graph.num_nodes)))
+        full_edge_index = np.array(all_edges).transpose()
+
+        graph.edge_attr = edge_features
+        graph.edge_index = full_edge_index
+
+        return graph
 
 
 class AlchemyDataset(InMemoryDataset):
@@ -68,10 +47,12 @@ class AlchemyDataset(InMemoryDataset):
                  mode='dev',
                  transform=None,
                  pre_transform=None,
-                 pre_filter=None):
+                 pre_filter=None,
+                 fully_connected=False):
 
         assert mode in SET_NAMES, f'Alchemy dataset has only these sets: {SET_NAMES}'  # generalize?
         self.mode = mode
+        self.fully_connected = fully_connected
 
         self.base_url = 'https://alchemy.tencent.com/data/{}_v20190730.zip'
         self.atom_types = np.array(['H', 'C', 'N', 'O', 'F', 'S', 'Cl'])
@@ -88,14 +69,14 @@ class AlchemyDataset(InMemoryDataset):
         self.data, self.slices = torch.load(self.processed_paths[0])
 
     @property
-    def raw_file_names(self):
+    def raw_file_names(self) -> list:
         if self.mode != 'test':
             return ['sdf', f'{self.mode}_target.csv']
         else:
             return ['sdf']
 
     @property
-    def processed_file_names(self):
+    def processed_file_names(self) -> list:
         return [f'Alchemy_{self.mode}.pt']
 
     def download(self):
@@ -128,7 +109,7 @@ class AlchemyDataset(InMemoryDataset):
 
         return tensor(atom_features)
 
-    def get_edges(self, molecule: Chem.rdchem.Mol) -> Tuple[tensor, tensor]:
+    def get_bonds(self, molecule: Chem.rdchem.Mol) -> Tuple[tensor, tensor]:
 
         bonds = []
         bond_features = []
@@ -137,7 +118,37 @@ class AlchemyDataset(InMemoryDataset):
             bond_type = (bond.GetBondType() == self.bond_types).astype(int)
             bond_features.append(bond_type)
 
-        return tensor(bonds).transpose(0, 1), tensor(bond_features)  # edge-index, edge-attributes
+        return tensor(bonds).transpose(0, 1), tensor(bond_features)  # bond-indices, bond-features
+
+    def read_sdf(self, sdf_path: str, target_df: pd.DataFrame) -> Data:
+
+        with open(sdf_path, 'r') as f:
+            molecule = Chem.MolFromMolBlock(f.read(), removeHs=True)
+        if molecule is None:
+            print(f'Could not parse sdf-file: {sdf_path}')
+            return None
+
+        gdb_idx = int(os.path.basename(sdf_path).replace('.sdf', ''))
+        if self.mode != 'test':
+            y = tensor(target_df.loc[gdb_idx].values).unsqueeze(0)  # store target for train- / validation-set
+        else:
+            y = tensor([gdb_idx])  # store molecule-id for test-set
+
+        node_attributes = self.get_atom_features(molecule)
+        bond_indices, bond_features = self.get_bonds(molecule)
+        coordinates = tensor(molecule.GetConformer().GetPositions())
+
+        # TODO: check tensor types
+        graph = Data(x=node_attributes,
+                     pos=coordinates,
+                     edge_index=bond_indices,
+                     edge_attr=bond_features,
+                     y=y)
+
+        if self.fully_connected:
+            graph = self.make_fully_connected_graph(graph)
+
+        return graph
 
     def process(self):
 
@@ -149,30 +160,7 @@ class AlchemyDataset(InMemoryDataset):
         sdf_dir = self.raw_paths[0]
 
         for sdf_path in glob.glob(f'{sdf_dir}/atom_*/*'):
-            with open(sdf_path, 'r') as f:
-                molecule = Chem.MolFromMolBlock(f.read(), removeHs=False)
-            if molecule is None:
-                print(f'Could not parse sdf-file: {sdf_path}')
-                return None
-
-            gdb_idx = int(os.path.basename(sdf_path).replace('.sdf', ''))
-            if self.mode != 'test':
-                y = tensor(target_df.loc[gdb_idx].values).unsqueeze(0)  # store target for train- / validation-set
-            else:
-                y = tensor([gdb_idx])  # store molecule-id for test-set
-
-            node_attributes = self.get_atom_features(molecule)
-            edge_indices, edge_attributes = self.get_edges(molecule)
-            coordinates = tensor(molecule.GetConformer().GetPositions())
-
-            # TODO: check tensor types
-            graphs.append(
-                Data(x=node_attributes,
-                     pos=coordinates,
-                     edge_index=edge_indices,
-                     edge_attr=edge_attributes,
-                     y=y)
-            )
+            graphs.append(self.read_sdf(sdf_path, target_df))
 
         if self.pre_filter:
             graphs = [data for data in graphs if self.pre_filter(data)]

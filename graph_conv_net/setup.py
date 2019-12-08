@@ -1,6 +1,6 @@
 from setuptools import setup
 
-setup(name='swag_net',
+setup(name='graph_conv_net',
       version='0.1',
       description='a swag MPNN',
       url='https://github.com/raph333/masters_project',
