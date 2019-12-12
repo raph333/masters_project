@@ -5,15 +5,18 @@ import shutil
 import urllib.request
 import zipfile
 import typing
-from typing import Tuple
+from typing import Tuple, Union
 from itertools import product
 
 import numpy as np
 import pandas as pd
 
 import torch
-from torch import tensor
+from torch import tensor, FloatTensor, LongTensor
+
 from torch_geometric.data import Data, InMemoryDataset, DataLoader
+from torch_geometric.utils import remove_self_loops
+from torch_geometric.data.makedirs import makedirs
 
 from rdkit import Chem
 from rdkit.Chem import ChemicalFeatures
@@ -22,20 +25,22 @@ from rdkit import RDConfig
 SET_NAMES = ('dev', 'valid', 'test')
 
 
-class FullyConnected(object):
+class FullyConnectedGraph(object):
 
     def __call__(self, graph: Data) -> Data:
         num_bond_features = graph.edge_attr.shape[1]
-        edge_features = torch.zeros(graph.num_nodes**2, num_bond_features).long()
+        edge_features = FloatTensor(torch.zeros(graph.num_nodes**2, num_bond_features))
 
         bond_index = graph.edge_index[0] * graph.num_nodes + graph.edge_index[1]
         edge_features[bond_index] = graph.edge_attr
 
         all_edges = list(product(range(graph.num_nodes), range(graph.num_nodes)))
-        full_edge_index = np.array(all_edges).transpose()
+        full_edge_index = tensor(all_edges).transpose(0, 1)
 
-        graph.edge_attr = edge_features
-        graph.edge_index = full_edge_index
+        edge_index, edge_attr = remove_self_loops(full_edge_index, edge_features)
+
+        graph.edge_attr = edge_attr
+        graph.edge_index = edge_index
 
         return graph
 
@@ -48,11 +53,11 @@ class AlchemyDataset(InMemoryDataset):
                  transform=None,
                  pre_transform=None,
                  pre_filter=None,
-                 fully_connected=False):
+                 re_process=False):
 
         assert mode in SET_NAMES, f'Alchemy dataset has only these sets: {SET_NAMES}'  # generalize?
         self.mode = mode
-        self.fully_connected = fully_connected
+        self.re_process = re_process
 
         self.base_url = 'https://alchemy.tencent.com/data/{}_v20190730.zip'
         self.atom_types = np.array(['H', 'C', 'N', 'O', 'F', 'S', 'Cl'])
@@ -67,6 +72,16 @@ class AlchemyDataset(InMemoryDataset):
         super().__init__(root, transform, pre_transform, pre_filter)
 
         self.data, self.slices = torch.load(self.processed_paths[0])
+
+    # def _process(self):
+    #
+    #     if self.re_process is False and all([os.path.exists(f) for f in self.processed_paths]):
+    #         return
+    #
+    #     print('Processing...')
+    #     makedirs(self.processed_dir)
+    #     self.process()
+    #     print('Done!')
 
     @property
     def raw_file_names(self) -> list:
@@ -99,7 +114,9 @@ class AlchemyDataset(InMemoryDataset):
     def get_atom_features(self, molecule: Chem.rdchem.Mol) -> tensor:
 
         atom_features = []
+
         for atom in molecule.GetAtoms():
+
             atom_type = (atom.GetSymbol() == self.atom_types).astype(int)
             aromatic = np.array([atom.GetIsAromatic()]).astype(int)
             hybridization = (atom.GetHybridization() == self.hybrid_types).astype(int)
@@ -107,20 +124,25 @@ class AlchemyDataset(InMemoryDataset):
             atom_features.append(atom_feature_vector)
             # TODO: expand features
 
-        return tensor(atom_features)
+        # requires float for linear layer and long for embedding
+        return FloatTensor(atom_features)
 
     def get_bonds(self, molecule: Chem.rdchem.Mol) -> Tuple[tensor, tensor]:
 
         bonds = []
         bond_features = []
+
         for bond in molecule.GetBonds():
+
             bonds.append((bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()))
             bond_type = (bond.GetBondType() == self.bond_types).astype(int)
             bond_features.append(bond_type)
 
-        return tensor(bonds).transpose(0, 1), tensor(bond_features)  # bond-indices, bond-features
+        return LongTensor(bonds).transpose(0, 1), FloatTensor(bond_features)  # bond-indices, bond-features
 
-    def read_sdf(self, sdf_path: str, target_df: pd.DataFrame) -> Data:
+    def read_sdf(self,
+                 sdf_path: str,
+                 target_df: pd.DataFrame = None) -> Union[Data, None]:
 
         with open(sdf_path, 'r') as f:
             molecule = Chem.MolFromMolBlock(f.read(), removeHs=True)
@@ -129,24 +151,21 @@ class AlchemyDataset(InMemoryDataset):
             return None
 
         gdb_idx = int(os.path.basename(sdf_path).replace('.sdf', ''))
-        if self.mode != 'test':
+        if target_df is not None:
             y = tensor(target_df.loc[gdb_idx].values).unsqueeze(0)  # store target for train- / validation-set
         else:
             y = tensor([gdb_idx])  # store molecule-id for test-set
 
         node_attributes = self.get_atom_features(molecule)
         bond_indices, bond_features = self.get_bonds(molecule)
-        coordinates = tensor(molecule.GetConformer().GetPositions())
+        coordinates = FloatTensor(molecule.GetConformer().GetPositions())
 
         # TODO: check tensor types
         graph = Data(x=node_attributes,
                      pos=coordinates,
                      edge_index=bond_indices,
                      edge_attr=bond_features,
-                     y=y)
-
-        if self.fully_connected:
-            graph = self.make_fully_connected_graph(graph)
+                     y=y.float())
 
         return graph
 
@@ -155,12 +174,17 @@ class AlchemyDataset(InMemoryDataset):
         if self.mode != 'test':
             target_df = pd.read_csv(self.raw_paths[1])
             target_df = target_df.set_index('gdb_idx')
+        else:
+            target_df = None
 
         graphs = []
         sdf_dir = self.raw_paths[0]
 
         for sdf_path in glob.glob(f'{sdf_dir}/atom_*/*'):
-            graphs.append(self.read_sdf(sdf_path, target_df))
+
+            graph = self.read_sdf(sdf_path, target_df)
+            if graph is not None:
+                graphs.append(graph)
 
         if self.pre_filter:
             graphs = [data for data in graphs if self.pre_filter(data)]
