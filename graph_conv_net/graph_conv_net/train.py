@@ -1,12 +1,14 @@
 from os.path import join
+from pprint import pprint
 
+import json
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import mlflow
 
 import torch
 from torch import nn
-
 from torch_geometric.transforms import Compose, Distance, Cartesian
 from torch_geometric.data import DataLoader
 
@@ -52,16 +54,17 @@ def plot_error_curves(training_error: list,
     plt.show()
 
 
-# todo: logging
 def train(net: nn.Module,
           train_loader: DataLoader,
           validation_loader: DataLoader,
           device: torch.device,
           loss_function,
           optimizer,
-          num_epochs: int):
+          num_epochs: int) -> pd.DataFrame():
+
     print('epoch\ttrain-MAE\tvalid-MAE\tmin\t\tlr')
     print('-' * 60)
+    log_df = pd.DataFrame(columns=['train_mae', 'valid_mae'])
     net.to(device)
 
     for epoch in range(num_epochs):
@@ -91,75 +94,86 @@ def train(net: nn.Module,
                 loss = loss_function(y_hat, data.y)
                 valid_mae += loss.item() / len(validation_loader)
 
-        lr = optimizer.param_groups[0]['lr']
-        print(f'{epoch}:\t{train_mae:.4f}\t\t{valid_mae:.4f}\t\t{lr:.6f}')
+        #lr = optimizer.param_groups[0]['lr']
+        print(f'{epoch}:\t{train_mae:.4f}\t\t{valid_mae:.4f}')
+        log_df = log_df.append({'train_mae': valid_mae, 'valid_mae': train_mae}, ignore_index=True)
+
+    return log_df
 
 
-def predict(net: nn.Module,
-            test_loader: DataLoader,
-            device: torch.device) -> pd.DataFrame():
+def run_experiment(config_file='config.json'):
 
-    net.eval()
-    col_names = ['gbd_id', *[f'p_{i}' for i in range(12)]]
-    answer_df = pd.DataFrame(columns=col_names)
+    with open(config_file) as infile:
+        config = json.load(infile)
 
-    with torch.no_grad():
-        for i, data in enumerate(test_loader):
+    ds_valid = AlchemyDataset(root=join(DATA_DIR, 'valid'),
+                              mode='valid',
+                              transform=TRANS,
+                              re_process=RE_PROCESS)
+    ds_dev = AlchemyDataset(root=join(DATA_DIR, 'dev'),
+                            mode='dev',
+                            transform=TRANS,
+                            re_process=RE_PROCESS)
+    model = tencent_mpnn.MPNN(node_input_dim=11,
+                              edge_input_dim=5,
+                              output_dim=12)
 
-            data = data.to(device)
-            y_hat = net(data)
+    print('Starting experiment:')
+    pprint(config, width=1)
 
-            ids = data.y.detach().cpu().numpy()
-            predictions = y_hat.detach().cpu().numpy()
+    mlflow.set_experiment('mlflow_test')
+    with mlflow.start_run():
 
-            pred_matrix = np.concatenate([np.expand_dims(ids, 1), predictions], axis=1)
-            answer_df = pd.concat([answer_df, pd.DataFrame(pred_matrix, columns=col_names)])
+        mlflow.log_params(config)
 
-    answer_df.gbd_id = answer_df.gbd_id.astype(int)
-    answer_df = answer_df.sort_values('gbd_id')
-    answer_df.to_csv('answer.csv', index=False, header=False)
+        opt = torch.optim.Adam(model.parameters(), lr=config['lr'])
+        learning_curve_df = train(net=model,
+                                  train_loader=DataLoader(ds_dev, batch_size=config['batch_size']),
+                                  validation_loader=DataLoader(ds_valid, batch_size=config['batch_size']),
+                                  device=torch.device(f'cuda:{config["cuda"]}'),
+                                  loss_function=nn.L1Loss(),
+                                  optimizer=opt,
+                                  num_epochs=0)
 
-    return answer_df
+        tmp_file_name = 'learning_curve.csv'
+        learning_curve_df.to_csv(tmp_file_name)
+        mlflow.log_artifact(tmp_file_name)
+        # todo: add plot
+    print('Done.')
 
 
 if __name__ == '__main__':
 
     DATA_DIR = '/home/rpeer/masters_project/data'
-    trans = Compose([FullyConnectedGraph(), Distance(norm=True)])
+    TRANS = Compose([FullyConnectedGraph(), Distance(norm=True)])
     RE_PROCESS = False
 
-    ds_valid = AlchemyDataset(root=join(DATA_DIR, 'valid'),
-                              mode='valid',
-                              transform=trans,
-                              re_process=RE_PROCESS)
-    ds_dev = AlchemyDataset(root=join(DATA_DIR, 'dev'),
-                            mode='dev',
-                            transform=trans,
-                            re_process=RE_PROCESS)
-    ds_test = AlchemyDataset(root=join(DATA_DIR, 'test'),
-                             mode='test',
-                             transform=trans,
-                             re_process=RE_PROCESS)
+    run_experiment(config_file='config.json')
 
-    model = tencent_mpnn.MPNN(node_input_dim=11,
-                              edge_input_dim=5,
-                              output_dim=12)
-
-    l_rate = 0.0001
-    decay = 0.999
-
-    opt = torch.optim.Adam(model.parameters(), lr=l_rate)
-
-    train(net=model,
-          train_loader=DataLoader(ds_dev, batch_size=64),
-          validation_loader=DataLoader(ds_valid, batch_size=64),
-          device=torch.device('cuda:1'),
-          loss_function=nn.L1Loss(),
-          optimizer=opt,
-          num_epochs=1)
-
-    predictions = predict(net=model,
-                          test_loader=DataLoader(ds_test, batch_size=64),
-                          device=torch.device('cuda:1'))
+    # ds_valid = AlchemyDataset(root=join(DATA_DIR, 'valid'),
+    #                           mode='valid',
+    #                           transform=TRANS,
+    #                           re_process=RE_PROCESS)
+    # ds_dev = AlchemyDataset(root=join(DATA_DIR, 'dev'),
+    #                         mode='dev',
+    #                         transform=TRANS,
+    #                         re_process=RE_PROCESS)
+    # ds_test = AlchemyDataset(root=join(DATA_DIR, 'test'),
+    #                          mode='test',
+    #                          transform=TRANS,
+    #                          re_process=RE_PROCESS)
+    # model = tencent_mpnn.MPNN(node_input_dim=11,
+    #                           edge_input_dim=5,
+    #                           output_dim=12)
+    #
+    # opt = torch.optim.Adam(model.parameters(), lr=0.001)
+    #
+    # learning_curve_df = train(net=model,
+    #                           train_loader=DataLoader(ds_dev, batch_size=BATCH_SIZE),
+    #                           validation_loader=DataLoader(ds_valid, batch_size=BATCH_SIZE),
+    #                           device=torch.device('cuda:1'),
+    #                           loss_function=nn.L1Loss(),
+    #                           optimizer=opt,
+    #                           num_epochs=0)
 
 
