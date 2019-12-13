@@ -160,7 +160,7 @@ def run_multiple_experiments(config_file: str):
     for exp_name, exp_config in config.items():
         print(f'\nRUNNING EXPERIMENT: {exp_name}:')
         pprint(config, width=1)
-        run_experiment(exp_name, exp_config)
+        # run_experiment(exp_name, exp_config)
 
 
 if __name__ == '__main__':
