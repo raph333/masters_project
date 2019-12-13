@@ -64,7 +64,7 @@ def train(net: nn.Module,
 
     print('epoch\ttrain-MAE\tvalid-MAE\tmin\t\tlr')
     print('-' * 60)
-    log_df = pd.DataFrame(columns=['train_mae', 'valid_mae'])
+    log_df = pd.DataFrame(columns=['epoch', 'train_mae', 'valid_mae'])
     net.to(device)
 
     for epoch in range(num_epochs):
@@ -87,6 +87,7 @@ def train(net: nn.Module,
 
         with torch.no_grad():
             net.eval()
+
             for data in validation_loader:
 
                 data = data.to(device)
@@ -96,15 +97,12 @@ def train(net: nn.Module,
 
         #lr = optimizer.param_groups[0]['lr']
         print(f'{epoch}:\t{train_mae:.4f}\t\t{valid_mae:.4f}')
-        log_df = log_df.append({'train_mae': valid_mae, 'valid_mae': train_mae}, ignore_index=True)
+        log_df = log_df.append({'epoch': epoch, 'train_mae': valid_mae, 'valid_mae': train_mae}, ignore_index=True)
 
     return log_df
 
 
-def run_experiment(config_file='config.json'):
-
-    with open(config_file) as infile:
-        config = json.load(infile)
+def run_experiment(name: str, config: dict):
 
     ds_valid = AlchemyDataset(root=join(DATA_DIR, 'valid'),
                               mode='valid',
@@ -118,28 +116,43 @@ def run_experiment(config_file='config.json'):
                               edge_input_dim=5,
                               output_dim=12)
 
-    print('Starting experiment:')
-    pprint(config, width=1)
+    # target_param = config['target_param']
 
-    mlflow.set_experiment('mlflow_test')
-    with mlflow.start_run():
+    mlflow.set_experiment(name)
 
-        mlflow.log_params(config)
+    for rep in range(config['repeat']):
 
-        opt = torch.optim.Adam(model.parameters(), lr=config['lr'])
-        learning_curve_df = train(net=model,
-                                  train_loader=DataLoader(ds_dev, batch_size=config['batch_size']),
-                                  validation_loader=DataLoader(ds_valid, batch_size=config['batch_size']),
-                                  device=torch.device(f'cuda:{config["cuda"]}'),
-                                  loss_function=nn.L1Loss(),
-                                  optimizer=opt,
-                                  num_epochs=0)
+        print(f'rep number {rep}:')
+        with mlflow.start_run():
 
-        tmp_file_name = 'learning_curve.csv'
-        learning_curve_df.to_csv(tmp_file_name)
-        mlflow.log_artifact(tmp_file_name)
-        # todo: add plot
-    print('Done.')
+            mlflow.log_params(config)
+            mlflow.log_param('rep', rep)
+
+            opt = torch.optim.Adam(model.parameters(), lr=config['lr'])
+            learning_curve_df = train(net=model,
+                                      train_loader=DataLoader(ds_dev, batch_size=config['batch_size'], shuffle=True),
+                                      validation_loader=DataLoader(ds_valid, batch_size=config['batch_size']),
+                                      device=torch.device(f'cuda:{config["cuda"]}'),
+                                      loss_function=nn.L1Loss(),
+                                      optimizer=opt,
+                                      num_epochs=config['num_epochs'])
+
+            tmp_file_name = 'learning_curve.csv'
+            learning_curve_df.to_csv(tmp_file_name, index=False)
+            mlflow.log_artifact(tmp_file_name)
+            # todo: add plot
+    print('EXPERIMENT DONE.')
+
+
+def run_multiple_experiments(config_file: str):
+
+    with open(config_file) as infile:
+        config = json.load(infile)
+
+    for exp_name, exp_config in config.items():
+        print(f'\nRUNNING EXPERIMENT: {exp_name}:')
+        pprint(config, width=1)
+        run_experiment(exp_name, exp_config)
 
 
 if __name__ == '__main__':
@@ -148,32 +161,4 @@ if __name__ == '__main__':
     TRANS = Compose([FullyConnectedGraph(), Distance(norm=True)])
     RE_PROCESS = False
 
-    run_experiment(config_file='config.json')
-
-    # ds_valid = AlchemyDataset(root=join(DATA_DIR, 'valid'),
-    #                           mode='valid',
-    #                           transform=TRANS,
-    #                           re_process=RE_PROCESS)
-    # ds_dev = AlchemyDataset(root=join(DATA_DIR, 'dev'),
-    #                         mode='dev',
-    #                         transform=TRANS,
-    #                         re_process=RE_PROCESS)
-    # ds_test = AlchemyDataset(root=join(DATA_DIR, 'test'),
-    #                          mode='test',
-    #                          transform=TRANS,
-    #                          re_process=RE_PROCESS)
-    # model = tencent_mpnn.MPNN(node_input_dim=11,
-    #                           edge_input_dim=5,
-    #                           output_dim=12)
-    #
-    # opt = torch.optim.Adam(model.parameters(), lr=0.001)
-    #
-    # learning_curve_df = train(net=model,
-    #                           train_loader=DataLoader(ds_dev, batch_size=BATCH_SIZE),
-    #                           validation_loader=DataLoader(ds_valid, batch_size=BATCH_SIZE),
-    #                           device=torch.device('cuda:1'),
-    #                           loss_function=nn.L1Loss(),
-    #                           optimizer=opt,
-    #                           num_epochs=0)
-
-
+    run_multiple_experiments(config_file='config.json')
