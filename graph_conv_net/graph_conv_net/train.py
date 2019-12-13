@@ -15,6 +15,8 @@ from torch_geometric.data import DataLoader
 from graph_conv_net.alchemy_dataset import AlchemyDataset, FullyConnectedGraph
 from graph_conv_net import tencent_mpnn
 
+DATA_DIR = '/home/rpeer/masters_project/data'
+
 
 def count_parameters(net: nn.Module):
     return sum([np.prod(x.shape) for x in net.parameters()])
@@ -102,45 +104,51 @@ def train(net: nn.Module,
     return log_df
 
 
-def run_experiment(name: str, config: dict):
+def run_experiment(config: dict):
+    print(f'\nRUNNING EXPERIMENT: {config["name"]}:')
+    pprint(config, width=1)
 
-    ds_valid = AlchemyDataset(root=join(DATA_DIR, 'valid'),
-                              mode='valid',
-                              transform=TRANS,
-                              re_process=RE_PROCESS)
-    ds_dev = AlchemyDataset(root=join(DATA_DIR, 'dev'),
-                            mode='dev',
-                            transform=TRANS,
-                            re_process=RE_PROCESS)
-    model = tencent_mpnn.MPNN(node_input_dim=11,
-                              edge_input_dim=5,
-                              output_dim=12)
+    mlflow.set_experiment(config['name'])
+    target_param = config['target_param']
+    transform_creator = config['get_transform']
 
-    # target_param = config['target_param']
+    for param in config[target_param]:
+        print(f'\nUSING {target_param} = {param}:')
 
-    mlflow.set_experiment(name)
+        ds_valid = AlchemyDataset(root=join(DATA_DIR, 'valid'),
+                                  mode='valid',
+                                  transform=transform_creator(param),
+                                  re_process=True)
+        ds_dev = AlchemyDataset(root=join(DATA_DIR, 'dev'),
+                                mode='dev',
+                                transform=transform_creator(param),
+                                re_process=True)
 
-    for rep in range(config['repeat']):
+        for rep in range(config['repeat']):
 
-        print(f'rep number {rep}:')
-        with mlflow.start_run():
+            print(f'\nrep number {rep}:')
+            model = tencent_mpnn.MPNN(node_input_dim=11,
+                                      edge_input_dim=5,
+                                      output_dim=12)
 
-            mlflow.log_params(config)
-            mlflow.log_param('rep', rep)
+            with mlflow.start_run():
 
-            opt = torch.optim.Adam(model.parameters(), lr=config['lr'])
-            learning_curve_df = train(net=model,
-                                      train_loader=DataLoader(ds_dev, batch_size=config['batch_size'], shuffle=True),
-                                      validation_loader=DataLoader(ds_valid, batch_size=config['batch_size']),
-                                      device=torch.device(f'cuda:{config["cuda"]}'),
-                                      loss_function=nn.L1Loss(),
-                                      optimizer=opt,
-                                      num_epochs=config['num_epochs'])
+                mlflow.log_params(config)
+                mlflow.log_param('rep', rep)
 
-            tmp_file_name = 'learning_curve.csv'
-            learning_curve_df.to_csv(tmp_file_name, index=False)
-            mlflow.log_artifact(tmp_file_name)
-            # todo: add plot
+                opt = torch.optim.Adam(model.parameters(), lr=config['lr'])
+                learning_curve_df = train(net=model,
+                                          train_loader=DataLoader(ds_dev, batch_size=config['batch_size'], shuffle=True),
+                                          validation_loader=DataLoader(ds_valid, batch_size=config['batch_size']),
+                                          device=torch.device(f'cuda:{config["cuda"]}'),
+                                          loss_function=nn.L1Loss(),
+                                          optimizer=opt,
+                                          num_epochs=config['num_epochs'])
+
+                tmp_file_name = 'learning_curve.csv'
+                learning_curve_df.to_csv(tmp_file_name, index=False)
+                mlflow.log_artifact(tmp_file_name)
+                # todo: add plot
     print('EXPERIMENT DONE.')
 
 
@@ -157,8 +165,7 @@ def run_multiple_experiments(config_file: str):
 
 if __name__ == '__main__':
 
-    DATA_DIR = '/home/rpeer/masters_project/data'
     TRANS = Compose([FullyConnectedGraph(), Distance(norm=True)])
     RE_PROCESS = False
 
-    run_multiple_experiments(config_file='config.json')
+    run_multiple_experiments(config_file='config.py')

@@ -48,6 +48,45 @@ class FullyConnectedGraph(object):
         return f'{self.__class__.__name__}()'
 
 
+class AddEdges(object):
+    """
+    Add an edge between every two atoms with distance <= distance_threshold
+    """
+
+    def __init__(self, distance_threshold=None):
+
+        if distance_threshold is None:
+            self.t = np.inf
+        else:
+            self.t = distance_threshold
+
+    def __call__(self, graph: Data) -> Data:
+
+        # todo: write method
+        return graph
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}(distance_threshold={self.t})'
+
+
+class NHop(object):
+    """
+    Adds the n-hop edges to the edge indices.
+    (An edge will be added (if not there already) between any atoms <= n edges apart in the input graph)
+    """
+
+    def __init__(self, n):
+        self.n = n
+
+    def __call__(self, data):
+
+        # todo: write method - check TwoHop implementation
+        return data
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self.n})'
+
+
 class AlchemyDataset(InMemoryDataset):
 
     def __init__(self,
