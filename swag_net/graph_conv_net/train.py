@@ -12,7 +12,8 @@ from torch import nn
 from torch_geometric.transforms import Compose, Distance, Cartesian
 from torch_geometric.data import DataLoader
 
-from graph_conv_net.alchemy_dataset import AlchemyDataset, FullyConnectedGraph
+from graph_conv_net.alchemy_dataset import TencentAlchemyDataset
+from graph_conv_net.transformations import AddEdges
 from graph_conv_net import tencent_mpnn
 
 DATA_DIR = '/home/rpeer/masters_project/data'
@@ -111,18 +112,19 @@ def run_experiment(config: dict):
     mlflow.set_experiment(config['name'])
     target_param = config['target_param']
     transform_creator = config['get_transform']
+    DatasetClass = config['dataset_class']
 
-    for param in config[target_param]:
+    for i, param in enumerate(config[target_param]):
         print(f'\nUSING {target_param} = {param}:')
 
-        ds_valid = AlchemyDataset(root=join(DATA_DIR, 'valid'),
-                                  mode='valid',
-                                  transform=transform_creator(param),
-                                  re_process=True)
-        ds_dev = AlchemyDataset(root=join(DATA_DIR, 'dev'),
-                                mode='dev',
+        ds_valid = DatasetClass(root=join(DATA_DIR, 'valid'),
+                                mode='valid',
                                 transform=transform_creator(param),
-                                re_process=True)
+                                re_process=(i == 0))  # only re-process the first time
+        ds_dev = DatasetClass(root=join(DATA_DIR, 'dev'),
+                              mode='dev',
+                              transform=transform_creator(param),
+                              re_process=(i == 0))
 
         for rep in range(config['repeat']):
 

@@ -6,7 +6,6 @@ import urllib.request
 import zipfile
 import typing
 from typing import Tuple, Union
-from itertools import product
 
 import numpy as np
 import pandas as pd
@@ -14,9 +13,9 @@ import pandas as pd
 import torch
 from torch import tensor, FloatTensor, LongTensor
 
-from torch_geometric.data import Data, InMemoryDataset, DataLoader
-from torch_geometric.utils import remove_self_loops
+from torch_geometric.data import Data, InMemoryDataset
 from torch_geometric.data.makedirs import makedirs
+
 
 from rdkit import Chem
 from rdkit.Chem import ChemicalFeatures
@@ -25,69 +24,7 @@ from rdkit import RDConfig
 SET_NAMES = ('dev', 'valid', 'test')
 
 
-class FullyConnectedGraph(object):
-
-    def __call__(self, graph: Data) -> Data:
-        num_bond_features = graph.edge_attr.shape[1]
-        edge_features = FloatTensor(torch.zeros(graph.num_nodes**2, num_bond_features))
-
-        bond_index = graph.edge_index[0] * graph.num_nodes + graph.edge_index[1]
-        edge_features[bond_index] = graph.edge_attr
-
-        all_edges = list(product(range(graph.num_nodes), range(graph.num_nodes)))
-        full_edge_index = tensor(all_edges).transpose(0, 1)
-
-        edge_index, edge_attr = remove_self_loops(full_edge_index, edge_features)
-
-        graph.edge_attr = edge_attr
-        graph.edge_index = edge_index
-
-        return graph
-
-    def __repr__(self):
-        return f'{self.__class__.__name__}()'
-
-
-class AddEdges(object):
-    """
-    Add an edge between every two atoms with distance <= distance_threshold
-    """
-
-    def __init__(self, distance_threshold=None):
-
-        if distance_threshold is None:
-            self.t = np.inf
-        else:
-            self.t = distance_threshold
-
-    def __call__(self, graph: Data) -> Data:
-
-        # todo: write method
-        return graph
-
-    def __repr__(self):
-        return f'{self.__class__.__name__}(distance_threshold={self.t})'
-
-
-class NHop(object):
-    """
-    Adds the n-hop edges to the edge indices.
-    (An edge will be added (if not there already) between any atoms <= n edges apart in the input graph)
-    """
-
-    def __init__(self, n):
-        self.n = n
-
-    def __call__(self, data):
-
-        # todo: write method - check TwoHop implementation
-        return data
-
-    def __repr__(self):
-        return f'{self.__class__.__name__}({self.n})'
-
-
-class AlchemyDataset(InMemoryDataset):
+class BaseAlchemyDataset(InMemoryDataset):
 
     def __init__(self,
                  root,
@@ -115,15 +52,15 @@ class AlchemyDataset(InMemoryDataset):
 
         self.data, self.slices = torch.load(self.processed_paths[0])
 
-    # def _process(self):
-    #
-    #     if self.re_process is False and all([os.path.exists(f) for f in self.processed_paths]):
-    #         return
-    #
-    #     print('Processing...')
-    #     makedirs(self.processed_dir)
-    #     self.process()
-    #     print('Done!')
+    def _process(self):
+
+        if self.re_process is False and all([os.path.exists(f) for f in self.processed_paths]):
+            return
+
+        print('Processing...')
+        makedirs(self.processed_dir)
+        self.process()
+        print('Done!')
 
     @property
     def raw_file_names(self) -> list:
@@ -154,33 +91,31 @@ class AlchemyDataset(InMemoryDataset):
         os.rmdir(source_dir)
 
     def get_atom_features(self, molecule: Chem.rdchem.Mol) -> tensor:
-
+        """
+        Simplest atom-features: only atom-type
+        """
         atom_features = []
 
         for atom in molecule.GetAtoms():
-
             atom_type = (atom.GetSymbol() == self.atom_types).astype(int)
-            aromatic = np.array([atom.GetIsAromatic()]).astype(int)
-            hybridization = (atom.GetHybridization() == self.hybrid_types).astype(int)
-            atom_feature_vector = np.concatenate([atom_type, aromatic, hybridization])
-            atom_features.append(atom_feature_vector)
-            # TODO: expand features
+            atom_features.append(atom_type)
 
         # requires float for linear layer and long for embedding
-        return FloatTensor(atom_features)
+        return tensor(atom_features).float()
 
     def get_bonds(self, molecule: Chem.rdchem.Mol) -> Tuple[tensor, tensor]:
-
+        """
+        :return: bond-index, bond-features
+        """
         bonds = []
         bond_features = []
 
         for bond in molecule.GetBonds():
-
             bonds.append((bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()))
             bond_type = (bond.GetBondType() == self.bond_types).astype(int)
             bond_features.append(bond_type)
 
-        return LongTensor(bonds).transpose(0, 1), FloatTensor(bond_features)  # bond-indices, bond-features
+        return tensor(bonds).transpose(0, 1).float(), tensor(bond_features).float()
 
     def read_sdf(self,
                  sdf_path: str,
@@ -200,9 +135,8 @@ class AlchemyDataset(InMemoryDataset):
 
         node_attributes = self.get_atom_features(molecule)
         bond_indices, bond_features = self.get_bonds(molecule)
-        coordinates = FloatTensor(molecule.GetConformer().GetPositions())
+        coordinates = tensor(molecule.GetConformer().GetPositions()).float()
 
-        # TODO: check tensor types
         graph = Data(x=node_attributes,
                      pos=coordinates,
                      edge_index=bond_indices,
@@ -237,3 +171,59 @@ class AlchemyDataset(InMemoryDataset):
         combined_data, slices = self.collate(graphs)
         torch.save((combined_data, slices), self.processed_paths[0])
 
+
+class TencentAlchemyDataset(BaseAlchemyDataset):
+    """
+    Using the exact same features as in http://arxiv.org/abs/1906.09427
+    """
+
+    @staticmethod
+    def get_donors_acceptors(molecule: Chem.rdchem.Mol) -> tuple:
+
+        feature_definition = join(RDConfig.RDDataDir, 'BaseFeatures.fdef')
+        chem_feature_factory = ChemicalFeatures.BuildFeatureFactory(feature_definition)
+        molecule_features = chem_feature_factory.GetFeaturesForMol(molecule)
+
+        donor_atoms, acceptor_atoms = tuple(), tuple()
+
+        for feature in molecule_features:
+            if feature.GetFamily() == 'Donor':
+                donor_atoms = feature.GetAtomIds()
+            elif feature.GetFamily() == 'Acceptor':
+                acceptor_atoms = feature.GetAtomIds()
+
+        return donor_atoms, acceptor_atoms
+
+    def get_atom_features(self, molecule: Chem.rdchem.Mol) -> tensor:
+
+        donor_atom_ids, acceptor_atom_ids = self.get_donors_acceptors(molecule)
+        atom_features = []
+
+        for atom in molecule.GetAtoms():
+            atom_type = (atom.GetSymbol() == self.atom_types).astype(int)
+            aromatic = np.array([atom.GetIsAromatic()]).astype(int)
+            hybridization = (atom.GetHybridization() == self.hybrid_types).astype(int)
+            atom_feature_vector = np.concatenate([
+                atom_type,
+                np.array([atom.GetAtomicNum()]),  # redundant info: same as above
+                np.array([int(atom.GetIdx() in acceptor_atom_ids)]),
+                np.array([int(atom.GetIdx() in donor_atom_ids)]),
+                aromatic,
+                hybridization,
+                np.array([atom.GetTotalNumHs()])
+            ])
+            atom_features.append(atom_feature_vector)
+
+        return tensor(atom_features).float()
+
+    def get_bonds(self, molecule: Chem.rdchem.Mol) -> Tuple[tensor, tensor]:
+
+        bonds = []
+        bond_features = []
+
+        for bond in molecule.GetBonds():
+            bonds.append((bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()))
+            bond_type = (bond.GetBondType() == self.bond_types).astype(int)
+            bond_features.append(bond_type)
+
+        return tensor(bonds).transpose(0, 1).float(), tensor(bond_features).float()

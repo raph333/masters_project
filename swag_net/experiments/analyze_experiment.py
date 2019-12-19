@@ -1,6 +1,8 @@
 """
 Reads parameters and artifacts from ml-flow experiment
 """
+
+from graph_conv_net import tencent_mpnn
 import os
 from os.path import join
 from glob import glob

@@ -1,5 +1,9 @@
+import numpy as np
+
 from torch_geometric.transforms import Compose, Distance, Cartesian
-from graph_conv_net.alchemy_dataset import FullyConnectedGraph, AddEdges
+
+from graph_conv_net.alchemy_dataset import TencentAlchemyDataset
+from graph_conv_net.transformations import AddEdges
 from graph_conv_net.train import run_experiment
 
 
@@ -14,13 +18,14 @@ def get_transform(threshold: float):
 config = {
     "name": "distance_threshold",
     "target_param": "distance_threshold",
-    "distance_threshold": [1, 2, 3, None],
+    "distance_threshold": [None, *np.arange(1.5, 5.5, 0.5).tolist(), np.inf],
+    "dataset_class": TencentAlchemyDataset,
     "get_transform": get_transform,
     "repeat": 3,
     "lr":  0.001,
-    "model_name": "test",
+    "model_name": "tencent_mpnn",
     "batch_size": 64,
-    "num_epochs": 2,
+    "num_epochs": 1,
     "cuda": 1
 }
 
