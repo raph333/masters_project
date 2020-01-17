@@ -1,24 +1,38 @@
 \chapter{Introduction}
 \label{chapter:Introduction}
 
-\section{Predicting molecular properties}
 
-\textit{} Briefly the applications of computational chemistry and computational structural biology
 
 \section{Graph neural networks}
 
-{\itshape
-\noindent Explain the reasoning behind graph neural networks:
+In the past decade, deep neural networks have been responsible for several breakthroughs in machine learning ranging from computer vision to natural language processing. [add some citations]. These astounding achievements suggest that deep neural networks have the potential to give rise to many more groundbreaking applications of machine learning. However, a closer look at the breakthroughs cited above reveals that most of these applications focus on one of two kinds of data: images and natural language. An image (in the most general sense) can described as data-points (pixels) on a two-dimensional grid. Natural language on the other hand has a purely one-dimensional structure. In text-form, it can be described as a sequence of words, syllables or characters. In the form of speech, it is a sequence of words or sounds. In either case, the structure of the data is purely sequential meaning that each data point (e.g. a word or a character) is fully described by it's position in the 1D-sequence. (For example think of a word in a novel: it's meaning only depends on the words before and after in the sequence of words - it's position on the page is irrelevant).
 
-\begin{itemize}
-	\item no order => permutation invariance required
-	\item no fixed dimension: a node can have 0 to n neighbors => need aggregation function
-\end{itemize}
+Two classes of deep neural architectures were responsible for the breakthroughs: convolutional neural networks (CNNs) for computer vision and recurrent neural networks (RNNs) for natural language. Many improvements have been made to these architectures but the basic architecture remains the same~\footnote{Recently, \textit{Transformer}-architectures have largely replaced RNN-based architectures in natural language processing. However, up until this point, advanced RNN-architectures, such as \textit{Long Short Term Memory networks} (LSTMs) have been responsible for the advances in the field.}. For this reason, the basic strategy in applied deep learning is straightforward: Use the latest convolutional architecture that suits the task at hand in computer vision and use the latest RNN-based (e.g. LSTM) or Transformer architecture in natural language processing. However, if the data for the use-case at hand does not fit into either of those two categories, the situation is much more complicated. I other areas, deep neural networks have not outperformed traditional methods by as a large a margin and the choice of approach is not as obvious. Examples include for instance documents that comprise both, text and visual elements, such as invoices, legal documents, etc. These documents can cannot be fully described as a text-sequence because the position of words, amounts or dates strongly affects their interpretation. However, they also cannot be treated merely as images as the textual information is vital. Thus, the represent case of textual information on a 2D-grid for which there is no go-to deep learning architecture yet. Another example is 3D data such as point-clouds from 3D-scanners or molecular structures. In theory, CNNs can be extended to three or higher dimensions but in practice this approach is computationally not feasible due to the cubic number of data points in three dimensions.
 
-\noindent Nomenclature:\\
-1) graph conv: complicated but compares well with computer vision\\
-2) message passing: simple, but not analogous to cv
-}
+From these considerations, it becomes clear that is not trivial to extend the success of DNNs from images and language to other kinds of data. Nevertheless, the potential for progress is tremendous and warrants research into neural networks architectures for other data.
+
+One of the most-versatile data structures is the graph. A graph contains a set of data points called vertices or nodes and a set of edges that define relations between the nodes. A such, as graph is inherently unordered and thus suited for modeling data without p predefined order. The only kind of structure that has to imposed is the definition of the edges. That is the only kind of inductive bias of a graph are the relations between nodes. This relational inductive bias is a rather weak bias and allows many kinds of data to be modeled as a graph without imposing some kind of structure onto the data that is not there.
+
+
+
+%{\itshape
+%\noindent Explain the reasoning behind graph neural networks:
+%
+%\begin{itemize}
+%	\item no order => permutation invariance required
+%	\item no fixed dimension: a node can have 0 to n neighbors => need aggregation function
+%\end{itemize}
+%
+%\noindent Nomenclature:\\
+%1) graph conv: complicated but compares well with computer vision\\
+%2) message passing: simple, but not analogous to cv
+%}
+
+
+\section{Predicting molecular properties}
+
+\textit{Briefly explain the applications of computational chemistry and computational structural biology} 
+
 
 \section{Limitations of Graph neural networks for molecular structures}
 
@@ -26,14 +40,14 @@
 
 {\itshape
 	
-subsubsection: different structural arrangements can lead to same graph => same results
+sub-subsection: different structural arrangements can lead to same graph => same results
 
 what does not work:\\
 * adding coordinates: not invariant to translations and rotations\\
 * adding relative positions as edge-features: invariant to translations but not to rotations
 => opposite case to above: now to equivalent structures can be represented with different edge-features
 
-subsubsection: no downsampling
+sub-subsection: no down-sampling
 
 this goes hand in hand with: no graph-level or graph-part-level features; only node-features - even when higher level
 

@@ -43,6 +43,8 @@ class AddEdges(object):
 
         if distance_threshold is None:
             self.add_edges = False
+        else:
+            self.add_edges = True
 
         self.t = distance_threshold
 

@@ -115,7 +115,7 @@ class BaseAlchemyDataset(InMemoryDataset):
             bond_type = (bond.GetBondType() == self.bond_types).astype(int)
             bond_features.append(bond_type)
 
-        return tensor(bonds).transpose(0, 1).float(), tensor(bond_features).float()
+        return tensor(bonds).transpose(0, 1).long(), tensor(bond_features).float()
 
     def read_sdf(self,
                  sdf_path: str,
@@ -215,15 +215,3 @@ class TencentAlchemyDataset(BaseAlchemyDataset):
             atom_features.append(atom_feature_vector)
 
         return tensor(atom_features).float()
-
-    def get_bonds(self, molecule: Chem.rdchem.Mol) -> Tuple[tensor, tensor]:
-
-        bonds = []
-        bond_features = []
-
-        for bond in molecule.GetBonds():
-            bonds.append((bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()))
-            bond_type = (bond.GetBondType() == self.bond_types).astype(int)
-            bond_features.append(bond_type)
-
-        return tensor(bonds).transpose(0, 1).float(), tensor(bond_features).float()

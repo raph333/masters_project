@@ -7,7 +7,7 @@ setup(name='graph_conv_net',
       author='Raphael Peer',
       author_email='raphael1peer@gmail.com',
       license='MIT',
-      packages=['swag_net'],
+      packages=['graph_conv_net'],
       zip_safe=False,
       install_requires=['pandas', 'torch', 'numpy'])
 

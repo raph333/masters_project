@@ -15,7 +15,7 @@ from torch_geometric.data import DataLoader
 from graph_conv_net.alchemy_dataset import TencentAlchemyDataset
 from graph_conv_net.transformations import AddEdges
 from graph_conv_net import tencent_mpnn
-
+from graph_conv_net.transformations import FullyConnectedGraph
 DATA_DIR = '/home/rpeer/masters_project/data'
 
 
@@ -110,33 +110,35 @@ def run_experiment(config: dict):
     pprint(config, width=1)
 
     mlflow.set_experiment(config['name'])
-    target_param = config['target_param']
+    target_param = config['target_param']['name']
     transform_creator = config['get_transform']
     DatasetClass = config['dataset_class']
 
-    for i, param in enumerate(config[target_param]):
+    for i, param in enumerate(config['target_param']['values']):
         print(f'\nUSING {target_param} = {param}:')
+        process = False  # i == 0  # only re-process the first time
 
         ds_valid = DatasetClass(root=join(DATA_DIR, 'valid'),
                                 mode='valid',
                                 transform=transform_creator(param),
-                                re_process=(i == 0))  # only re-process the first time
+                                re_process=process)
         ds_dev = DatasetClass(root=join(DATA_DIR, 'dev'),
                               mode='dev',
                               transform=transform_creator(param),
-                              re_process=(i == 0))
+                              re_process=process)
 
         for rep in range(config['repeat']):
 
             print(f'\nrep number {rep}:')
-            model = tencent_mpnn.MPNN(node_input_dim=11,
-                                      edge_input_dim=5,
+            model = tencent_mpnn.MPNN(node_input_dim=ds_dev[0].num_features,
+                                      edge_input_dim=ds_dev[0].edge_attr.shape[1],
                                       output_dim=12)
 
             with mlflow.start_run():
 
                 mlflow.log_params(config)
                 mlflow.log_param('rep', rep)
+                mlflow.log_param('target_param', target_param)
 
                 opt = torch.optim.Adam(model.parameters(), lr=config['lr'])
                 learning_curve_df = train(net=model,

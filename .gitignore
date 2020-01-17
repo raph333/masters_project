@@ -1,5 +1,7 @@
 tutorials
 data
+meetup_talk
+ssh_pycharm.txt
 
 *ipynb_checkpoints
 *__pycache__
@@ -24,3 +26,4 @@ thesis/Fonts
 thesis/Example.bib
 thesis/structure.md
 thesis/install-getnonfreefonts
+graph_conv_net/graph_conv_net/run.py
