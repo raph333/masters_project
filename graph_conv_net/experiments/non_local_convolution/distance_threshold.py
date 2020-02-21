@@ -16,19 +16,19 @@ def get_transform(threshold: float):
 
 
 config = {
-    "name": "test-run",
+    "name": "test-run",  # set this for each experiment!
     "target_param": {
         "name": "distance_threshold",
         "values": [None, *np.arange(1.5, 5.5, 0.5).tolist(), np.inf]
     },
     "dataset_class": TencentAlchemyDataset,
     "get_transform": get_transform,
-    "repeat": 2,
+    "repeat": 3,
     "lr":  0.001,
     "model_name": "tencent_mpnn",
     "batch_size": 64,
-    "num_epochs": 2,
-    "cuda": [0, 1, 2, 3]
+    "num_epochs": 5,
+    "cuda": 1
 }
 
 

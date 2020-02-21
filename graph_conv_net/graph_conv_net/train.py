@@ -96,7 +96,7 @@ def train(net: nn.Module,
                 loss = loss_function(y_hat, data.y)
                 valid_mae += loss.item() / len(validation_loader)
 
-        #lr = optimizer.param_groups[0]['lr']
+        # lr = optimizer.param_groups[0]['lr']
         print(f'{epoch}:\t{train_mae:.4f}\t\t{valid_mae:.4f}')
         log_df = log_df.append({'epoch': epoch, 'train_mae': valid_mae, 'valid_mae': train_mae}, ignore_index=True)
 
@@ -114,7 +114,7 @@ def run_experiment(config: dict):
 
     for i, param in enumerate(config['target_param']['values']):
         print(f'\nUSING {target_param} = {param}:')
-        process = False  # i == 0  # only re-process the first time
+        process = i == 0  # only re-process the first time
 
         ds_valid = DatasetClass(root=join(DATA_DIR, 'valid'),
                                 mode='valid',
@@ -128,7 +128,6 @@ def run_experiment(config: dict):
         for rep in range(config['repeat']):
 
             print(f'\nrep number {rep}:')
-            cuda_number = rep % len(config["cuda"])
             model = tencent_mpnn.MPNN(node_input_dim=ds_dev[0].num_features,
                                       edge_input_dim=ds_dev[0].edge_attr.shape[1],
                                       output_dim=12)
@@ -137,13 +136,14 @@ def run_experiment(config: dict):
 
                 mlflow.log_params(config)
                 mlflow.log_param('rep', rep)
-                mlflow.log_param('target_param', target_param)
+                mlflow.log_param('target_param_name', target_param)
+                mlflow.log_param('target_param_value', param)
 
                 opt = torch.optim.Adam(model.parameters(), lr=config['lr'])
                 learning_curve_df = train(net=model,
                                           train_loader=DataLoader(ds_dev, batch_size=config['batch_size'], shuffle=True),
                                           validation_loader=DataLoader(ds_valid, batch_size=config['batch_size']),
-                                          device=torch.device(f'cuda:{cuda_number}'),
+                                          device=torch.device(f'cuda:{config["cuda"]}'),
                                           loss_function=nn.L1Loss(),
                                           optimizer=opt,
                                           num_epochs=config['num_epochs'])
@@ -151,8 +151,8 @@ def run_experiment(config: dict):
                 tmp_file_name = 'learning_curve.csv'
                 learning_curve_df.to_csv(tmp_file_name, index=False)
                 mlflow.log_artifact(tmp_file_name)
-                # todo: add plot
-    print('EXPERIMENT DONE.')
+
+    print('\nEXPERIMENT DONE.')
 
 
 def run_multiple_experiments(config_file: str):
