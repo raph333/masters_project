@@ -1,8 +1,5 @@
 import numpy as np
 
-import os
-print(os.getcwd())
-
 from torch_geometric.transforms import Compose, Distance, Cartesian
 
 from graph_conv_net.alchemy_dataset import TencentAlchemyDataset
@@ -26,12 +23,12 @@ config = {
     },
     "dataset_class": TencentAlchemyDataset,
     "get_transform": get_transform,
-    "repeat": 3,
+    "repeat": 2,
     "lr":  0.001,
     "model_name": "tencent_mpnn",
     "batch_size": 64,
-    "num_epochs": 5,
-    "cuda": 1
+    "num_epochs": 2,
+    "cuda": [0, 1, 2, 3]
 }
 
 

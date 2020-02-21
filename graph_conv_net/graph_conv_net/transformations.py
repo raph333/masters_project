@@ -58,19 +58,26 @@ class AddEdges(object):
         edges = []
         edge_attributes = []
 
+        from_atom, to_atom = data.edge_index
+
         for i, j in product(range(data.num_nodes), range(data.num_nodes)):
-            if i == j or dist_matrix[i, j] > self.t:
+
+            if i == j:
                 continue
 
-            index = (row == i) * (col == j)
-            edges.append((i, j))
+            existing_edge = ((from_atom == i) * (to_atom == j)).nonzero()
+            assert len(existing_edge) <= 1, 'There can be only one edge from atom a to atom b'
 
-            if index.sum():
-                edge_attributes.append(data.edge_attr[index])
-            else:
+            if len(existing_edge) == 1:
+                edges.append((i, j))
+                edge_attributes.append(data.edge_attr[existing_edge.item()].unsqueeze(0))
+
+            # create new edge:
+            elif dist_matrix[i, j] <= self.t:
+                edges.append((i, j))
                 edge_attributes.append(torch.zeros(*data.edge_attr.shape[1:]).unsqueeze(0))
 
-        assert len(edges) == len(edge_attributes)  # todo unit-test
+        assert len(edges) == len(edge_attributes) > 0
 
         data.edge_index = torch.tensor(edges).transpose(0, 1)
         data.edge_attr = torch.stack(edge_attributes, dim=1).squeeze()

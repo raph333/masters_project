@@ -12,8 +12,6 @@ from torch import nn
 from torch_geometric.transforms import Compose, Distance, Cartesian
 from torch_geometric.data import DataLoader
 
-from graph_conv_net.alchemy_dataset import TencentAlchemyDataset
-from graph_conv_net.transformations import AddEdges
 from graph_conv_net import tencent_mpnn
 from graph_conv_net.transformations import FullyConnectedGraph
 DATA_DIR = '/home/rpeer/masters_project/data'
@@ -130,6 +128,7 @@ def run_experiment(config: dict):
         for rep in range(config['repeat']):
 
             print(f'\nrep number {rep}:')
+            cuda_number = rep % len(config["cuda"])
             model = tencent_mpnn.MPNN(node_input_dim=ds_dev[0].num_features,
                                       edge_input_dim=ds_dev[0].edge_attr.shape[1],
                                       output_dim=12)
@@ -144,7 +143,7 @@ def run_experiment(config: dict):
                 learning_curve_df = train(net=model,
                                           train_loader=DataLoader(ds_dev, batch_size=config['batch_size'], shuffle=True),
                                           validation_loader=DataLoader(ds_valid, batch_size=config['batch_size']),
-                                          device=torch.device(f'cuda:{config["cuda"]}'),
+                                          device=torch.device(f'cuda:{cuda_number}'),
                                           loss_function=nn.L1Loss(),
                                           optimizer=opt,
                                           num_epochs=config['num_epochs'])
