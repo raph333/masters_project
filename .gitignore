@@ -9,6 +9,10 @@ ssh_pycharm.txt
 .idea
 notes.md
 
+graph_conv_net/experiments/mlruns/*
+doc/tmp/*
+*.html
+
 *.out
 *.log
 *.aux

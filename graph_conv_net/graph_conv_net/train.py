@@ -1,7 +1,6 @@
 from os.path import join
 from pprint import pprint
 
-import json
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -9,11 +8,10 @@ import mlflow
 
 import torch
 from torch import nn
-from torch_geometric.transforms import Compose, Distance, Cartesian
 from torch_geometric.data import DataLoader
 
 from graph_conv_net import tencent_mpnn
-from graph_conv_net.transformations import FullyConnectedGraph
+
 DATA_DIR = '/home/rpeer/masters_project/data'
 
 
@@ -33,7 +31,7 @@ def plot_error_curves(training_error: list,
                       validation_error: list,
                       error_name='error',
                       plot_name='learning_curve',
-                      ylim=None,
+                      y_limit=None,
                       save_fig=True):
     assert len(training_error) == len(validation_error) > 1
 
@@ -41,8 +39,8 @@ def plot_error_curves(training_error: list,
     ax.plot(range(len(training_error)), training_error)
     ax.plot(range(len(validation_error)), validation_error)
 
-    if ylim:
-        ax.set_ylim(*ylim)
+    if y_limit:
+        ax.set_ylim(*y_limit)
 
     ax.set_xlabel('epoch')
     ax.set_ylabel(error_name)
@@ -104,7 +102,7 @@ def train(net: nn.Module,
 
 
 def run_experiment(config: dict):
-    print(f'\nRUNNING EXPERIMENT: {config["name"]}:')
+    print(f'\nRUNNING EXPERIMENT: {config["name"]}\n:')
     pprint(config, width=1)
 
     mlflow.set_experiment(config['name'])
@@ -148,27 +146,27 @@ def run_experiment(config: dict):
                                           optimizer=opt,
                                           num_epochs=config['num_epochs'])
 
-                tmp_file_name = 'learning_curve.csv'
-                learning_curve_df.to_csv(tmp_file_name, index=False)
-                mlflow.log_artifact(tmp_file_name)
+                lc_file = 'learning_curve.csv'
+                learning_curve_df.to_csv(lc_file, index=False)
+                mlflow.log_artifact(lc_file)
 
     print('\nEXPERIMENT DONE.')
 
 
-def run_multiple_experiments(config_file: str):
-
-    with open(config_file) as infile:
-        config = json.load(infile)
-
-    for exp_name, exp_config in config.items():
-        print(f'\nRUNNING EXPERIMENT: {exp_name}:')
-        pprint(config, width=1)
-        # run_experiment(exp_name, exp_config)
-
-
-if __name__ == '__main__':
-
-    TRANS = Compose([FullyConnectedGraph(), Distance(norm=True)])
-    RE_PROCESS = False
-
-    run_multiple_experiments(config_file='config.py')
+# def run_multiple_experiments(config_file: str):
+#
+#     with open(config_file) as infile:
+#         config = json.load(infile)
+#
+#     for exp_name, exp_config in config.items():
+#         print(f'\nRUNNING EXPERIMENT: {exp_name}:')
+#         pprint(config, width=1)
+#         # run_experiment(exp_name, exp_config)
+#
+#
+# if __name__ == '__main__':
+#
+#     TRANS = Compose([FullyConnectedGraph(), Distance(norm=True)])
+#     RE_PROCESS = False
+#
+#     run_multiple_experiments(config_file='config.py')

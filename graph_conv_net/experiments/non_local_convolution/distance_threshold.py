@@ -8,18 +8,17 @@ from graph_conv_net.train import run_experiment
 
 
 def get_transform(threshold: float):
-    transformation = Compose([
+    return Compose([
         AddEdges(distance_threshold=threshold),
         Distance(norm=True)
     ])
-    return transformation
 
 
-config = {
-    "name": "test-run",  # set this for each experiment!
+CONFIG = {
+    "name": "tencent-mpnn-neighborhood-expansion",  # todo: set this for each experiment!
     "target_param": {
         "name": "distance_threshold",
-        "values": [None, *np.arange(1.5, 5.5, 0.5).tolist(), np.inf]
+        "values": [None, 1.5, 2, 3, 4, 5, np.inf]
     },
     "dataset_class": TencentAlchemyDataset,
     "get_transform": get_transform,
@@ -27,10 +26,11 @@ config = {
     "lr":  0.001,
     "model_name": "tencent_mpnn",
     "batch_size": 64,
-    "num_epochs": 5,
+    "num_epochs": 100,
     "cuda": 1
 }
 
 
 if __name__ == '__main__':
-    run_experiment(config)
+
+    run_experiment(CONFIG)

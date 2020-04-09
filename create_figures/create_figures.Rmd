@@ -1,0 +1,19 @@
+---
+title: "Make figures"
+output: html_notebook
+---
+
+# Results
+
+```{r}
+results_dir <- '../graph_conv_net/experiments/results'
+```
+
+
+## Using graph convolution in the way it's meant to be used gives poor results on molecular structures
+
+```{r}
+df <- read.csv(sprintf('%s/test-run.csv', results_dir))
+head(df)
+```
+
