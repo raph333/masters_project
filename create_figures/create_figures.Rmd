@@ -5,15 +5,47 @@ output: html_notebook
 
 # Results
 
-```{r}
+```{r, message=F, warning=F}
+require(ggplot2)
+require(tidyr)
+require(dplyr)
+require(reshape2)
+
 results_dir <- '../graph_conv_net/experiments/results'
+figures_dir <- '../thesis/figures'
+getwd()
+```
+```{r}
+df <- read.csv(file.path(results_dir, 'test-run.csv'), stringsAsFactors=F) %>% 
+  melt(id.vars=c('target_param', 'epoch'), value.name='MAE') %>% 
+  mutate(variable = sub('_mae', '', variable))
+
+df
 ```
 
 
 ## Using graph convolution in the way it's meant to be used gives poor results on molecular structures
 
-```{r}
-df <- read.csv(sprintf('%s/test-run.csv', results_dir))
-head(df)
+```{r, message=F}
+df <- read.csv(file.path(results_dir, 'test-run.csv'), stringsAsFactors=F) %>%
+  melt(id.vars=c('target_param', 'epoch'), value.name='MAE') %>% 
+  mutate(variable = sub('_mae', '', variable),
+         variable = replace(variable, variable == 'valid', 'validation'),
+         variable = replace(variable, variable == 'train', 'training'),
+         variable = factor(variable, levels=c('validation', 'training'))) %>% 
+  mutate(target_param = replace(target_param, target_param == 'None', '0.0'),
+         target_param = as.factor(target_param)) %>% 
+  filter(!target_param %in% c('2.5', '3.5', '4.5'))   # todo: remove
+
+
+p <- ggplot(data=df, aes(x=epoch, y=MAE, color=target_param, linetype=variable)) +
+  geom_line(size=1) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(title='Neighborhood expansion',
+       y='validation MAE',
+       color='neighborhood radius',
+       linetype=element_blank())
+p
+ggsave(file.path(figures_dir, 'tencent-mpnn-neighborhood-expansion.pdf'), p)
 ```
 
