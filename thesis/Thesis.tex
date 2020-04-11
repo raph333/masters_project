@@ -21,6 +21,19 @@
 %% PREAMBLE.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\usepackage{float}  % force figures into section
+
+%\usepackage{hyperref}
+
+
+\usepackage{geometry}
+\geometry{a4paper, right=25mm, left=25mm, top=25mm, bottom=45mm}
+%\usepackage[top=2cm,bottom=4cm,left=1.5cm,right=3cm]{geometry}
+%\usepackage[utf8]{inputenc} % Required for inputting international characters
+%\usepackage[T1]{fontenc} % Output font encoding for international characters
+%\usepackage{palatino} % Use the Palatino font by default
+\linespread{1.5}  % line spacing
+
 % Document properties.
 \def\DocumentTitle{Deep Neural Networks for predicting molecular properties}
 \def\AuthorName{Raphael Peer}
@@ -61,9 +74,12 @@ bookmarksnumbered}
 
 \begin{document}
 
+
 \input{FrontMatter.tex}
 
 \input{Chapter-Intro.tex}
+
+\input{Chapter-Materials-and-Methods.tex}
 
 %\input{Chapter-ChapAbbr.tex}
 \input{Chapter-Results.tex}

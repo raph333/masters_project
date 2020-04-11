@@ -24,6 +24,7 @@ In the remainder of this section we will mostly refer to molecular structures as
 \subsection{Graph convolutional network architecture}
 
 \subsubsection{Challenges of graph structured data for graph convolutional neural networks}
+\label{sec:graph-challenges}
 
 There are several challenges of designing neural network architectures for graphs:
 
@@ -39,6 +40,7 @@ From the last two paragraphs, one can already suspect that graph convolutions re
 Now that we briefly described the properties of the input data, we will examine the possible output formats of a GCNN in the next section. With the input data and the output defined, we will then focus on the transformations that map the input to the output in GCNNs.
 
 \subsubsection{Output format of graph convolutional neural networks}
+\label{sec:graph-output}
 
 GCNNs can be used to predict three kinds of target variables:
 
@@ -55,6 +57,39 @@ Note that for the second two types of target variables, the output dimension dep
 
 
 The basic building block of a GCNN is graph convolution that maps a node-representation and the nodes neighborhood. We will describe graph convolution using the message passing terminology suggested by Gilmer et. al.~\cite{Gilmer2017}.
+
+The input data can be described as a graph $G$ with	a set of node features where $x_v$ are the features of node $v$ and a (optionally) a set of edge features where $e_{vw}$ describes the edge between node $v$ and node $w$. For simplicity, we will assume undirected graphs where$e_{vw}$ is equal tot $e_{wv}$ which are for modeling structures. However, directed graphs can be described in the same framework if the application requires directed edges. Finally, let $T$ be the number of graph convolutional layers or the number of message passing steps and denote a specific step as $t \in \{1, 2, ..., T\}$. Furthermore, a the node representation at any hidden layer $t$ shall be denoted as $h_v^t$. Note that compared to an image in regular CNNs, the node features $x$ are equivalent to the image while the hidden node representations (also called hidden states) $h$ are equivalent to the feature maps after the first convolutional layer.
+
+During each message passing step, the hidden representation of each node $h_v^t$ is updated to $h_v^{t+1}$ using the following procedure:
+
+\begin{equation}
+m_v^{t+1} = \sum_{w \in N(v)} M_t(h_v^t, h_w^t, e_{vw})
+\end{equation}
+
+\begin{equation}
+h_v^{t+1} = U_t(h_v^t, m_v^{t+1})
+\end{equation}
+
+The above two steps are comprised of three functions:
+
+\begin{enumerate}
+	\item The message function $M$ which computes the 'message' from node $w$ to node $v$ using the hidden representations of both nodes as well as the features of the connecting edge. Note that a specific architecture may not use all the arguments of the message function in the general framework. For instance, the message function may not use the receiving node hidden states $h_v^t$ (note that it is used in the next step anyway) or the edge features.
+	\item An aggregation function that aggregates all the messages from all the neighboring nodes $w \in N(v)$ of node $h$. Any function that is permutation invariant and works for any number of nodes $w$, such as $sum$, $mean$, $min$ or $max$, can be used at this step. However, in practice, the reasonable options are mostly limited to summation and the arithmetic mean.	
+	In other papers, aggregation is described as a separate step and the aggregation function denoted with a specific symbol. Here, as well as in Gilmer et al.~\cite{Gilmer2017} we will simply use the summation and note that it could be replaced by the arithmetic mean if appropriate.
+	The aggregation is not a function with learned parameters and has to be chosen by the architect of the GCNN. Moreover, it can lead to considerably loss of information. However, this step in inevitable because the neighborhood of a given node can be any number of nodes and they do not have an inherent order as discussed in Section~\ref{sec:graph-challenges}.
+	\item The update function $U$ updates the hidden state $h^t$ based on  $m_v^{t+1}$, the aggregated messages from its neighboring nodes.
+\end{enumerate}
+
+The details of how these functions are constructed are best explained using a specific example, such as the one explained in Chapter~\ref{chapter:Methods}. For now, it shall suffice to note that both functions $M$ and $U$ could, for instance be a simple MPL (multilayer perceptron) with only one hidden layer. In most architectures the weights of both functions are shared such that $M_t$ and $U_t$ are the same for all $t$. However, this is not a necessity and one could also build a GCNN with different weights for at each graph convolutional layer (= message passing step).
+
+With a block of $T$ message passing steps, one has successfully constructed mapping to create higher-level features akin to the convolutional layers of a regular CNN. Now, we can examine how these higher-level features can be mapped to the desired output. While the message passing part of the GCNN can be the same for each of the three types of output format discussed in Section~\ref{sec:graph-output}, the head of the GCNN needs to be tailored depending on the desired output format.
+
+\begin{enumerate}
+	\item \textbf{Graph properties}. To predict graph properties, the higher-level node features computed by the convolutional layers have to be mapped to the target variable using a so-called readout function $R$~\cite{Gilmer2017}. Again, due to the variable number of nodes and the lack of any inherent order, this requires an aggregation function which is permutation invariant and works for different numbers of nodes. Similarly to aggregation during message passing, summation and the arithmetic mean are typically the only viable options. After that, a mapping from the aggregated node hidden states has to be defined - usually a shallow MLP.
+	Just as during message passing, the aggregation step in the readout function potentially looses valuable information. However, due to the inherent challenges of graph structured data~\ref{sec:graph-challenges}, it is difficult to find a better solution. As the nodes can be regarded as an unordered set, \textit{Set2Set} [CITATION] and similar methods can be used in the readout function. However, a detailed discussion of these is beyond the scope of this thesis.
+	\item \textbf{Node properties}. In this simple case, the readout is much simpler as it requires only a mapping from the final node hidden state $h_T$ to the output variable which can again be achieved with a simple MLP.
+	\item \textbf{Edge properties}. To predict edge properties, at readout function needs to take the two connected node's hidden states (and optionally also the edge features) as input and map it to the desired output dimension.~\footnote{Some architectures use edge-updates as described in [ADD SECTION]. In this case, a mapping from the final hidden state to the desired output format can suffice as a readout function - equivalent to how node properties are predicted.}
+\end{enumerate}
 
 
 
@@ -80,6 +115,7 @@ The basic building block of a GCNN is graph convolution that maps a node-represe
 
 
 \section{Limitations of Graph neural networks for molecular structures}
+\label{sec:limitations}
 
 \subsection{Lack of 3D structure representation}
 
