@@ -80,63 +80,66 @@ The above two steps are comprised of three functions:
 	\item The update function $U$ updates the hidden state $h^t$ based on  $m_v^{t+1}$, the aggregated messages from its neighboring nodes.
 \end{enumerate}
 
-The details of how these functions are constructed are best explained using a specific example, such as the one explained in Chapter~\ref{chapter:Methods}. For now, it shall suffice to note that both functions $M$ and $U$ could, for instance be a simple MPL (multilayer perceptron) with only one hidden layer. In most architectures the weights of both functions are shared such that $M_t$ and $U_t$ are the same for all $t$. However, this is not a necessity and one could also build a GCNN with different weights for at each graph convolutional layer (= message passing step).
+The details of how these functions are constructed are best explained using a specific example, such as the one explained in Chapter~\ref{chapter:Methods}. For now, it shall suffice to note that both functions $M$ and $U$ could, for instance be a simple MLP (multilayer perceptron) with only one hidden layer. In most architectures the weights of both functions are shared such that $M_t$ and $U_t$ are the same for all $t$. However, this is not a necessity and one could also build a GCNN with different weights for at each graph convolutional layer (= message passing step).
+
+Note in the message passing fist step, only first degree neighbor nodes have an impact on the updated node hidden states. In the second step, second degree neighbors have an indirect impact as they already influenced the hidden state of the first degree neighbors in the previous step. Thus at each step $t$, $h_v^t$ is influence by nodes with a path length of at most $t$ apart from node $v$. Depending on the number of steps $T$, eventually the whole graph might have an indirect influence on the hidden state $h_v^T$. However, the first degree neighbors will always have the most direct influence, followed by the second degree neighbors, etc.
 
 With a block of $T$ message passing steps, one has successfully constructed mapping to create higher-level features akin to the convolutional layers of a regular CNN. Now, we can examine how these higher-level features can be mapped to the desired output. While the message passing part of the GCNN can be the same for each of the three types of output format discussed in Section~\ref{sec:graph-output}, the head of the GCNN needs to be tailored depending on the desired output format.
 
 \begin{enumerate}
 	\item \textbf{Graph properties}. To predict graph properties, the higher-level node features computed by the convolutional layers have to be mapped to the target variable using a so-called readout function $R$~\cite{Gilmer2017}. Again, due to the variable number of nodes and the lack of any inherent order, this requires an aggregation function which is permutation invariant and works for different numbers of nodes. Similarly to aggregation during message passing, summation and the arithmetic mean are typically the only viable options. After that, a mapping from the aggregated node hidden states has to be defined - usually a shallow MLP.
 	Just as during message passing, the aggregation step in the readout function potentially looses valuable information. However, due to the inherent challenges of graph structured data~\ref{sec:graph-challenges}, it is difficult to find a better solution. As the nodes can be regarded as an unordered set, \textit{Set2Set} [CITATION] and similar methods can be used in the readout function. However, a detailed discussion of these is beyond the scope of this thesis.
-	\item \textbf{Node properties}. In this simple case, the readout is much simpler as it requires only a mapping from the final node hidden state $h_T$ to the output variable which can again be achieved with a simple MLP.
+	\item \textbf{Node properties}. In this simple case, the readout requires only a mapping from the final node hidden state $h_T$ to the output variable which can again be achieved with a shallow MLP.
 	\item \textbf{Edge properties}. To predict edge properties, at readout function needs to take the two connected node's hidden states (and optionally also the edge features) as input and map it to the desired output dimension.~\footnote{Some architectures use edge-updates as described in [ADD SECTION]. In this case, a mapping from the final hidden state to the desired output format can suffice as a readout function - equivalent to how node properties are predicted.}
 \end{enumerate}
 
 
+In summary, a GCNN is composed of two parts: graph convolutional layers and a readout function. The framework introduced here allows to describe highly different architectures using the same terminology. In Chapter~\ref{chapter:Methods}, a the basic architecture of a the GCNN used in this thesis is described in detail. While several different architectures were designed and evaluated in this work [REFERENCE], they are all based on this architecture and thus share key similarities.
 
 
 
-%{\itshape
-%\noindent Explain the reasoning behind graph neural networks:
-%
-%\begin{itemize}
-%	\item no order => permutation invariance required
-%	\item no fixed dimension: a node can have 0 to n neighbors => need aggregation function
-%\end{itemize}
-%
-%\noindent Nomenclature:\\
-%1) graph conv: complicated but compares well with computer vision\\
-%2) message passing: simple, but not analogous to cv
-%}
+\section{Predicting molecular properties from 3D structure with graph convolutional neural networks}
+
+\subsection{Importance of extracting information form 3D molecular structures}
+
+3D structures of small chemical compound as well as large biomolecules are readily available on a large scale [CITATIONS]. However, just knowing the 3D structure of a molecule does not go a long way towards understand it's biological function (in the case of biomolecules) or it's molecular properties and potential applications (in the case of of small organic molecules). For instance, in drug discover, a huge amount of effort goes into laborious and costly experiments on a large scale to find the right small organic molecule for the right therapeutic target. Speeding up and improving this process is highly desirable for obvious reasons.
+
+One way to address this issue is to create purely computational experiments. These experiments are often referred to as in-silico analogous to in-vitro (in a test-tube) in in-vivo (in a living organism). Such in in-silico experiments can be created with molecular structures using molecular dynamics simulations (MDS). In short, MDS creates artificial force-fields to simulate real physical forces to simulated the behavior of molecules under certain conditions. Large biomolecules are usually modeled down to the level of atoms while small molecules are modeled down to the level of subatomic particles (electrons, protons, etc.). While MDS is extremely valuable not only as a proxy for in-vitro experiment but also for understanding the underlying dynamics that produce the experiments outcome. However, it is also extremely challenging mimic realistic experimental conditions, requires an enormous amount of expertise in life science / chemistry and computational skills and extensive experience with MDS itself. Furthermore, MDS is also computationally very expensive and thus cannot be used a cheap proxy for in-vitro experiments at a large scale.
+
+For these reasons, the use of DNNs to predict molecular properties from 3D structures has received increasing attention in recent years. DNNs have the potential to extract valuable information from 3D structures using vast amounts of data with ground-truth without having to explicitly model the underlying physical forces and the interplay of subatomic particles.
+
+\subsection{Modeling molecules as graphs}
+
+When it comes to 3D structures there are really only two basic ways of modeling them from DNNs. The first is to describe them as 3D grids and using 3D convolutional networks simply extending the same architectures used in computer vision by an additional dimension~\cite{Wallach2015}. The problem with this approach is two-fold: First of all, the cubic number of data-points make this method computationally very expensive thus defeating the purpose of finding a less costly alternative for MDS. The second problem is that the information encoded in all these data-points is redundant. In molecular structures, coordinates and types of atoms are fully sufficient to describe the molecule. All other information - such as atomic radius, etc. - are functions of the types of atoms (Hydrogen, Carbon, etc.) or the types of atoms in the neighborhood. Thus when for instance a ten-atom molecule is fully described by ten coordinate vectors and ten (40 numbers), it is excessive an inefficient to model it as a 3D image with tens or hundreds of thousands of pixels. The advantage of the 3D convolutional approach is that 3D structure information is necessarily provided to the model which is a challenge for GCNNs as explained in Section~\ref{sec:limitations}.
+
+The idea of using graphs to model molecules comes quite naturally when looking common representations of molecules such as those shown in figure [REFERENCE: basic molecule graph]. A molecule usually defined as a number of atoms connected by covalent bonds. These kind of bonds involve the sharing of one or more electron-pairs between the bonded atoms and chemically very stable - i.e. it takes takes considerable energy or the involvement of enzymes to break them up. In laymen's terms, covalent bonds can be regarded as 'stable under normal conditions'. In the commonly used molecule graph representation, atoms are shown as letters denoting their type and the covalent bonds are drawn as edges between them as shown in Figure [REFERENCE]. Thus defining a graph where atoms are the nodes and covalent bonds are the edges seems like the most natural way of modeling molecules. However, upon closer examination, the situation is somewhat more complicated.
+
+Atoms interact not only if they are covalently bonded. There is a wide array of non-covalent interactions that have a large influence on molecular properties or function - a simple example being positive and negative (partial) charges. The strength of non-covalent interactions is a function, atom types, distance and the local environment in the 3D structure. Thus, only including covalent bonds leads to considerable loss of information. As an example, consider two atoms can be close in space and interact covalently even though the path length in the covalent graph may be quite large.
+With these considerations, another way of representing a molecule as graph would be to simply define an edge between every pair of atoms if the distance is below a certain threshold. Furthermore, the distance could be added as an edge-feature along with a binary feature indicating whether the atoms are covalently bonded or not. This representation has the advantage of considering non-covalent interactions but also introduces many more edges which increases the computational workload. Another way of constructing a graph from a molecular structure is to draw an edge between any given atom and it's k nearest neighbors.
+
+These examples highlight an importance difference between the theory of GCNNs and their application. In the theory, the starting point is graph structured data and all the effort goes into construction the best possible architecture to extraction information from this data. For practical application, the data has to be modeled as graphs in a way that captures the information available in the data in the best possible manner. The choices made in this process may have more influence on the quality of the predictions than the choice of GCNN architecture. After all, if incomplete information is fed into the model, even the best model will yield disappointing results. In the next section, we will examine some challenges that arise modeling molecules as graphs for GCNNs.
 
 
-\section{Predicting molecular properties from 3D structure}
 
-\textit{Briefly explain the applications of computational chemistry and computational structural biology} 
-
-
-\section{Limitations of Graph neural networks for molecular structures}
+\subsection{Limitations of Graph convolutional neural networks for molecular structures}
 \label{sec:limitations}
 
-\subsection{Lack of 3D structure representation}
+\subsubsection{Lack of 3D structure representation}
 
-{\itshape
-	
-sub-subsection: different structural arrangements can lead to same graph => same results
+In principle, 3D coordinates could simply be added to the node features to obtain a 3D graph. However, this is not meaningful for representing 3D molecular structures. First of all, there is no logical reference point for the origin of the coordinate system. The molecule can be translated arbitrarily along one, two or all three spacial axes without changing anything of relevance. The second problem is, that molecules have no natural orientations i.e. they can be arbitrarily rotated where every rotation is just as valid as any other one (In contrast to everyday objects, such as cupboards or cars, where certain rotations are unlikely to be encountered in everyday life.)
 
-what does not work:\\
-* adding coordinates: not invariant to translations and rotations\\
-* adding relative positions as edge-features: invariant to translations but not to rotations
-=> opposite case to above: now to equivalent structures can be represented with different edge-features
+For these reasons, the concrete values of the 3D coordinates which depend on this arbitrary positioning and rotation of the coordinate do not posses relevant information. The translation issue could be addressed by instead using directional vectors from one atom to another as edge-features. These vectors are invariant to the arbitrary translation of the molecule in the coordinate system. However, they depend on the arbitrary rotation of the molecule rendering them also not useful to encode the 3D structure.
 
-sub-subsection: no down-sampling
+In most GCNN architectures, the euclidean distance is provided as an edge feature. This encodes part of the 3D structure in the graph but still looses vital information. It is straightforward to see that for most graphs with distance as edge feature, there are many 3D structures satisfying these constraints. In other words the mapping from 3D structure to graph with distances is unambiguous but the inverse operation is not. It does not take much chemical expertise to conjecture that not providing the full 3D structural information to the model limits it's capability to make accurate predictions considerably. However, there is no easy way to avoid this dilemma and to my knowledge, no satisfying solution has been found so far.
 
-this goes hand in hand with: no graph-level or graph-part-level features; only node-features - even when higher level
+\subsubsection{No down-sampling during feature extraction}
 
-compare with computer vision
+In computer vision with regular CNNs, feature maps are down-sampled to a lower dimension (while expanding the number of channels) every few layers. It makes perfect sense, that higher-level features correspond to larger parts of the original image. Intuitively, one can think a data-point on a feature map close to the end of the convolutional part as containing features that summarize a larger region of the original image. The connection between higher-level features and lower dimension feature maps is so central to regular CNNs that it is hard to imagine it any other way. However, analogous process exists in GCNN.
 
-see: results
-	}
-	
-	
+In GCNN, the higher-level features (i.e. the node hidden states) are always associated to their respective nodes throughout all graph convolutional layers. While each of the node hidden states contains information from the node's environment, there is no representation that summarizes a whole group of nodes. However, after the graph convolutional layers, all the node representations are immediately aggregated to give a graph representation.
+
+In the example of molecules such down-sampled representations could represent groups of atoms instead of just individual atoms. In organic chemistry, there are is a limited number of chemical groups that appear frequently in organic molecules and strongly determine their properties and function called functional groups [CITATION]. Many of those functional groups are composed of only three to four atom and appear very frequently in organic molecules (Carbonyl, Hydroxyl, Amide, Amines, etc.). A model with the ability do down-sample would likely learn representations of these important functional groups. Another benefit of such a mechanism would be to feed angle-information into the model. Note that angles are neither node- nor edge-features. Instead, an angle is a property of a group of three nodes (or you can also see it as a property of a pair of edges). Having a representation for a group of - for example three - nodes would allow to add the angle as a feature thus providing more structural information than only distances.
+
+For these reasons it is my strong believe that future successful GCNN architectures will likely have some sort of down-sampling mechanism that allows learning representations for groups of nodes.
 
 
