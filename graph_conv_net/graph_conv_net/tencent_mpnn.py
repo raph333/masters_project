@@ -18,6 +18,7 @@ class MPNN(torch.nn.Module):
                  num_step_message_passing=6,
                  num_step_set2set=6):
         super(MPNN, self).__init__()
+
         self.num_step_message_passing = num_step_message_passing
         self.lin0 = nn.Linear(node_input_dim, node_hidden_dim)
         edge_network = nn.Sequential(
@@ -46,6 +47,4 @@ class MPNN(torch.nn.Module):
 
         out = self.set2set(out, data.batch)
         out = F.relu(self.lin1(out))
-        out = self.lin2(out)
-        return out
-
+        return self.lin2(out)

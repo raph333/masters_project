@@ -96,7 +96,7 @@ def train(net: nn.Module,
 
         # lr = optimizer.param_groups[0]['lr']
         print(f'{epoch}:\t{train_mae:.4f}\t\t{valid_mae:.4f}')
-        log_df = log_df.append({'epoch': epoch, 'train_mae': valid_mae, 'valid_mae': train_mae}, ignore_index=True)
+        log_df = log_df.append({'epoch': epoch, 'train_mae': train_mae, 'valid_mae': valid_mae}, ignore_index=True)
 
     return log_df
 

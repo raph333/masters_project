@@ -1,8 +1,9 @@
 """
 Reads parameters and artifacts from ml-flow experiment
 """
-import os
 from os.path import join
+import argparse
+
 import pandas as pd
 import mlflow
 
@@ -21,11 +22,19 @@ def average_learning_curve(run_df: pd.DataFrame) -> pd.DataFrame:
 
 if __name__ == '__main__':
 
-    experiment_name = 'test-run'
+    parser = argparse.ArgumentParser(description='Aggregate learning curves from mlflow experiment.')
+    parser.add_argument('experiment_name', help='mlflow experiment-name')
+    args = parser.parse_args()
 
     tracker = mlflow.tracking.MlflowClient()
-    exp = tracker.get_experiment_by_name(experiment_name)
+    exp = tracker.get_experiment_by_name(args.experiment_name)
     runs = mlflow.search_runs(exp.experiment_id)
 
     result_df = average_learning_curve(runs)
-    result_df.to_csv(f'results/{experiment_name}.csv', index=False)
+
+    # temporary: switching training and validation error because they have been wrongly assigned:
+    # result_df = result_df.rename({'train_mae': 'valid_mae',
+    #                               'valid_mae': 'train_mae'},
+    #                              axis=1)
+
+    # result_df.to_csv(f'results/{args.experiment_name}.csv', index=False)
