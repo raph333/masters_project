@@ -1,9 +1,9 @@
 from os.path import join
 from pprint import pprint
+import time
+from typing import Union, Callable
 
-import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import mlflow
 
 import torch
@@ -15,56 +15,20 @@ from graph_conv_net import tencent_mpnn
 DATA_DIR = '/home/rpeer/masters_project/data'
 
 
-def count_parameters(net: nn.Module):
-    return sum([np.prod(x.shape) for x in net.parameters()])
-
-
-def print_lr_schedule(lr: float, decay: float, num_epochs=20, steps=5):
-    print('\nlearning-rate schedule:')
-    for i in range(num_epochs):
-        if i % steps == 0:
-            print(f'{i}\t{lr:.6f}')
-        lr = lr * decay
-
-
-def plot_error_curves(training_error: list,
-                      validation_error: list,
-                      error_name='error',
-                      plot_name='learning_curve',
-                      y_limit=None,
-                      save_fig=True):
-    assert len(training_error) == len(validation_error) > 1
-
-    fig, ax = plt.subplots()
-    ax.plot(range(len(training_error)), training_error)
-    ax.plot(range(len(validation_error)), validation_error)
-
-    if y_limit:
-        ax.set_ylim(*y_limit)
-
-    ax.set_xlabel('epoch')
-    ax.set_ylabel(error_name)
-    ax.legend(('training', 'validation'))
-    ax.set_title(f'{error_name} over time')
-
-    if save_fig:
-        fig.savefig(f'{plot_name}.png', bbox_inches='tight', transparent=True)
-
-    plt.show()
-
-
 def train(net: nn.Module,
           train_loader: DataLoader,
           validation_loader: DataLoader,
           device: torch.device,
-          loss_function,
-          optimizer,
-          num_epochs: int) -> pd.DataFrame():
+          loss_function: Callable,
+          optimizer: torch.optim.Optimizer,
+          num_epochs: int,
+          lr_scheduler: Union[torch.optim.lr_scheduler._LRScheduler, None] = None) -> pd.DataFrame():
 
-    print('epoch\ttrain-MAE\tvalid-MAE\tmin\t\tlr')
+    print('epoch\ttrain-MAE\tvalid-MAE\t\tmin\t\tlr')
     print('-' * 60)
-    log_df = pd.DataFrame(columns=['epoch', 'train_mae', 'valid_mae'])
+    log_df = pd.DataFrame(columns=['epoch', 'train_mae', 'valid_mae', 'minutes', 'lr'])
     net.to(device)
+    start = time.time()
 
     for epoch in range(num_epochs):
 
@@ -94,9 +58,18 @@ def train(net: nn.Module,
                 loss = loss_function(y_hat, data.y)
                 valid_mae += loss.item() / len(validation_loader)
 
-        # lr = optimizer.param_groups[0]['lr']
-        print(f'{epoch}:\t{train_mae:.4f}\t\t{valid_mae:.4f}')
-        log_df = log_df.append({'epoch': epoch, 'train_mae': train_mae, 'valid_mae': valid_mae}, ignore_index=True)
+        minutes = (time.time() - start) / 60
+        lr = optimizer.param_groups[0]['lr']
+        print(f'{epoch}:\t\t{train_mae:.4f}\t\t{valid_mae:.4f}\t\t\t{minutes:.1f}\t\t{lr:.6f}')
+        row = {'epoch': epoch,
+               'train_mae': train_mae,
+               'valid_mae': valid_mae,
+               'minutes:': minutes,
+               'lr': lr}
+        log_df = log_df.append(row, ignore_index=True)
+
+        if lr_scheduler is not None:
+            lr_scheduler.step()
 
     return log_df
 
@@ -137,17 +110,22 @@ def run_experiment(config: dict):
                 mlflow.log_param('target_param_name', target_param)
                 mlflow.log_param('target_param_value', param)
 
-                opt = torch.optim.Adam(model.parameters(), lr=config['lr'])
-                learning_curve_df = train(net=model,
-                                          train_loader=DataLoader(ds_dev, batch_size=config['batch_size'], shuffle=True),
-                                          validation_loader=DataLoader(ds_valid, batch_size=config['batch_size']),
-                                          device=torch.device(f'cuda:{config["cuda"]}'),
-                                          loss_function=nn.L1Loss(),
-                                          optimizer=opt,
-                                          num_epochs=config['num_epochs'])
+                lr_schedule = config['lr_scheduler']
+                if lr_schedule is not None:
+                    opt = config['optimizer'](model.parameters(), lr=config['lr'])
+                    scheduler = lr_schedule['class'](opt, **lr_schedule['kwargs'])
+
+                learning_curve = train(net=model,
+                                       train_loader=DataLoader(ds_dev, batch_size=config['batch_size'], shuffle=True),
+                                       validation_loader=DataLoader(ds_valid, batch_size=config['batch_size']),
+                                       device=torch.device(f'cuda:{config["cuda"]}'),
+                                       loss_function=nn.L1Loss(),
+                                       optimizer=opt,
+                                       num_epochs=config['num_epochs'],
+                                       lr_scheduler=scheduler)
 
                 lc_file = 'learning_curve.csv'
-                learning_curve_df.to_csv(lc_file, index=False)
+                learning_curve.to_csv(lc_file, index=False)
                 mlflow.log_artifact(lc_file)
 
     print('\nEXPERIMENT DONE.')

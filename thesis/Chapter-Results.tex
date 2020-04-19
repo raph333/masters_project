@@ -1,11 +1,6 @@
 \chapter{Results}
 \label{chapter:Results}
 
-% Further experiment ideas:
-% * implicit hydrogens (will be super fast)
-% * graph state vs. full connected graph
-% * set2set vs simple note summation
-
 
 \section{Using graph convolution in the way it's meant to be used gives poor results on molecular structures}
 
@@ -23,7 +18,7 @@ Therefore, the first experiment, we compare the learning curves of graphs when d
 \begin{figure}[H]
 	\includegraphics[width=\linewidth]{figures/tencent-mpnn-neighborhood-expansion}
 	
-	\caption{The learning curves with different neighborhood radii are show over the courses of 100 epochs. The color corresponds to the neighborhood radius, dotted lines the training errors and solid lines show validation errors. Note that for each radius, there is a training- and a validation-error curve. Each curve is an average of three learning curves with the same neighborhood radius.}
+	\caption{The learning curves with different neighborhood radii are show over the courses of 100 epochs. The color corresponds to the neighborhood radius, dotted lines the training errors and solid lines show validation errors. Note that for each radius, there is a training- and a validation-error curve. Each curve is an average of three learning curves with the same neighborhood radius. All curves were generated using a simple optimization scheme described in Section~\ref{sec:training}. Both, validation- and training-error could be lowered considerably by employing a more sophisticated optimization scheme. However, this would be at the expense of comparability between curves.[REFERENCE]}
 	\label{fig:tencent-mpnn-neighborhood-expansion}
 \end{figure}
 

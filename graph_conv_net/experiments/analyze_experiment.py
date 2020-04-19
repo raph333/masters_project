@@ -30,11 +30,11 @@ if __name__ == '__main__':
     exp = tracker.get_experiment_by_name(args.experiment_name)
     runs = mlflow.search_runs(exp.experiment_id)
 
-    result_df = average_learning_curve(runs)
+    learning_curves_df = average_learning_curve(runs)
 
     # temporary: switching training and validation error because they have been wrongly assigned:
-    # result_df = result_df.rename({'train_mae': 'valid_mae',
+    # learning_curves = learning_curves.rename({'train_mae': 'valid_mae',
     #                               'valid_mae': 'train_mae'},
     #                              axis=1)
 
-    # result_df.to_csv(f'results/{args.experiment_name}.csv', index=False)
+    # learning_curves.to_csv(f'results/{lc-}{args.experiment_name}.csv', index=False)

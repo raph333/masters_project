@@ -4,14 +4,13 @@ import glob
 import shutil
 import urllib.request
 import zipfile
-import typing
-from typing import Tuple, Union
+from typing import Union, Tuple, Callable
 
 import numpy as np
 import pandas as pd
 
 import torch
-from torch import tensor, FloatTensor, LongTensor
+from torch import tensor
 
 from torch_geometric.data import Data, InMemoryDataset
 from torch_geometric.data.makedirs import makedirs
@@ -27,12 +26,12 @@ SET_NAMES = ('dev', 'valid', 'test')
 class BaseAlchemyDataset(InMemoryDataset):
 
     def __init__(self,
-                 root,
-                 mode='dev',
-                 transform=None,
-                 pre_transform=None,
-                 pre_filter=None,
-                 re_process=False):
+                 root: str,
+                 mode: str = 'dev',
+                 transform: Union[Callable, None] = None,
+                 pre_transform: Union[Callable, None] = None,
+                 pre_filter: Union[Callable, None] = None,
+                 re_process: bool = False):
 
         assert mode in SET_NAMES, f'Alchemy dataset has only these sets: {SET_NAMES}'  # generalize?
         self.mode = mode
@@ -119,7 +118,7 @@ class BaseAlchemyDataset(InMemoryDataset):
 
     def read_sdf(self,
                  sdf_path: str,
-                 target_df: pd.DataFrame = None) -> Union[Data, None]:
+                 target_df: Union[pd.DataFrame, None] = None) -> Union[Data, None]:
 
         with open(sdf_path, 'r') as f:
             molecule = Chem.MolFromMolBlock(f.read(), removeHs=True)
@@ -162,10 +161,10 @@ class BaseAlchemyDataset(InMemoryDataset):
             if graph is not None:
                 graphs.append(graph)
 
-        if self.pre_filter:
+        if self.pre_filter is not None:
             graphs = [data for data in graphs if self.pre_filter(data)]
 
-        if self.pre_transform:
+        if self.pre_transform is not None:
             graphs = [self.pre_transform(data) for data in graphs]
 
         combined_data, slices = self.collate(graphs)
