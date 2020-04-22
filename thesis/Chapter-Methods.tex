@@ -23,10 +23,20 @@ The other approach is to calculate all sorts of chemical features using open sou
 \subsection{Training}
 \label{sec:training}
 
+Two different optimization schemes were used for different purposes.
+To obtain the best possible validation error, a learning rate schedule that reduces the learning rate after the validation error plateaus has found to be most effective~\footnote{Specifically, the following parameters were chosen: The learning rate is reduced by a factor of 0.75 if the validation error did not decrease by a value of $10^{-4}$ or more within the last 5 epochs.} This optimization scheme above suffers from the drawback of requiring many training epochs~\footnote{300 epochs were used here}. Furthermore, the resulting learning-rate schedule varies considerably even between trainings with the same parameters. These differences as well as the long training time make it unsuitable for comparing learning curves with different parameters.
+For comparing different learning curves in the most of the experiments in this thesis, a simpler, exponential learning-rate decay was chosen~\footnote{REFERENCE}. The advantage of this method is that at each epoch, all learning curves have the same learning rate making them comparable. The final validation error is usually higher than would be achieved with reduce-on-plateau learning rate scheduling. However, this drawback is accepted because the main point of the experiments is to compare different model architectures, parameters or data-transformation rather than to achieve the lowest possible validation error.
+
+% Adam
+
 % optimzer, lr, etc.
 
 \subsection{Benchmark and evaluation}
 
 
 \subsection{Experiments}
+
+Most experiments show learning curves with validation- and training-error rather than just the final errors. The choice was made because, in addition to showing the final error-rates, learning curves allow to estimate whether the model suffers from high bias or high variance and also shows if prolonged training could lead to further improvements or if a plateau has been reached. In contrast, a single error-metric does not show how this metric was obtained and thus offers little information to interpret the results.
+
+% learning curve averaging
 

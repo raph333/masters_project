@@ -69,7 +69,7 @@ def train(net: nn.Module,
         log_df = log_df.append(row, ignore_index=True)
 
         if lr_scheduler is not None:
-            lr_scheduler.step()
+            lr_scheduler.step(valid_mae)  # argument ignored if not required
 
     return log_df
 
@@ -129,6 +129,8 @@ def run_experiment(config: dict):
                 mlflow.log_artifact(lc_file)
 
     print('\nEXPERIMENT DONE.')
+
+    # todo: test-set evaluation
 
 
 # def run_multiple_experiments(config_file: str):

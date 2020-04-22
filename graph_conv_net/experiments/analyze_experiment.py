@@ -37,4 +37,4 @@ if __name__ == '__main__':
     #                               'valid_mae': 'train_mae'},
     #                              axis=1)
 
-    # learning_curves.to_csv(f'results/{lc-}{args.experiment_name}.csv', index=False)
+    learning_curves_df.to_csv(f'results/lc-{args.experiment_name}.csv', index=False)

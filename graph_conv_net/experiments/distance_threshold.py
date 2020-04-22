@@ -15,7 +15,7 @@ def get_transform(threshold: float):
 
 
 CONFIG = {
-    'name': 'tencent-mpnn-neighborhood-expansion-lr-decay',  # todo: set this for each experiment!  (default: use 'test-run')
+    'name': 'tencent-mpnn-neighborhood-expansion-lr-decay',  # todo: set this for each experiment!  (default 'test-run')
     'target_param': {
         'name': 'distance_threshold',
         'values': [None, 1.5, 2, 3, 4, 5, np.inf]
