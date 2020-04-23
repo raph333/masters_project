@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from torch_geometric.transforms import Compose, Distance
 
-from graph_conv_net.alchemy_dataset import TencentAlchemyDataset
+from graph_conv_net.alchemy_dataset import AlchemyCompetitionDataset
 from graph_conv_net.transformations import AddEdges
 from graph_conv_net.train import run_experiment
 
@@ -25,7 +25,7 @@ CONFIG = {
         'class': torch.optim.lr_scheduler.ExponentialLR,
         'kwargs': {'gamma': 0.98}
     },
-    'dataset_class': TencentAlchemyDataset,
+    'dataset_class': AlchemyCompetitionDataset,
     'get_transform': get_transform,
     'repeat': 3,
     'lr':  0.002,

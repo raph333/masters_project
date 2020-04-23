@@ -13,7 +13,7 @@ from torch_geometric.data import DataLoader
 from graph_conv_net import tencent_mpnn, tools
 
 
-DATA_DIR = '/home/rpeer/masters_project/data'
+DATA_DIR = '/home/rpeer/masters_project/data'  #_full'  # todo check
 
 
 def train(net: nn.Module,
@@ -86,7 +86,7 @@ def run_experiment(config: dict):
 
     for i, param in enumerate(config['target_param']['values']):
         print(f'\nUSING {target_param} = {param}:')
-        process = False  # i == 0  # only re-process the first time
+        process = i == 0  # only re-process the first time
 
         ds_valid = dataset_class(root=join(DATA_DIR, 'valid'),
                                  mode='valid',
@@ -125,6 +125,10 @@ def run_experiment(config: dict):
                                        num_epochs=config['num_epochs'],
                                        lr_scheduler=scheduler)
 
+                # todo: test-set evaluation and log result as metric
+                test_mae = 0
+                mlflow.log_metric('MAE', test_mae)
+
                 lc_file = 'learning_curve.csv'
                 learning_curve.to_csv(lc_file, index=False)
                 mlflow.log_artifact(lc_file)
@@ -134,5 +138,3 @@ def run_experiment(config: dict):
                 mlflow.log_artifact(parameters_file)
 
     print('\nEXPERIMENT DONE.')
-    # todo: test-set evaluation
-
