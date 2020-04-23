@@ -33,7 +33,7 @@ class BaseAlchemyDataset(InMemoryDataset):
                  pre_filter: Union[Callable, None] = None,
                  re_process: bool = False):
 
-        assert mode in SET_NAMES, f'Alchemy dataset has only these sets: {SET_NAMES}'  # generalize?
+        assert mode in SET_NAMES, f'Alchemy dataset has only these sets: {SET_NAMES}'
         self.mode = mode
         self.re_process = re_process
 

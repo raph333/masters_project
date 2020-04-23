@@ -10,7 +10,8 @@ import torch
 from torch import nn
 from torch_geometric.data import DataLoader
 
-from graph_conv_net import tencent_mpnn
+from graph_conv_net import tencent_mpnn, tools
+
 
 DATA_DIR = '/home/rpeer/masters_project/data'
 
@@ -60,7 +61,7 @@ def train(net: nn.Module,
 
         minutes = (time.time() - start) / 60
         lr = optimizer.param_groups[0]['lr']
-        print(f'{epoch}:\t\t{train_mae:.4f}\t\t{valid_mae:.4f}\t\t\t{minutes:.1f}\t\t{lr:.6f}')
+        print(f'{epoch}:\t\t{train_mae:.4f}\t\t{valid_mae:.4f}\t\t\t{minutes:.1f}\t\t{lr:.8f}')
         row = {'epoch': epoch,
                'train_mae': train_mae,
                'valid_mae': valid_mae,
@@ -81,27 +82,26 @@ def run_experiment(config: dict):
     mlflow.set_experiment(config['name'])
     target_param = config['target_param']['name']
     transform_creator = config['get_transform']
-    DatasetClass = config['dataset_class']
+    dataset_class = config['dataset_class']
 
     for i, param in enumerate(config['target_param']['values']):
         print(f'\nUSING {target_param} = {param}:')
-        process = i == 0  # only re-process the first time
+        process = False  # i == 0  # only re-process the first time
 
-        ds_valid = DatasetClass(root=join(DATA_DIR, 'valid'),
-                                mode='valid',
-                                transform=transform_creator(param),
-                                re_process=process)
-        ds_dev = DatasetClass(root=join(DATA_DIR, 'dev'),
-                              mode='dev',
-                              transform=transform_creator(param),
-                              re_process=process)
+        ds_valid = dataset_class(root=join(DATA_DIR, 'valid'),
+                                 mode='valid',
+                                 transform=transform_creator(param),
+                                 re_process=process)
+        ds_dev = dataset_class(root=join(DATA_DIR, 'dev'),
+                               mode='dev',
+                               transform=transform_creator(param),
+                               re_process=process)
 
         for rep in range(config['repeat']):
 
             print(f'\nrep number {rep}:')
-            model = tencent_mpnn.MPNN(node_input_dim=ds_dev[0].num_features,
-                                      edge_input_dim=ds_dev[0].edge_attr.shape[1],
-                                      output_dim=12)
+            model = tencent_mpnn.MPNN(node_input_dim=ds_dev[0].num_features,  # todo for other architectures: configure
+                                      edge_input_dim=ds_dev[0].edge_attr.shape[1])
 
             with mlflow.start_run():
 
@@ -109,6 +109,7 @@ def run_experiment(config: dict):
                 mlflow.log_param('rep', rep)
                 mlflow.log_param('target_param_name', target_param)
                 mlflow.log_param('target_param_value', param)
+                mlflow.log_param('num_params', tools.count_parameters(model))
 
                 lr_schedule = config['lr_scheduler']
                 if lr_schedule is not None:
@@ -128,25 +129,10 @@ def run_experiment(config: dict):
                 learning_curve.to_csv(lc_file, index=False)
                 mlflow.log_artifact(lc_file)
 
-    print('\nEXPERIMENT DONE.')
+                parameters_file = 'state_dict.pt'
+                torch.save(model.state_dict(), parameters_file)
+                mlflow.log_artifact(parameters_file)
 
+    print('\nEXPERIMENT DONE.')
     # todo: test-set evaluation
 
-
-# def run_multiple_experiments(config_file: str):
-#
-#     with open(config_file) as infile:
-#         config = json.load(infile)
-#
-#     for exp_name, exp_config in config.items():
-#         print(f'\nRUNNING EXPERIMENT: {exp_name}:')
-#         pprint(config, width=1)
-#         # run_experiment(exp_name, exp_config)
-#
-#
-# if __name__ == '__main__':
-#
-#     TRANS = Compose([FullyConnectedGraph(), Distance(norm=True)])
-#     RE_PROCESS = False
-#
-#     run_multiple_experiments(config_file='config.py')

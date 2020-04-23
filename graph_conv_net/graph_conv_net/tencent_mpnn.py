@@ -12,7 +12,7 @@ class MPNN(torch.nn.Module):
     def __init__(self,
                  node_input_dim=15,
                  edge_input_dim=5,
-                 output_dim=1,
+                 output_dim=12,
                  node_hidden_dim=64,
                  edge_hidden_dim=128,
                  num_step_message_passing=6,
