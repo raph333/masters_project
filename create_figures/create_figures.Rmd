@@ -37,7 +37,7 @@ process_learning_curve <- function(df) {
 ## optizing the tencent MPNN
 
 ```{r}
-experiment_name <- 'best-optimization'  #-patience-10
+experiment_name <- 'best-optimization-patience-10'
 
 df <- read.csv(file.path(results_dir, paste0('lc-', experiment_name, '.csv')), stringsAsFactors=F)
 

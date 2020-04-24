@@ -163,7 +163,6 @@ class AlchemyDataset(InMemoryDataset):
                  pre_transform: Union[Callable, None] = None,
                  pre_filter: Union[Callable, None] = None,
                  re_process: bool = False):
-                 # split: Union[Tuple[float], None] = None):
 
         if not hasattr(self, 'data_processor'):
             print('Please specify an instance of the "BasicDataProcessor"-class as class-attribute.')
@@ -195,14 +194,12 @@ class AlchemyDataset(InMemoryDataset):
     def processed_file_names(self) -> list:
         return [f'processed.pt']
 
-    def download(self, delete_zip: bool = False):
+    def download(self):
         print(f'Downloading data-set from {self.url} ...')
 
         zip_file_name = os.path.basename(self.url)
         zip_path = join(self.raw_dir, zip_file_name)
-
-        if not os.path.exists(zip_path):  # todo: remove if-statement
-            urllib.request.urlretrieve(self.url, zip_path)
+        urllib.request.urlretrieve(self.url, zip_path)
 
         print('Extracting zip file ...')
         with zipfile.ZipFile(zip_path) as zip_ref:
@@ -220,29 +217,20 @@ class AlchemyDataset(InMemoryDataset):
                         dst=join(self.raw_dir, new_name))
 
         os.rmdir(source_dir)
-        if delete_zip:
-            os.remove(zip_path)
+        os.remove(zip_path)
 
     def process(self):
         target_df = pd.read_csv(join(self.raw_dir, self.labels_file_name))
-        target_df = target_df.set_index('gdb_idx')
+        target_df = target_df.set_index('gdb_idx').drop('atom number', axis=1)
+        normalized_targets = (target_df - target_df.mean()) / target_df.std()
 
         graphs = self.data_processor.get_graphs(structures_dir=self.raw_dir,
-                                                target_df=target_df,
+                                                target_df=normalized_targets,
                                                 pre_filter=self.pre_filter,
                                                 pre_transform=self.pre_transform)
 
         combined_data, slices = self.collate(graphs)
         torch.save((combined_data, slices), self.processed_paths[0])
-
-    def split(self,
-              random_seed=None,
-              fractions=(0.8, 0.2)):
-        assert sum(fractions) == 1
-
-        # hypothesis: self.data is the main in-memory store
-        # => initialized the whole dataset, copy it 2 times and subset self.data of each copy
-        # remove original ds from memory
 
 
 class AlchemyCompetitionDataset(InMemoryDataset):
@@ -267,7 +255,6 @@ class AlchemyCompetitionDataset(InMemoryDataset):
         self.mode = mode
         self.re_process = re_process
         self.base_url = 'https://alchemy.tencent.com/data/{}_v20190730.zip'
-        self.data_processor = BasicDataProcessor()
 
         super().__init__(root, transform, pre_transform, pre_filter)
         self.data, self.slices = torch.load(self.processed_paths[0])

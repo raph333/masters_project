@@ -2,14 +2,14 @@ import numpy as np
 import torch
 
 from graph_conv_net.train import run_experiment
-from graph_conv_net.alchemy_dataset import AlchemyCompetitionDataset, TencentDataProcessor
+from graph_conv_net.alchemy_dataset import AlchemyDataset, TencentDataProcessor
 from distance_threshold import CONFIG
 
-AlchemyCompetitionDataset.data_processor = TencentDataProcessor()
+AlchemyDataset.data_processor = TencentDataProcessor()
 
 new_config = {
     'name': 'test-run',  # todo: set this for each experiment!  (default 'test-run')
-    'dataset_class': AlchemyCompetitionDataset,
+    'dataset_class': AlchemyDataset,
     'target_param': {
         'name': 'distance_threshold',
         'values': [np.inf]

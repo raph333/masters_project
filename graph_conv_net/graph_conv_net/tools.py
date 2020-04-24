@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from typing import Tuple, List
+
 from torch import nn
+from torch.utils.data.dataset import Dataset, Subset
 
 
 def count_parameters(net: nn.Module):
@@ -39,3 +42,24 @@ def plot_error_curves(training_error: list,
         fig.savefig(f'{plot_name}.png', bbox_inches='tight', transparent=True)
 
     plt.show()
+
+
+def split_dataset(full_ds: Dataset,
+                  fractions: tuple,
+                  random_seed: int) -> List[Dataset]:
+    assert sum(fractions) == 1
+    lengths = [int(f * len(full_ds)) for f in fractions]
+
+    np.random.seed(random_seed)
+    permuted_indices = np.random.choice(range(len(full_ds)), size=len(full_ds), replace=False)
+
+    start = 0
+    data_sets = []
+    for n in lengths:
+        end = start + n
+        ds = Subset(dataset=full_ds,
+                    indices=permuted_indices[start:end].tolist())
+        data_sets.append(ds)
+        start = end
+
+    return data_sets
