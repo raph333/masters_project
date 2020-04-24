@@ -6,6 +6,7 @@
 * screen -S run_name
 * screen -r 1234  # resume screen with id 1234
 * detach screen from terminal Ctrl + a + d
+* screen -X -S 1234 quit  # kill screen
 
 
 ## mlflow

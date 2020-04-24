@@ -21,7 +21,7 @@ from rdkit.Chem import ChemicalFeatures
 from rdkit import RDConfig
 
 
-class BasicDataProcessor:
+class RawDataProcessor:
 
     atom_types = np.array(['H', 'C', 'N', 'O', 'F', 'S', 'Cl'])
     bond_types = np.array([Chem.rdchem.BondType.SINGLE,
@@ -105,7 +105,7 @@ class BasicDataProcessor:
         return graphs
 
 
-class TencentDataProcessor(BasicDataProcessor):
+class TencentDataProcessor(RawDataProcessor):
     """
     Using the exact same features as in http://arxiv.org/abs/1906.09427
     """
@@ -171,6 +171,7 @@ class AlchemyDataset(InMemoryDataset):
         self.re_process = re_process
         self.url = 'https://alchemy.tencent.com/data/alchemy-v20191129.zip'
         self.labels_file_name = 'ground_truth.csv'
+        self.atom_numbers = (9, 10, 11, 12)
 
         super().__init__(root, transform, pre_transform, pre_filter)
         self.data, self.slices = torch.load(self.processed_paths[0])
@@ -187,7 +188,7 @@ class AlchemyDataset(InMemoryDataset):
 
     @property
     def raw_file_names(self) -> list:
-        structure_dirs = [x for x in os.listdir(self.raw_dir) if x.startswith('atom_')]
+        structure_dirs = [f'atom_{n}' for n in self.atom_numbers]
         return [*structure_dirs, self.labels_file_name]
 
     @property

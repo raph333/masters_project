@@ -8,9 +8,10 @@ from distance_threshold import CONFIG
 AlchemyDataset.data_processor = TencentDataProcessor()
 
 new_config = {
-    'name': 'test-run',  # todo: set this for each experiment!  (default 'test-run')
+    'name': 'full-ds-tencent-features',  # todo: set this for each experiment!  (default 'test-run')
     'dataset_class': AlchemyDataset,
-    'target_param': {
+    'data_processor': TencentDataProcessor,
+    'target_param': {  # usually a parameter for the transformation
         'name': 'distance_threshold',
         'values': [np.inf]
     },
@@ -20,9 +21,9 @@ new_config = {
                    'threshold': 1e-4,
                    'patience': 10}
     },
-    'cuda': 3,
+    'cuda': 0,
     'repeat': 1,
-    'num_epochs': 1
+    'num_epochs': 300
 }
 CONFIG.update(new_config)
 

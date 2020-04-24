@@ -1,3 +1,4 @@
+import os
 from os.path import join
 from pprint import pprint
 import time
@@ -13,7 +14,8 @@ from torch_geometric.data import DataLoader
 from graph_conv_net import tencent_mpnn, tools
 
 
-DATA_DIR = '/home/rpeer/masters_project/data_full'
+# DATA_DIR = '/home/rpeer/masters_project/data_full'  # todo: download ds each time in temporary dir
+DATA_DIR = '/scratch1/rpeer/tmp'
 
 
 def evaluate(net: nn.Module,
@@ -82,7 +84,10 @@ def train(net: nn.Module,
         log_df = log_df.append(row, ignore_index=True)
 
         if lr_scheduler is not None:
-            lr_scheduler.step(valid_error)  # argument ignored if not required  todo check
+            if isinstance(lr_scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+                lr_scheduler.step(valid_error)
+            else:
+                lr_scheduler.step()
 
     return log_df
 
@@ -96,9 +101,11 @@ def run_experiment(config: dict):
     transform_creator = config['get_transform']
     dataset_class = config['dataset_class']
 
-    ds = dataset_class(root=DATA_DIR,
-                       transform=None,  # set according to target parameter in loop
-                       re_process=False)
+    root_dir = join(DATA_DIR, config['name'])
+    if not os.path.exists(root_dir):
+        os.makedirs(root_dir)
+    ds = dataset_class(root=root_dir,
+                       transform=None)  # set according to target parameter in loop
     ds_dev, ds_valid, ds_test = tools.split_dataset(full_ds=ds,
                                                     fractions=config['ds_fractions'],
                                                     random_seed=config['random_seed'])
