@@ -14,6 +14,9 @@ There are two different approaches to go about this task. The pure deep learning
 The other approach is to calculate all sorts of chemical features using open source python libraries and feed them in to the model alongside the raw data. Such features are node (atom) features (whether the atom is an electron donor or acceptor, whether it is an an aromatic ring, it's hybridization type, etc.) as well as bond (edge) features. The fact that these features are calculated from the raw data without any additional information means that the model should also be able to learn to compute them if required. Hence, calculating features and feeding them into the model should in theory be obsolete but could give a slight performance boost if the model would not be able to learn those features. Since the focus of this thesis is deep-learning, no manual feature computation is performed here except if it is required to allow comparison with results from the literature.
 
 % explain target properties
+% mae, normalization
+
+% alchemy ds: train, validation, testset split
 
 
 \subsection{Base network architecture}
