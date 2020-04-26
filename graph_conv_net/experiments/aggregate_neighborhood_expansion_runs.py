@@ -1,9 +1,8 @@
 """
 Reads parameters and artifacts from ml-flow experiment
 """
-from os.path import join
 import argparse
-
+from os.path import join
 import pandas as pd
 import mlflow
 

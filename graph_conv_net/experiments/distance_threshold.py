@@ -28,7 +28,7 @@ new_config = {
     'dataset_class': AlchemyCompetitionDataset,
     'get_transform': get_transform,
     'repeat': 3,
-    'lr':  0.002,
+    'lr':  0.001,
     'model_name': 'tencent_mpnn',
     'num_epochs': 150,
     'cuda': 1
