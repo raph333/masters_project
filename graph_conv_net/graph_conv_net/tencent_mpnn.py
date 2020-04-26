@@ -21,9 +21,12 @@ class MPNN(torch.nn.Module):
 
         self.num_step_message_passing = num_step_message_passing
         self.lin0 = nn.Linear(node_input_dim, node_hidden_dim)
+
         edge_network = nn.Sequential(
-            nn.Linear(edge_input_dim, edge_hidden_dim), nn.ReLU(),
+            nn.Linear(edge_input_dim, edge_hidden_dim),
+            nn.ReLU(),
             nn.Linear(edge_hidden_dim, node_hidden_dim * node_hidden_dim))
+
         self.conv = NNConv(node_hidden_dim,
                            node_hidden_dim,
                            edge_network,

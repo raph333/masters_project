@@ -8,7 +8,6 @@ sys.path.append('tmp')
 from old_data import Complete  # , OldAlchemyDataset
 
 from graph_conv_net.train import run_experiment
-# from graph_conv_net.transformations import AddEdges
 from graph_conv_net.alchemy_dataset import AlchemyDataset
 from graph_conv_net.data_processing import TencentDataProcessor
 from distance_threshold import CONFIG
@@ -26,8 +25,7 @@ def get_transform(threshold: float) -> Callable:
 
 
 new_config = {
-    # full-ds-tencent-features-complete
-    'name': 'test-run',  # todo: set this for each experiment!  (default 'test-run')
+    'name': 'new-data-complete',  # todo: set this for each experiment!  (default 'test-run')
     'dataset_class': AlchemyDataset,
     'data_processor': TencentDataProcessor,
     'get_transform': get_transform,

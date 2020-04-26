@@ -14,8 +14,9 @@ from torch_geometric.data import DataLoader
 from graph_conv_net import tencent_mpnn, tools
 
 
-# DATA_DIR = '/home/rpeer/masters_project/data_full'  # todo: download ds each time in temporary dir
+# DATA_DIR = '/home/rpeer/masters_project/data_full'
 DATA_DIR = '/scratch1/rpeer/tmp'
+# DATA_DIR = '/scratch1/rpeer/alchemy/data'  # temporary for debug run, todo: remove
 
 
 def evaluate(net: nn.Module,
@@ -54,7 +55,7 @@ def train(net: nn.Module,
 
         train_error = 0
 
-        for i, data in enumerate(train_loader):
+        for data in train_loader:
 
             optimizer.zero_grad()
             net.train()
@@ -110,14 +111,8 @@ def run_experiment(config: dict):
                                                     fractions=config['ds_fractions'],
                                                     random_seed=config['random_seed'])
 
-    # ds_valid = dataset_class(root=join(DATA_DIR, 'valid'),
-    #                          mode='valid',
-    #                          transform=None,  # set according to target parameter below
-    #                          re_process=False)
-    # ds_dev = dataset_class(root=join(DATA_DIR, 'dev'),
-    #                        mode='dev',
-    #                        transform=None,
-    #                        re_process=False)
+    # ds_valid = dataset_class(root=DATA_DIR, mode='valid', transform=None)
+    # ds_dev = dataset_class(root=DATA_DIR, mode='dev', transform=None)
 
     for i, param in enumerate(config['target_param']['values']):
         print(f'\nUSING {target_param} = {param}:')
@@ -128,8 +123,8 @@ def run_experiment(config: dict):
         for rep in range(config['repeat']):
 
             print(f'\nrep number {rep}:')
-            model = tencent_mpnn.MPNN(node_input_dim=ds[0].num_features,  # todo for other architectures: configure
-                                      edge_input_dim=ds[0].edge_attr.shape[1])
+            model = tencent_mpnn.MPNN(node_input_dim=ds_dev[0].num_features,  # todo for other architectures: configure
+                                      edge_input_dim=ds_dev[0].edge_attr.shape[1])
 
             with mlflow.start_run():
 
@@ -161,8 +156,8 @@ def run_experiment(config: dict):
                 learning_curve.to_csv(lc_file, index=False)
                 mlflow.log_artifact(lc_file)
 
-                parameters_file = 'state_dict.pt'
-                torch.save(model.state_dict(), parameters_file)
-                mlflow.log_artifact(parameters_file)
+                weights_file = 'state_dict.pt'
+                torch.save(model.state_dict(), weights_file)
+                mlflow.log_artifact(weights_file)
 
     print('\nEXPERIMENT DONE.')

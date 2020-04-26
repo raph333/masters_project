@@ -3,8 +3,6 @@ data
 data_full
 tmp
 literature
-meetup_talk
-ssh_pycharm.txt
 
 *ipynb_checkpoints
 *__pycache__
@@ -26,11 +24,3 @@ doc/tmp/*
 *.toc
 *.synctex.gz
 *.pdf
-
-thesis/Chapter-ChapAbbr.tex
-thesis/Figures/Figure-SampleVectorGraphic.*
-thesis/Fonts
-thesis/Example.bib
-thesis/structure.md
-thesis/install-getnonfreefonts
-graph_conv_net/graph_conv_net/run.py

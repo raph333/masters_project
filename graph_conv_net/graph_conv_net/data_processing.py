@@ -21,10 +21,15 @@ class RawDataProcessor:
                            Chem.rdchem.BondType.DOUBLE,
                            Chem.rdchem.BondType.TRIPLE,
                            Chem.rdchem.BondType.AROMATIC])
-    num_hydrogens = np.arange(4)  # there's a maximum of 3 H-atoms bonded to any heavy atoms in this dataset
 
     def __init__(self, implicit_hydrogens: bool = False):
         self.implicit_h = implicit_hydrogens
+
+        if self.implicit_h:
+            self.atom_types = self.atom_types[1:]
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}(implicit_h={self.implicit_h})'
 
     def _get_atom_features(self, molecule: Chem.rdchem.Mol) -> tensor:
         """
@@ -34,24 +39,8 @@ class RawDataProcessor:
 
         for atom in molecule.GetAtoms():
 
-            type_letter = atom.GetSymbol()
-            atom_feature_vector = (type_letter == self.atom_types).astype(int)
-            LETTERS.append(type_letter)
-            explicit.append(atom.GetNumExplicitHs())
-            implicit.append(atom.GetNumImplicitHs())
-            total.append(atom.GetTotalNumHs())
-
-            if self.implicit_h:
-                if type_letter == 'H':
-                    print()
-                    continue
-                num_implicit_h = (atom.GetNumImplicitHs() == self.num_hydrogens).astype(int)
-                atom_feature_vector = np.concatenate([
-                    atom_feature_vector,
-                    num_implicit_h
-                ])
-
-            features.append(atom_feature_vector)
+            atom_type = (atom.GetSymbol() == self.atom_types).astype(int)
+            features.append(atom_type)
 
         # requires float for linear layer and long for embedding
         return tensor(features).float()
@@ -65,9 +54,6 @@ class RawDataProcessor:
 
         for bond in molecule.GetBonds():
 
-            # if one is H:
-            #   continue
-
             bonds.append((bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()))
             bond_type = (bond.GetBondType() == self.bond_types).astype(int)
             bond_features.append(bond_type)
@@ -79,7 +65,7 @@ class RawDataProcessor:
                   target_df: Union[pd.DataFrame, None] = None) -> Union[Data, None]:
 
         with open(sdf_path) as infile:
-            molecule = Chem.MolFromMolBlock(infile.read(), removeHs=True)
+            molecule = Chem.MolFromMolBlock(infile.read(), removeHs=self.implicit_h)
         if molecule is None:
             print(f'Could not parse sdf-file: {sdf_path}')
             return None
@@ -93,8 +79,6 @@ class RawDataProcessor:
         node_attributes = self._get_atom_features(molecule)
         bond_indices, bond_features = self._get_bonds(molecule)
         coordinates = tensor(molecule.GetConformer().GetPositions()).float()
-
-        # remove hydrogens at this point
 
         graph = Data(x=node_attributes,
                      pos=coordinates,
@@ -174,27 +158,27 @@ class TencentDataProcessor(RawDataProcessor):
         return tensor(features).float()
 
 
-if __name__ == '__main__':
-
-    LETTERS = []
-    explicit = []
-    implicit = []
-    total = []
-    p = RawDataProcessor(implicit_hydrogens=True)
-    # g = p._read_sdf('../../data_full/raw/atom_10/8273173.sdf')
-
-    graphs = []
-    for file_name in glob.glob('../../data_full/raw/atom_10/*.sdf'):
-        graph = p._read_sdf(file_name)
-        graphs.append(graph)
-
-    h_types = pd.DataFrame({'explicit': explicit,
-                            'implicit': implicit,
-                            'total': total})
-    h_types['sum_ok'] = (h_types.explicit + h_types.implicit) == h_types.total
-
-    atom_counts = pd.Series([g.num_nodes for g in graphs]).value_counts()
-    print(atom_counts)
-
-    print(pd.Series(LETTERS).value_counts())
+# if __name__ == '__main__':
+#
+#     LETTERS = []
+#     explicit = []
+#     implicit = []
+#     total = []
+#     p = RawDataProcessor(implicit_hydrogens=True)
+#     # g = p._read_sdf('../../data_full/raw/atom_10/8273173.sdf')
+#
+#     graphs = []
+#     for file_name in glob.glob('../../data_full/raw/atom_10/*.sdf'):
+#         graph = p._read_sdf(file_name)
+#         graphs.append(graph)
+#
+#     h_types = pd.DataFrame({'explicit': explicit,
+#                             'implicit': implicit,
+#                             'total': total})
+#     h_types['sum_ok'] = (h_types.explicit + h_types.implicit) == h_types.total
+#
+#     atom_counts = pd.Series([g.num_nodes for g in graphs]).value_counts()
+#     print(atom_counts)
+#
+#     print(pd.Series(LETTERS).value_counts())
 

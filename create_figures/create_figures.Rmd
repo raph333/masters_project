@@ -19,22 +19,22 @@ getwd()
 ## functions
 
 ```{r}
-process_learning_curve <- function(df) {
+process_learning_curve <- function(df, target_column) {
   processed <- df %>% 
-    melt(id.vars=c('target_param', 'epoch'), value.name='MAE') %>% 
+    melt(id.vars=c(target_column, 'epoch'), value.name='MAE') %>% 
     mutate(variable = sub('_mae', '', variable),
            variable = replace(variable, variable == 'valid', 'validation'),
            variable = replace(variable, variable == 'train', 'training'),
            variable = factor(variable, levels=c('validation', 'training'))) %>% 
-    mutate(target_param = replace(target_param, target_param == 'None', '0'),
-           target_param = as.factor(target_param))
+    mutate(target_column = replace(target_column, target_column == 'None', '0'),  # for target param = neighborhood expansion
+           target_column = as.factor(target_column))
   return(processed)
 }
 ```
 
 
 
-## optizing the tencent MPNN
+## optimizing the tencent MPNN
 
 ```{r}
 experiment_name <- 'best-optimization-patience-10'
@@ -42,7 +42,7 @@ experiment_name <- 'best-optimization-patience-10'
 df <- read.csv(file.path(results_dir, paste0('lc-', experiment_name, '.csv')), stringsAsFactors=F)
 
 df_long <- df %>% 
-  process_learning_curve() %>% 
+  process_learning_curve(target_column='target_param') %>% 
   drop_na() %>% 
   select(-target_param)
 
@@ -70,15 +70,26 @@ p <- ggplot(data=df, aes(x=epoch, y=lr)) +
 p
 ```
 
+### comparing different kinds of data
+
+```{r}
+df <- read.csv(file.path(results_dir, 'raw-vs-tencent-vs-complete.csv')) %>%
+    select(-c(minutes, 'minutes.', lr))  %>% 
+    process_learning_curve(target_column='experiment_name')
+
+ggplot(data=df, aes(x=epoch, y=MAE, color=experiment_name, linetype=variable)) +
+  geom_line() + 
+  scale_y_continuous(limits=c(0.05, 0.2)) 
+```
+
 
 ## Using graph convolution in the way it's meant to be used gives poor results on molecular structures
-
 
 ```{r, message=F}
 experiment_name <- 'tencent-mpnn-neighborhood-expansion'
 
 df <- read.csv(file.path(results_dir, paste0(experiment_name, '.csv')), stringsAsFactors=F) %>%
-  process_learning_curve()
+  process_learning_curve(target_column='target_param')
 
 
 p <- ggplot(data=df, aes(x=epoch, y=MAE, color=target_param, linetype=variable)) +

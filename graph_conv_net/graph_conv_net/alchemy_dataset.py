@@ -3,6 +3,7 @@ from os.path import join
 import shutil
 import urllib.request
 import zipfile
+import time
 from typing import Union, Callable
 
 import pandas as pd
@@ -41,9 +42,10 @@ class AlchemyDataset(InMemoryDataset):
             return
 
         print('Processing...')
+        start = time.time()
         makedirs(self.processed_dir)
         self.process()
-        print('Done!')
+        print(f'Done! ({time.time() - start / 60:.2f} minutes)')
 
     @property
     def raw_file_names(self) -> list:

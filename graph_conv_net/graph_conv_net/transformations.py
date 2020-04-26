@@ -54,7 +54,6 @@ class AddEdges(object):
             return data
 
         dist_matrix = distance_matrix(data.pos, data.pos)  # todo use torch
-        row, col = data.edge_index
         edges = []
         edge_attributes = []
 

@@ -2,14 +2,14 @@
 
 
 ### data
-* implicit hydrogens (will be super fast)
 * compare manually constructed features from Tencent with raw data
 
 ### new architectures
 * adapt DimeNet pytorch implementation
 
 ### modifications of Tencent MPNN
-* graph state
+* graph state  
+  check: mpnn_root.ipynb
 * Tencent MPNN with edge updates
 * set2set vs simple note summation
 
