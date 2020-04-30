@@ -1,6 +1,7 @@
 import os
 from os.path import join
 import glob
+from tqdm import tqdm
 from typing import Tuple, Union
 
 import numpy as np
@@ -22,8 +23,12 @@ class RawDataProcessor:
                            Chem.rdchem.BondType.TRIPLE,
                            Chem.rdchem.BondType.AROMATIC])
 
-    def __init__(self, implicit_hydrogens: bool = False):
+    def __init__(self,
+                 implicit_hydrogens: bool = False,
+                 sample_fraction: bool = 1):
         self.implicit_h = implicit_hydrogens
+        assert 0 < sample_fraction <= 1
+        self.sample_fraction = sample_fraction
 
         if self.implicit_h:
             self.atom_types = self.atom_types[1:]
@@ -54,9 +59,10 @@ class RawDataProcessor:
 
         for bond in molecule.GetBonds():
 
-            bonds.append((bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()))
+            i, j = bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()
+            bonds.extend([(i, j), (j, i)])  # 2 directed edges ... like 1 undirected edge
             bond_type = (bond.GetBondType() == self.bond_types).astype(int)
-            bond_features.append(bond_type)
+            bond_features.extend([bond_type, bond_type])
 
         return tensor(bonds).transpose(0, 1).long(), tensor(bond_features).float()
 
@@ -85,6 +91,7 @@ class RawDataProcessor:
                      edge_index=bond_indices,
                      edge_attr=bond_features,
                      y=y.float())
+        setattr(graph, 'gbd_idx', gdb_idx)
 
         return graph
 
@@ -94,8 +101,11 @@ class RawDataProcessor:
                    pre_filter,
                    pre_transform) -> list:
         graphs = []
+        file_paths = glob.glob(f'{structures_dir}/atom_*/*')
+        n = int(len(file_paths) * self.sample_fraction)
+        file_paths = np.random.choice(file_paths, size=n, replace=False)
 
-        for sdf_path in glob.glob(f'{structures_dir}/atom_*/*'):
+        for sdf_path in tqdm(file_paths):
 
             graph = self._read_sdf(sdf_path, target_df)
             if graph is not None:

@@ -45,7 +45,7 @@ class AlchemyDataset(InMemoryDataset):
         start = time.time()
         makedirs(self.processed_dir)
         self.process()
-        print(f'Done! ({time.time() - start / 60:.2f} minutes)')
+        print(f'Done! ({(time.time() - start) / 60:.2f} minutes)')
 
     @property
     def raw_file_names(self) -> list:
