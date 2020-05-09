@@ -143,29 +143,9 @@ class TencentDataProcessor(RawDataProcessor):
 
         return donor_atoms, acceptor_atoms
 
-    # # tencent-version:
-    # def _get_donors_acceptors(self, mol: Chem.rdchem.Mol) -> tuple:
-    #     feats = self.chem_feature_factory.GetFeaturesForMol(mol)
-    #     donor_map, acceptor_map = defaultdict(int), defaultdict(int)
-    #
-    #     for i in range(len(feats)):
-    #
-    #         if feats[i].GetFamily() == 'Donor':
-    #             donor_nodes = feats[i].GetAtomIds()
-    #             for i in donor_nodes:  # replicating bug
-    #                 donor_map[i] = 1
-    #
-    #         elif feats[i].GetFamily() == 'Acceptor':
-    #             acceptor_nodes = feats[i].GetAtomIds()
-    #             for i in acceptor_nodes:
-    #                 acceptor_map[i] = 1
-    #
-    #         return donor_map, acceptor_map
-
     def _get_atom_features(self, molecule: Chem.rdchem.Mol) -> tensor:
 
         donor_atom_ids, acceptor_atom_ids = self._get_donors_acceptors(molecule)
-        #donors, acceptors = self._get_donors_acceptors(molecule)
         features = []
 
         for atom in molecule.GetAtoms():
@@ -177,8 +157,6 @@ class TencentDataProcessor(RawDataProcessor):
                 np.array([atom.GetAtomicNum()]),  # redundant info: same as above
                 np.array([int(atom.GetIdx() in acceptor_atom_ids)]),  # some difference to tencent dataset
                 np.array([int(atom.GetIdx() in donor_atom_ids)]),
-                #np.array([acceptors[atom.GetIdx()]]),
-                #np.array([donors[atom.GetIdx()]]),
                 aromatic,
                 hybridization,
                 np.array([atom.GetTotalNumHs()])

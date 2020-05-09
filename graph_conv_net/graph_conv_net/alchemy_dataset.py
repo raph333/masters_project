@@ -155,13 +155,6 @@ class AlchemyCompetitionDataset(InMemoryDataset):
             zip_ref.extractall(self.raw_dir)
         os.remove(zip_path)
 
-        # move files directly into self.raw_dir:
-        # source_dir = join(self.raw_dir, self.mode)
-        # for name in os.listdir(source_dir):
-        #     shutil.move(src=join(source_dir, name),
-        #                 dst=join(self.raw_dir, name))
-        # os.rmdir(source_dir)
-
     def process(self):
         if self.mode != 'test':
             target_df = pd.read_csv(self.raw_paths[1])

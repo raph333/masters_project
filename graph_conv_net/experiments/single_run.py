@@ -3,10 +3,6 @@ import numpy as np
 import torch
 from torch_geometric.transforms import Compose, Distance
 
-import sys
-sys.path.append('tmp')
-from old_data import Complete  # , OldAlchemyDataset
-
 from graph_conv_net.train import run_experiment
 from graph_conv_net.alchemy_dataset import AlchemyCompetitionDataset
 from graph_conv_net.data_processing import TencentDataProcessor
@@ -18,11 +14,9 @@ AlchemyCompetitionDataset.data_processor = TencentDataProcessor()
 
 def get_transform(threshold: float) -> Callable:
     return Compose([
-        AddEdges(distance_threshold=threshold),
-        # Complete(),
-        Distance(norm=True)
+        Distance(norm=True),
+        AddEdges(distance_threshold=threshold)
     ])
-# idea: use Complete() and then remove edges with distance > threshold
 
 
 new_config = {
