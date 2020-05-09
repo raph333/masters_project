@@ -80,6 +80,7 @@ class AddEdges(object):
 
         data.edge_index = torch.tensor(edges).transpose(0, 1)
         data.edge_attr = torch.stack(edge_attributes, dim=1).squeeze()
+        assert data.edge_index.shape[1] == data.num_nodes**2 - data.num_nodes
 
         return data
 

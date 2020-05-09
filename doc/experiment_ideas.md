@@ -1,8 +1,16 @@
 ## experiment ideas
 
+### evaluate data:
+* edge-fixed new data with Complete() transformation
+* same data with AddEdges(np.inf)
+  
+one run each with 300 epochs  
+if they work: merge into master
+
 
 ### data
 * compare manually constructed features from Tencent with raw data
+* implicit vs explicit hydrogen atoms
 
 ### new architectures
 * adapt DimeNet pytorch implementation

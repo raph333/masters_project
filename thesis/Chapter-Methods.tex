@@ -9,9 +9,9 @@ The new quantum chemistry dataset \textit{Alchemy}, created by Tencent Quantum L
 
 There 119487 molecules in the dataset containing the 3D coordinates for each atom, its type and the information which atoms are covalently bonded and with which bond type and twelve important quantum mechanical properties~\cite{Chen2019}. The task is to predict these twelve properties from the raw data.
 
-There are two different approaches to go about this task. The pure deep learning approach is to use only coordinates and bonds and rely on the network to learn to extract any features required to predict the target properties. After all, coordinates, atom types and bonds contain all the available information (actually the bonds could be reliably calculated from coordinates and atom types and thus, strictly speaking are redundant information).
+There are two different approaches to go about this task. The pure deep learning approach is to use only coordinates and bonds and rely on the network to learn to extract any features required to predict the target properties. After all, coordinates, atom types and bonds contain all the available information (actually the bonds could be reliably calculated from coordinates and atom types and thus, strictly speaking are also redundant information).
 
-The other approach is to calculate all sorts of chemical features using open source python libraries and feed them in to the model alongside the raw data. Such features are node (atom) features (whether the atom is an electron donor or acceptor, whether it is an an aromatic ring, it's hybridization type, etc.) as well as bond (edge) features. The fact that these features are calculated from the raw data without any additional information means that the model should also be able to learn to compute them if required. Hence, calculating features and feeding them into the model should in theory be obsolete but could give a slight performance boost if the model would not be able to learn those features. Since the focus of this thesis is deep-learning, no manual feature computation is performed here except if it is required to allow comparison with results from the literature.
+The other approach is to calculate all sorts of chemical features using chemistry python libraries and feed them in to the model alongside the raw data. Such features are node (atom) features (whether the atom is an electron donor or acceptor, whether it is an an aromatic ring, it's hybridization type, etc.) as well as bond (edge) features. The fact that these features are calculated from the raw data without any additional information means that the model should also be able to learn to compute them if required. Hence, calculating features and feeding them into the model should in theory be obsolete but could give a slight performance boost if the model is unable to learn those features. Since the focus of this thesis is deep-learning, no manual feature computation is performed here except if it is required to allow comparison with results from the literature.
 
 % explain target properties
 % mae, normalization
@@ -23,24 +23,33 @@ The other approach is to calculate all sorts of chemical features using open sou
 \subsection{Base network architecture}
 
 
+\subsection{Software}
+
+% pytorch, etc.
+
+% link to repo
+
+
 
 \subsection{Training}
 \label{sec:training}
 
-Two different optimization schemes were used for different purposes.
-To obtain the best possible validation error, a learning rate schedule that reduces the learning rate after the validation error plateaus has found to be most effective~\footnote{Specifically, the following parameters were chosen: The learning rate is reduced by a factor of 0.75 if the validation error did not decrease by a value of $10^{-4}$ or more within the last 5 epochs.} This optimization scheme above suffers from the drawback of requiring many training epochs~\footnote{300 epochs were used here}. Furthermore, the resulting learning-rate schedule varies considerably even between trainings with the same parameters. These differences as well as the long training time make it unsuitable for comparing learning curves with different parameters.
-For comparing different learning curves in the most of the experiments in this thesis, a simpler, exponential learning-rate decay was chosen~\footnote{REFERENCE}. The advantage of this method is that at each epoch, all learning curves have the same learning rate making them comparable. The final validation error is usually higher than would be achieved with reduce-on-plateau learning rate scheduling. However, this drawback is accepted because the main point of the experiments is to compare different model architectures, parameters or data-transformation rather than to achieve the lowest possible validation error.
+In all experiments presented in this thesis, Adaptive Moment Estimation (Adam)[CITATION] was used for training. For certain experiments, other optimizers might lead to slightly better results. However, comparison between differences in data processing and network architectures would be impeded by employing different optimization schemes because one would never know if the different outcomes are a result of the model or the optimization. For this reason, optimization strategies were kept as constant as possible for all experiments.
 
-% Adam
+The same considerations were applied to learning rates and learning rate scheduling. Two different optimization schemes were used for different purposes.
+To obtain the lowest possible test-set error, a learning rate schedule that reduces the learning rate after the validation error plateaus has found to be most effective~\footnote{Specifically, the following parameters were chosen: The initial learning rate of 0.01 is reduced by a factor of 0.75 if the validation error did not decrease by a value of $10^{-4}$ or more within the last 10 epochs. The training duration was 300 epochs} This optimization scheme above suffers from the drawback of requiring many training epochs. Furthermore, the resulting learning-rate schedule varies considerably even between trainings with the same parameters. These differences as well as the long training time make it unsuitable for comparing learning curves with different parameters.
+For comparing different learning curves a simpler, exponential learning-rate decay was chosen~\footnote{REFERENCE} [CITATON]. The advantage of this method is that at each epoch, all curves have the same learning rate making them comparable. The final validation error is usually higher than would be achieved with reduce-on-plateau learning rate scheduling. However, this drawback is accepted because the main point of the experiments is to compare different model architectures, parameters or data-transformation rather than to achieve the lowest possible test-set error.
 
-% optimzer, lr, etc.
 
 \subsection{Benchmark and evaluation}
+
+% mae-error, etc. 
 
 
 \subsection{Experiments}
 
-Most experiments show learning curves with validation- and training-error rather than just the final errors. The choice was made because, in addition to showing the final error-rates, learning curves allow to estimate whether the model suffers from high bias or high variance and also shows if prolonged training could lead to further improvements or if a plateau has been reached. In contrast, a single error-metric does not show how this metric was obtained and thus offers little information to interpret the results.
+Most experiments show learning curves with validation- and training-error rather than just the final errors. The choice was made because, in addition to showing the final error-rates, learning curves allow to estimate whether the model suffers from high bias or high variance and also shows if prolonged training could lead to further improvements or if a plateau has been reached. In contrast, a single error-metric does not show how this metric was obtained and thus offers little information to interpret the results. Furthermore, learning curve averaging of multiple training runs was employed to reduce the impact of noise. Some variation in the learning curves is to be expected even in the absence of any difference in model architecture, input data or optimization strategy. Conduction multiple training runs for each setting and averaging the results reduces the impact of random variation and allow to see the systematic differences instead.
 
-% learning curve averaging
+
+% appendix: interpreting learning curves
 

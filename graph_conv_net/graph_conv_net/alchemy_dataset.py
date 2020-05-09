@@ -17,6 +17,9 @@ class AlchemyDataset(InMemoryDataset):
     """
     Entire 200k molecule Alchemy dataset: fully labeled, no pre-defined split
     """
+    labels_file_name = 'ground_truth.csv'
+    atom_numbers = (9, 10, 11, 12)
+
     def __init__(self,
                  root: str,
                  transform: Union[Callable, None] = None,
@@ -30,8 +33,6 @@ class AlchemyDataset(InMemoryDataset):
 
         self.re_process = re_process
         self.url = 'https://alchemy.tencent.com/data/alchemy-v20191129.zip'
-        self.labels_file_name = 'ground_truth.csv'
-        self.atom_numbers = (9, 10, 11, 12)
 
         super().__init__(root, transform, pre_transform, pre_filter)
         self.data, self.slices = torch.load(self.processed_paths[0])
@@ -99,6 +100,7 @@ class AlchemyCompetitionDataset(InMemoryDataset):
     """
     Competition dataset with pre-defined dev-, validation- and unlabeled test-set.
     """
+    set_names = ('dev', 'valid', 'test')
 
     def __init__(self,
                  root: str,
@@ -112,17 +114,16 @@ class AlchemyCompetitionDataset(InMemoryDataset):
             print('Please specify an instance of the "BasicDataProcessor"-class as class-attribute.')
             raise AssertionError('Missing attribute: "data_processor"')
 
-        self.set_names = ('dev', 'valid', 'test')
         assert mode in self.set_names, f'Alchemy dataset has only these sets: {self.set_names}'
         self.mode = mode
         self.re_process = re_process
         self.base_url = 'https://alchemy.tencent.com/data/{}_v20190730.zip'
+        self.target_df = None
 
         super().__init__(root, transform, pre_transform, pre_filter)
         self.data, self.slices = torch.load(self.processed_paths[0])
 
     def _process(self):
-
         if self.re_process is False and all([os.path.exists(f) for f in self.processed_paths]):
             return
 
@@ -133,10 +134,11 @@ class AlchemyCompetitionDataset(InMemoryDataset):
 
     @property
     def raw_file_names(self) -> list:
+        sdf_dir = join(self.mode, 'sdf')
         if self.mode != 'test':
-            return ['sdf', f'{self.mode}_target.csv']
+            return [sdf_dir, join(self.mode, f'{self.mode}_target.csv')]
         else:
-            return ['sdf']
+            return [sdf_dir]
 
     @property
     def processed_file_names(self) -> list:
@@ -151,24 +153,24 @@ class AlchemyCompetitionDataset(InMemoryDataset):
 
         with zipfile.ZipFile(zip_path) as zip_ref:
             zip_ref.extractall(self.raw_dir)
+        os.remove(zip_path)
 
         # move files directly into self.raw_dir:
-        source_dir = join(self.raw_dir, self.mode)
-        for name in os.listdir(source_dir):
-            shutil.move(src=join(source_dir, name),
-                        dst=join(self.raw_dir, name))
-        os.rmdir(source_dir)
+        # source_dir = join(self.raw_dir, self.mode)
+        # for name in os.listdir(source_dir):
+        #     shutil.move(src=join(source_dir, name),
+        #                 dst=join(self.raw_dir, name))
+        # os.rmdir(source_dir)
 
     def process(self):
-
         if self.mode != 'test':
             target_df = pd.read_csv(self.raw_paths[1])
-            target_df = target_df.set_index('gdb_idx')
+            self.target_df = target_df.set_index('gdb_idx')
         else:
-            target_df = None
+            self.target_df = None
 
         graphs = self.data_processor.get_graphs(structures_dir=self.raw_paths[0],
-                                                target_df=target_df,
+                                                target_df=self.target_df,
                                                 pre_filter=self.pre_filter,
                                                 pre_transform=self.pre_transform)
 

@@ -37,13 +37,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Combine learning curves from multiple mlflow experiments.')
     parser.add_argument('experiment_names', help='csv list of mlflow experiment-names')
     parser.add_argument('--output-name', '-o',
-                        default='raw-vs-tencent-vs-complete')
+                        default='combined-experiments')
     args = parser.parse_args()
+
+    experiment_names = args.experiment_names.split(',')
+    if len(experiment_names) == 1 and args.output_name == 'combined-experiments':
+        args.output_name = experiment_names[0]
 
     result = combine_learning_curves(args.experiment_names)
     result.to_csv(join('results', f'{args.output_name}.csv'), index=False)
-
-
-
-
-

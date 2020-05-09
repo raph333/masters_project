@@ -19,7 +19,19 @@ getwd()
 ## functions
 
 ```{r}
-process_learning_curve <- function(df, target_column) {
+process_single_lc <- function(df) {
+  processed <- df %>% 
+    melt(id.vars=c('epoch'), value.name='MAE') %>% 
+    mutate(variable = sub('_mae', '', variable),
+           variable = replace(variable, variable == 'valid', 'validation'),
+           variable = replace(variable, variable == 'train', 'training'),
+           variable = factor(variable, levels=c('validation', 'training'))) %>% 
+    mutate(epoch = as.integer(epoch)) %>% 
+    mutate(MAE = as.double(MAE))
+return(processed)
+}
+
+process_multiple_lc <- function(df, target_column) {
   processed <- df %>% 
     melt(id.vars=c(target_column, 'epoch'), value.name='MAE') %>% 
     mutate(variable = sub('_mae', '', variable),
@@ -37,20 +49,18 @@ process_learning_curve <- function(df, target_column) {
 ## optimizing the tencent MPNN
 
 ```{r}
-experiment_name <- 'best-optimization-patience-10'
+experiment_name <- 'old-data-complete'
 
-df <- read.csv(file.path(results_dir, paste0('lc-', experiment_name, '.csv')), stringsAsFactors=F)
+df <- read.csv(file.path(results_dir, paste0(experiment_name, '.csv')), stringsAsFactors=F)
 
-df_long <- df %>% 
-  process_learning_curve(target_column='target_param') %>% 
-  drop_na() %>% 
-  select(-target_param)
+df_long <- df %>%
+  process_single_lc() %>% 
+  na.omit()
 
 
-p <- ggplot(data=df_long) +
-  geom_line(aes(x=epoch, y=MAE, linetype=variable)) + #  , colour='error')) +
-  # geom_point(data=df, aes(x=epoch, y=lr*100, color='learning rate')) +
-  scale_y_continuous(limits=c(0, 0.4)) +
+p <- ggplot(data=df_long, aes(x=epoch, y=MAE, linetype=variable)) +
+  geom_line() +
+  scale_y_continuous(limits=c(0, 0.3)) +
   theme_bw() +
   theme(plot.title = element_text(hjust = 0.5, size=16)) +
   labs(title='Training with learning rate scheduling',
@@ -71,25 +81,25 @@ p
 ```
 
 ### comparing different kinds of data
-
+make this a plot for methods section: proof of concept
 ```{r}
-df <- read.csv(file.path(results_dir, 'raw-vs-tencent-vs-complete.csv')) %>%
+df <- read.csv(file.path(results_dir, 'old-vs-new-data.csv')) %>%
     select(-c(minutes, 'minutes.', lr))  %>% 
-    process_learning_curve(target_column='experiment_name')
+    process_multiple_lc(target_column='experiment_name')
 
 ggplot(data=df, aes(x=epoch, y=MAE, color=experiment_name, linetype=variable)) +
   geom_line() + 
-  scale_y_continuous(limits=c(0.05, 0.2)) 
+  scale_y_continuous(limits=c(0, 0.2)) 
 ```
 
 
 ## Using graph convolution in the way it's meant to be used gives poor results on molecular structures
 
 ```{r, message=F}
-experiment_name <- 'tencent-mpnn-neighborhood-expansion'
+experiment_name <- 'tencent-mpnn-neighborhood-expansion'  # old run with implicit Hs
 
 df <- read.csv(file.path(results_dir, paste0(experiment_name, '.csv')), stringsAsFactors=F) %>%
-  process_learning_curve(target_column='target_param')
+  process_multiple_lc(target_column='target_param')
 
 
 p <- ggplot(data=df, aes(x=epoch, y=MAE, color=target_param, linetype=variable)) +

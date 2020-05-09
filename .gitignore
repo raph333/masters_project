@@ -11,6 +11,7 @@ literature
 notes.md
 
 graph_conv_net/experiments/mlruns/*
+graph_conv_net/experiments/results/archive/*
 doc/tmp/*
 *.html
 

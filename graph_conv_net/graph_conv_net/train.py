@@ -105,14 +105,14 @@ def run_experiment(config: dict):
     root_dir = join(DATA_DIR, config['name'])
     if not os.path.exists(root_dir):
         os.makedirs(root_dir)
-    ds = dataset_class(root=root_dir,
-                       transform=None)  # set according to target parameter in loop
-    ds_dev, ds_valid, ds_test = tools.split_dataset(full_ds=ds,
-                                                    fractions=config['ds_fractions'],
-                                                    random_seed=config['random_seed'])
+    # ds = dataset_class(root=root_dir,
+    #                    transform=None)  # set according to target parameter in loop
+    # ds_dev, ds_valid, ds_test = tools.split_dataset(full_ds=ds,
+    #                                                 fractions=config['ds_fractions'],
+    #                                                 random_seed=config['random_seed'])
 
-    # ds_valid = dataset_class(root=DATA_DIR, mode='valid', transform=None)
-    # ds_dev = dataset_class(root=DATA_DIR, mode='dev', transform=None)
+    ds_valid = dataset_class(root=root_dir, mode='valid', transform=None)
+    ds_dev = dataset_class(root=root_dir, mode='dev', transform=None)
 
     for i, param in enumerate(config['target_param']['values']):
         print(f'\nUSING {target_param} = {param}:')
@@ -147,10 +147,10 @@ def run_experiment(config: dict):
                                        num_epochs=config['num_epochs'],
                                        lr_scheduler=scheduler)
 
-                test_mae = evaluate(net=model,
-                                    data_loader=DataLoader(ds_test, batch_size=config['batch_size']),
-                                    device=torch.device(f'cuda:{config["cuda"]}'))
-                mlflow.log_metric('MAE', test_mae)
+                # test_mae = evaluate(net=model,
+                #                     data_loader=DataLoader(ds_test, batch_size=config['batch_size']),
+                #                     device=torch.device(f'cuda:{config["cuda"]}'))
+                # mlflow.log_metric('MAE', test_mae)
 
                 lc_file = 'learning_curve.csv'
                 learning_curve.to_csv(lc_file, index=False)
