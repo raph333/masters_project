@@ -4,7 +4,7 @@
 
 \section{Using graph convolution in the way it's meant to be used gives poor results on molecular structures}
 
-In the paper Chen et al.~\cite{Chen2019} at Tencent Lab, the authors modify a well performing GCNN architecture for quantum chemistry invented by Gilmer et al.~\cite{bibid}. The authors expand this model by using both, categorical bond type and euclidean distance as edge features and observe considerably better performance. At first glance, the use of both kinds of features - which seems to be implied in the paper - looks like a plausible explanation for the success. However, a upon closer inspection, the reasoning does not add up. Bond types almost completely determine the euclidean distance. E.g. ever carbon-carbon single bond has a distance of []Å, every carbon-oxygen double bond is []Å long, etc. [CITATON]. (The same applies to the reverse: knowing the distance between two atoms as well as the atom types allows to deduce the type of covalent bond or lack thereof.) Therefore no additional information is added by including the euclidean distance as a feature. Inspection of the implementation reveals anther possible reason for the good performance of the Tencent Lab-paper is quickly identified: Not only is the euclidean distance added as a feature to existing edges, every atom is connected to every other atom in the molecule with the euclidean distance being the only not-null feature~\footnote{\url{https://github.com/tencent-alchemy/Alchemy}}. Thus, the structure of the graph is changed dramatically form the graph of covalent bonds to complete graph where every node is connected to every other node. The complete graph is a special case of graph and is rather untypical because in most applications, the presence or absence of an edge between two nodes is the most important kind of information. Simply connecting all nodes with each other seems to diminish this information (although in this case, the euclidean distance allows to distinguish between important and less important edges). With these considerations it is surprising but very interesting that the approach of Tencent Labs works so well.
+In the paper Chen et al.~\cite{Chen2019} at Tencent Lab, the authors modify a well performing GCNN architecture for quantum chemistry invented by Gilmer et al.~\cite{Gilmer2017}. The authors expand this model by using both, categorical bond type and euclidean distance as edge features and observe considerably better performance. At first glance, the use of both kinds of features - which seems to be implied in the paper - looks like a plausible explanation for the success. However, a upon closer inspection, the reasoning does not add up. Bond types almost completely determine the euclidean distance. E.g. ever carbon-carbon single bond has a distance of []Å, every carbon-oxygen double bond is []Å long, etc. [CITATON]. (The same applies to the reverse: knowing the distance between two atoms as well as the atom types allows to deduce the type of covalent bond or lack thereof.) Therefore no additional information is added by including the euclidean distance as a feature. Inspection of the implementation reveals anther possible reason for the good performance of the Tencent Lab-paper is quickly identified: Not only is the euclidean distance added as a feature to existing edges, every atom is connected to every other atom in the molecule with the euclidean distance being the only not-null feature~\footnote{\url{https://github.com/tencent-alchemy/Alchemy}}. Thus, the structure of the graph is changed dramatically form the graph of covalent bonds to complete graph where every node is connected to every other node. The complete graph is a special case of graph and is rather untypical because in most applications, the presence or absence of an edge between two nodes is the most important kind of information. Simply connecting all nodes with each other seems to diminish this information (although in this case, the euclidean distance allows to distinguish between important and less important edges). With these considerations it is surprising but very interesting that the approach of Tencent Labs works so well.
 
 In preparation for this thesis, I participated in the Tencent-Alchemy competition~\footnote{\url{https://alchemy.tencent.com}} using approach described above a baseline architecture. Despite many experiments, I achieved the best results simply fine-tuning Tencent Labs model and finished 26th out of 53 participants. The fact that half the participants did not beat the baseline published in the official competition paper, shows that the approach is indeed quite effective an warrants a closer examination why the peculiar approach of using complete graphs works quite well.
 
@@ -35,6 +35,21 @@ For small molecules and with considerable computational power at hand, one could
 %Does no one notice?
 %
 %Repeat that the conv should be able to handle this because after several MP steps, the effective field of vision is the entire molecule - but it doesn't work well
+
+
+\section{Manual feature engineering does not improve prediction accuracy.}
+
+% compare raw vs. tencent features.
+% after the point has been made, use only raw data
+
+\section{Excluding hydrogen atoms from the molecule-graph speeds up training but reduces prediction accuracy}
+
+Another possible preprocessing step is to disregard hydrogen atoms and instead add the number of hydrogen atoms bonded to a given heavy atom as a node feature. The rational behind this step is that the properties chemical properties of hydrogen atoms depend strongly on the heavy atom to which it is bound. While some information is lost during this step, the number of atoms in the molecule is reduced by an average factor of [CHECK value]. This modest reduction in the number of nodes leads to a very dramatic reduction in the number of edges. Naturally, this effect is most pronounced in complete graphs where the number of edges increases quadratically with the number of nodes ($\frac{n(n - 1)}{2}$ edges for $n$ nodes). While the average number of edges using complete graphs is [CHECK value] in the AlChemy dataset, this number drops to [CHECK value] after excluding hydrogen atoms.
+
+The approach of not considering hydrogen atoms explicitly but only as features of heavy atoms is known as using \textit{implicit hydrogen atoms}. In short, it is a way of summarizing raw data which speeds up training considerably while loosing some information. Figure [] shows...
+
+% probably: larger error
+% => use explicit hydrogen atoms from now on
 
 
 \section{Introducing a graph-state at every graph-conv layer improves results}
@@ -78,7 +93,6 @@ OPTIONAL PART:\\
 review the results of the 3DGCN-paper and show that this doesn't work really well on the Alchemy data - probably for the same reason given above
 }
 
-Citation is all you need~\cite{Vaswani2017}
 
 
 

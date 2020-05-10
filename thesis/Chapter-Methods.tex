@@ -5,29 +5,29 @@
 
 \subsection{Data and features}
 
-The new quantum chemistry dataset \textit{Alchemy}, created by Tencent Quantum Lab, was used for this thesis~\cite{Chen2019}. The dataset is similar to the well established QM9 dataset with the same quantum mechanical properties available and a similar number of molecules. The main advantage of the new \textit{Alchemy} dataset is that it also contains larger molecules of up to 14 heavy atoms (i.e. non-hydrogen atoms) as opposed to the maximum of nine heavy atoms in the Q9 dataset.
+The new quantum chemistry dataset \textit{Alchemy}, created by Tencent Quantum Lab, was used for this thesis~\cite{Chen2019}. The dataset is similar to the well established QM9 dataset with the same quantum mechanical properties available and a similar number of molecules. The main advantage of the new \textit{Alchemy} dataset is that it also contains larger molecules of up to 14 heavy atoms (i.e. non-hydrogen atoms) as opposed to the maximum of nine heavy atoms in the Q9 dataset. This property makes it more relevant for medically oriented research as potential drugs are not limited to only very small molecules.
 
-There 119487 molecules in the dataset containing the 3D coordinates for each atom, its type and the information which atoms are covalently bonded and with which bond type and twelve important quantum mechanical properties~\cite{Chen2019}. The task is to predict these twelve properties from the raw data.
+There 119487 molecules [CHECK: old vs. new dataset] in the dataset containing the 3D coordinates for each atom, its type and the information which atoms are covalently bonded with which bond type and twelve important quantum mechanical properties~\cite{Chen2019} of the molecule. The task is to predict these twelve properties from the raw data.
 
 There are two different approaches to go about this task. The pure deep learning approach is to use only coordinates and bonds and rely on the network to learn to extract any features required to predict the target properties. After all, coordinates, atom types and bonds contain all the available information (actually the bonds could be reliably calculated from coordinates and atom types and thus, strictly speaking are also redundant information).
 
-The other approach is to calculate all sorts of chemical features using chemistry python libraries and feed them in to the model alongside the raw data. Such features are node (atom) features (whether the atom is an electron donor or acceptor, whether it is an an aromatic ring, it's hybridization type, etc.) as well as bond (edge) features. The fact that these features are calculated from the raw data without any additional information means that the model should also be able to learn to compute them if required. Hence, calculating features and feeding them into the model should in theory be obsolete but could give a slight performance boost if the model is unable to learn those features. Since the focus of this thesis is deep-learning, no manual feature computation is performed here except if it is required to allow comparison with results from the literature.
+The other approach is to calculate all sorts of chemical features using chemistry python libraries and feed them in to the model alongside the raw data. Such features are node (atom) features (whether the atom is an electron donor or acceptor, whether it is an an aromatic ring, it's hybridization type, etc.) as well as bond (edge) features. The fact that these features are calculated from the raw data without any additional information means that the model should also be able to learn to compute them if required. Hence, calculating features and feeding them into the model should in theory be obsolete but could slightly improve predictions if the model is unable to learn those features. Since the focus of this thesis is deep-learning, no manual feature computation is performed here except if it is required to allow comparison with results from the literature.
 
-% explain target properties
-% mae, normalization
-% Hs implicit: as features
+
 
 % alchemy ds: train, validation, testset split
-
+% competition data vs. full data difference
+% explain target properties
+% mae, normalization
 
 \subsection{Base network architecture}
 
 
 \subsection{Software}
 
-% pytorch, etc.
+The models presented in this theses were implemented using the python deep learning library \textit{PyTorch}~\footnote{\url{https://pytorch.org/}} and its extension for graph neural networks, \textit{PyTorch Geometric}~\footnote{\url{https://pytorch-geometric.readthedocs.io/en/latest/}}.
 
-% link to repo
+The code is available at github: \url{https://github.com/raph333/masters_project}
 
 
 
@@ -43,7 +43,22 @@ For comparing different learning curves a simpler, exponential learning-rate dec
 
 \subsection{Benchmark and evaluation}
 
-% mae-error, etc. 
+The target variable in this dataset is a real-valued vector of length twelve. The error-metric used throughout this work is the mean absolute error (MAE) - which was also the metric in the Alchemy Contest. As the twelve quantum mechanical properties have vastly different ranges, they have to be normalized - otherwise the properties with larger ranges would contribute far more to the MAE than the properties with smaller ranges. Normalization was performed by subtracting the mean and dividing by the standard deviation.
+
+\subsubsection{Difference between competition-dataset and full-dataset}
+
+This subsection explains why the MAE-values presented in this thesis cannot be compared the competition leaderboard~\footnote{\url{https://alchemy.tencent.com/\#leaderboard}} including my own score with rank 26. If the reader is only interested in the methods used for the thesis, they may skip this subsection.
+
+Unfortunately, the results obtained on the competition dataset cannot be directly compared to results achieved on the full dataset (published after the competition).
+
+\paragraph{Train-test split}
+The competition data-set is split into training-set (called dev-set by the competition hosts), validation- and test-set with the ground truth being provided only for the first two sets. The split is not random. Instead, the validation- and test-set contain larger molecules than the training-set. Building models that can extrapolate from smaller molecules to larger molecules is useful for pharmacological research~\cite{Chen2019}. However, in order to focus on the core topic of GCNN for molecules, I only use a simple random split where training-, validation- and test-set are randomly drawn without replacement from the same population.
+
+\paragraph{Target variable normalization}
+
+In the competition data-set, the values are already normalized and the raw values are not available. It is not clear whether the mean and standard deviation used for normalization where calculated separately for the training- and validation-set or if the they are based on all molecules. Furthermore, the order of the target variables is unknown (by design) as their names are hidden with dummy-names property-1, property-2, etc.
+
+The full dataset released after the competition contains the raw values and the real names of the target variables. In for training and evaluation, they were normalized in the same manner as in the competition (subtraction of mean and division by standard deviation). However, a direct comparison with the ranges of the competition dataset is not possible as the names of the target variables are not provided there. The only observation that can be made is that the average range (maximum - minimum) of all target variables is lower in the competition data-set. This suggest that the normalization might have been conducted on per-set basis because the 
 
 
 \subsection{Experiments}

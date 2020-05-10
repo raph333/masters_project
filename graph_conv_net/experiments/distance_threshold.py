@@ -23,7 +23,7 @@ new_config = {
     },
     'lr_scheduler': {
         'class': torch.optim.lr_scheduler.ExponentialLR,
-        'kwargs': {'gamma': 0.98}
+        'kwargs': {'gamma': 0.99}
     },
     'dataset_class': AlchemyCompetitionDataset,
     'get_transform': get_transform,

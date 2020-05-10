@@ -22,7 +22,7 @@ def get_transform(threshold: float) -> Callable:
 
 
 new_config = {
-    'name': 'fixed-competition-data-add-edges2',  # todo: set this for each experiment!  (default 'test-run')
+    'name': 'exponential-decay-test',  # todo: set this for each experiment!  (default 'test-run')
     'dataset_class': AlchemyCompetitionDataset,
     'data_processor': TencentDataProcessor,
     'get_transform': get_transform,
@@ -30,15 +30,15 @@ new_config = {
         'name': 'distance_threshold',
         'values': [np.inf]
     },
-    'lr_scheduler': {
-        'class': torch.optim.lr_scheduler.ReduceLROnPlateau,
-        'kwargs': {'factor': 0.75,
-                   'threshold': 1e-4,
-                   'patience': 6}
-    },
-    'cuda': 1,
+    # 'lr_scheduler': {
+    #     'class': torch.optim.lr_scheduler.ReduceLROnPlateau,
+    #     'kwargs': {'factor': 0.75,
+    #                'threshold': 1e-4,
+    #                'patience': 6}
+    # },
+    'cuda': 2,
     'repeat': 1,
-    'num_epochs': 300
+    'num_epochs': 150
 }
 CONFIG.update(new_config)
 
