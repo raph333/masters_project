@@ -6,21 +6,23 @@ from torch_geometric.transforms import Compose, Distance
 from graph_conv_net.train import run_experiment
 from graph_conv_net.alchemy_dataset import AlchemyCompetitionDataset
 from graph_conv_net.data_processing import TencentDataProcessor
-from graph_conv_net.transformations import AddEdges
+from graph_conv_net.transformations import AddEdges, CompleteGraph
 from distance_threshold import CONFIG
 
 AlchemyCompetitionDataset.data_processor = TencentDataProcessor()
 
 
 def get_transform(threshold: float) -> Callable:
-    return Compose([
-        Distance(norm=True),
-        AddEdges(distance_threshold=threshold)
-    ])
+    return AddEdges(distance_threshold=threshold,
+                    add_dist_feature=True)
+    # return Compose([
+    #     CompleteGraph(),
+    #     Distance(norm=True)
+    # ])
 
 
 new_config = {
-    'name': 'fixed-competition-data-add-edges',  # todo: set this for each experiment!  (default 'test-run')
+    'name': 'fixed-competition-data-add-edges2',  # todo: set this for each experiment!  (default 'test-run')
     'dataset_class': AlchemyCompetitionDataset,
     'data_processor': TencentDataProcessor,
     'get_transform': get_transform,
@@ -34,7 +36,7 @@ new_config = {
                    'threshold': 1e-4,
                    'patience': 6}
     },
-    'cuda': 2,
+    'cuda': 1,
     'repeat': 1,
     'num_epochs': 300
 }
