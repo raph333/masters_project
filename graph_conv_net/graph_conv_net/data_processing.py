@@ -26,7 +26,7 @@ class RawDataProcessor:
 
     def __init__(self,
                  implicit_hydrogens: bool = False,
-                 sample_fraction: bool = 1):
+                 sample_fraction: float = 1):
         self.implicit_h = implicit_hydrogens
         assert 0 < sample_fraction <= 1
         self.sample_fraction = sample_fraction
@@ -92,7 +92,7 @@ class RawDataProcessor:
                      edge_index=bond_indices,
                      edge_attr=bond_features,
                      y=y.float())
-        setattr(graph, 'gbd_idx', gdb_idx)
+        setattr(graph, 'gdb_idx', gdb_idx)
 
         return graph
 

@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from typing import Tuple, List
+from typing import List
 
 from torch import nn
 from torch.utils.data.dataset import Dataset, Subset
@@ -44,9 +44,24 @@ def plot_error_curves(training_error: list,
     plt.show()
 
 
-def split_dataset(full_ds: Dataset,
-                  fractions: tuple,
-                  random_seed: int) -> List[Dataset]:
+def split_dataset_by_id(full_ds: Dataset,
+                        ds_ids: List[set],
+                        id_attr: str = 'gdb_idx') -> List[Dataset]:
+    data_sets = []
+
+    for ids in ds_ids:
+        ds_indices = [i for i in range(len(full_ds)) if full_ds[i][id_attr].item() in ids]
+        ds = Subset(dataset=full_ds,
+                    indices=ds_indices)
+        data_sets.append(ds)
+
+    assert [len(ids) for ids in ds_ids] == [len(ds) for ds in data_sets]
+    return data_sets
+
+
+def random_split_dataset(full_ds: Dataset,
+                         fractions: tuple,
+                         random_seed: int) -> List[Dataset]:
     assert sum(fractions) == 1
     lengths = [int(f * len(full_ds)) for f in fractions]
 

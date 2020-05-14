@@ -2,10 +2,10 @@ import numpy as np
 import torch
 from torch_geometric.transforms import Compose, Distance
 
-from graph_conv_net.alchemy_dataset import AlchemyCompetitionDataset
-from graph_conv_net.transformations import AddEdges
-from graph_conv_net.train import run_experiment
-from base_configuration import CONFIG
+from graph_conv_net.graph_conv_net.alchemy_dataset import AlchemyCompetitionDataset
+from graph_conv_net.graph_conv_net.transformations import AddEdges
+from graph_conv_net.graph_conv_net.train import run_experiment
+from graph_conv_net.experiments.base_configuration import CONFIG
 
 
 def get_transform(threshold: float):

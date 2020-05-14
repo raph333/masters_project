@@ -3,13 +3,13 @@ import numpy as np
 import torch
 from torch_geometric.transforms import Compose, Distance
 
-from graph_conv_net.train import run_experiment
-from graph_conv_net.alchemy_dataset import AlchemyCompetitionDataset
-from graph_conv_net.data_processing import TencentDataProcessor
-from graph_conv_net.transformations import AddEdges, CompleteGraph
-from distance_threshold import CONFIG
+from graph_conv_net.graph_conv_net.train import run_experiment
+from graph_conv_net.graph_conv_net.alchemy_dataset import AlchemyDataset
+from graph_conv_net.graph_conv_net.data_processing import TencentDataProcessor
+from graph_conv_net.graph_conv_net.transformations import AddEdges, CompleteGraph
+from graph_conv_net.experiments.distance_threshold import CONFIG
 
-AlchemyCompetitionDataset.data_processor = TencentDataProcessor()
+AlchemyDataset.data_processor = TencentDataProcessor()
 
 
 def get_transform(threshold: float) -> Callable:
@@ -22,8 +22,8 @@ def get_transform(threshold: float) -> Callable:
 
 
 new_config = {
-    'name': 'exponential-decay-test',  # todo: set this for each experiment!  (default 'test-run')
-    'dataset_class': AlchemyCompetitionDataset,
+    'name': 'full-ds-competition-split',  # todo: set this for each experiment!  (default 'test-run')
+    'dataset_class': AlchemyDataset,
     'data_processor': TencentDataProcessor,
     'get_transform': get_transform,
     'target_param': {  # usually a parameter for the transformation
@@ -36,7 +36,7 @@ new_config = {
     #                'threshold': 1e-4,
     #                'patience': 6}
     # },
-    'cuda': 2,
+    'cuda': 0,
     'repeat': 1,
     'num_epochs': 150
 }

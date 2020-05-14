@@ -10,7 +10,7 @@ require(ggplot2)
 require(tidyr)
 require(dplyr)
 require(reshape2)
-
+  
 results_dir <- '../graph_conv_net/experiments/results'
 figures_dir <- '../thesis/figures'
 getwd()
@@ -46,41 +46,41 @@ process_multiple_lc <- function(df, target_column) {
     
 
 
-## optimizing the tencent MPNN
+## optimization experiments
 
 ```{r}
-experiment_name <- 'old-data-complete'
-
-df <- read.csv(file.path(results_dir, paste0(experiment_name, '.csv')), stringsAsFactors=F)
-
-df_long <- df %>%
-  process_single_lc() %>% 
-  na.omit()
-
-
-p <- ggplot(data=df_long, aes(x=epoch, y=MAE, linetype=variable)) +
-  geom_line() +
-  scale_y_continuous(limits=c(0, 0.3)) +
-  theme_bw() +
-  theme(plot.title = element_text(hjust = 0.5, size=16)) +
-  labs(title='Training with learning rate scheduling',
-       y='MAE',
-       linetype=element_blank())
-p
+# experiment_name <- 'old-data-complete'
+# 
+# df <- read.csv(file.path(results_dir, paste0(experiment_name, '.csv')), stringsAsFactors=F)
+# 
+# df_long <- df %>%
+#   process_single_lc() %>% 
+#   na.omit()
+# 
+# 
+# p <- ggplot(data=df_long, aes(x=epoch, y=MAE, linetype=variable)) +
+#   geom_line() +
+#   scale_y_continuous(limits=c(0, 0.3)) +
+#   theme_bw() +
+#   theme(plot.title = element_text(hjust = 0.5, size=16)) +
+#   labs(title='Training with learning rate scheduling',
+#        y='MAE',
+#        linetype=element_blank())
+# p
 ```
 
 ```{r}
-p <- ggplot(data=df, aes(x=epoch, y=lr)) +
-  geom_line() +
-  theme_bw() +
-  theme(plot.title = element_text(hjust = 0.5, size=16)) +
-  labs(title='Learning rate schedule: reduction on plateau',
-       y='learning rate',
-       linetype=element_blank())
-p
+# p <- ggplot(data=df, aes(x=epoch, y=lr)) +
+#   geom_line() +
+#   theme_bw() +
+#   theme(plot.title = element_text(hjust = 0.5, size=16)) +
+#   labs(title='Learning rate schedule: reduction on plateau',
+#        y='learning rate',
+#        linetype=element_blank())
+# p
 ```
 
-### comparing different kinds of data
+## data experiments
 make this a plot for methods section: proof of concept
 ```{r}
 df <- read.csv(file.path(results_dir, 'old-vs-new-data.csv')) %>%
@@ -93,7 +93,7 @@ ggplot(data=df, aes(x=epoch, y=MAE, color=experiment_name, linetype=variable)) +
 ```
 
 
-## Using graph convolution in the way it's meant to be used gives poor results on molecular structures
+## Neighborhood expansion
 
 ```{r, message=F}
 experiment_name <- 'tencent-mpnn-neighborhood-expansion'  # old run with implicit Hs

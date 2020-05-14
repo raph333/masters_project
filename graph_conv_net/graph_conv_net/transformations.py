@@ -1,6 +1,4 @@
-import typing
-from typing import Tuple, Union
-
+from typing import Union
 from itertools import product
 import numpy as np
 
