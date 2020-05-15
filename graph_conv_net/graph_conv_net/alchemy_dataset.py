@@ -33,6 +33,7 @@ class AlchemyDataset(InMemoryDataset):
 
         self.re_process = re_process
         self.url = 'https://alchemy.tencent.com/data/alchemy-v20191129.zip'
+        self.target_df = None
 
         super().__init__(root, transform, pre_transform, pre_filter)
         self.data, self.slices = torch.load(self.processed_paths[0])
@@ -85,10 +86,10 @@ class AlchemyDataset(InMemoryDataset):
     def process(self):
         target_df = pd.read_csv(join(self.raw_dir, self.labels_file_name))
         target_df = target_df.set_index('gdb_idx').drop('atom number', axis=1)
-        normalized_targets = (target_df - target_df.mean()) / target_df.std()
+        self.target_df = target_df.apply(lambda col: (col - col.mean()) / col.std())
 
         graphs = self.data_processor.get_graphs(structures_dir=self.raw_dir,
-                                                target_df=normalized_targets,
+                                                target_df=self.target_df,
                                                 pre_filter=self.pre_filter,
                                                 pre_transform=self.pre_transform)
 
@@ -159,8 +160,6 @@ class AlchemyCompetitionDataset(InMemoryDataset):
         if self.mode != 'test':
             target_df = pd.read_csv(self.raw_paths[1])
             self.target_df = target_df.set_index('gdb_idx')
-        else:
-            self.target_df = None
 
         graphs = self.data_processor.get_graphs(structures_dir=self.raw_paths[0],
                                                 target_df=self.target_df,

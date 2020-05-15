@@ -40,9 +40,9 @@ if __name__ == '__main__':
                         default='combined-experiments')
     args = parser.parse_args()
 
-    experiment_names = args.experiment_names.split(',')
-    if len(experiment_names) == 1 and args.output_name == 'combined-experiments':
-        args.output_name = experiment_names[0]
+    names = args.experiment_names.split(',')
+    if len(names) == 1 and args.output_name == 'combined-experiments':
+        args.output_name = names[0]
 
     result = combine_learning_curves(args.experiment_names)
     result.to_csv(join('results', f'{args.output_name}.csv'), index=False)

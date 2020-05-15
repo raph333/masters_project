@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from typing import List
+from typing import Union, List
 
 from torch import nn
 from torch.utils.data.dataset import Dataset, Subset
@@ -60,10 +60,16 @@ def split_dataset_by_id(full_ds: Dataset,
 
 
 def random_split_dataset(full_ds: Dataset,
-                         fractions: tuple,
-                         random_seed: int) -> List[Dataset]:
-    assert sum(fractions) == 1
-    lengths = [int(f * len(full_ds)) for f in fractions]
+                         random_seed: int,
+                         fractions: Union[tuple, None],
+                         lengths: Union[tuple, None] = None) -> List[Dataset]:
+    if fractions is not None:
+        assert sum(fractions) == 1
+        lengths = [int(f * len(full_ds)) for f in fractions]
+    elif lengths is not None:
+        assert sum(lengths) == len(full_ds)
+    else:
+        raise AssertionError('Please provide either fractions or lengths.')
 
     np.random.seed(random_seed)
     permuted_indices = np.random.choice(range(len(full_ds)), size=len(full_ds), replace=False)

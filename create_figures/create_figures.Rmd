@@ -81,7 +81,8 @@ process_multiple_lc <- function(df, target_column) {
 ```
 
 ## data experiments
-make this a plot for methods section: proof of concept
+
+method validation experiment:
 ```{r}
 df <- read.csv(file.path(results_dir, 'old-vs-new-data.csv')) %>%
     select(-c(minutes, 'minutes.', lr))  %>% 
@@ -91,6 +92,23 @@ ggplot(data=df, aes(x=epoch, y=MAE, color=experiment_name, linetype=variable)) +
   geom_line() + 
   scale_y_continuous(limits=c(0, 0.2)) 
 ```
+```{r}
+# add competiton-ds with random split
+df <- read.csv(file.path(results_dir, 'competition-vs-full-ds.csv')) %>%
+    select(-c(minutes, 'minutes.', lr)) %>% 
+    process_multiple_lc(target_column='experiment_name') %>% 
+    mutate(
+      experiment_name = as.character(experiment_name),
+      experiment_name = replace(experiment_name, experiment_name=='exponential-decay-test', 'competition-ds-competion-split'),
+      experiment_name = replace(experiment_name, experiment_name=='full-ds', 'full-ds-random-split'),
+      experiment_name = as.factor(experiment_name)
+      )
+
+ggplot(data=df, aes(x=epoch, y=MAE, color=experiment_name, linetype=variable)) +
+  geom_line() + 
+  scale_y_continuous(limits=c(0, 0.3)) 
+```
+
 
 
 ## Neighborhood expansion

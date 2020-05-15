@@ -47,18 +47,35 @@ The target variable in this dataset is a real-valued vector of length twelve. Th
 
 \subsubsection{Difference between competition-dataset and full-dataset}
 
-This subsection explains why the MAE-values presented in this thesis cannot be compared the competition leaderboard~\footnote{\url{https://alchemy.tencent.com/\#leaderboard}} including my own score with rank 26. If the reader is only interested in the methods used for the thesis, they may skip this subsection.
+\paragraph{Overview.} This subsection explains why the MAE-values presented in this thesis cannot be compared the competition leader-board~\footnote{\url{https://alchemy.tencent.com/\#leaderboard}} including my own score with rank 26. If the reader is only interested in the methods used for the thesis, this subsection may be skipped.
 
-Unfortunately, the results obtained on the competition dataset cannot be directly compared to results achieved on the full dataset (published after the competition).
+Unfortunately, the results obtained on the competition dataset cannot be directly compared to results achieved on the full dataset published after the competition. Figure [REFERENCE] shows the learning curves of models being trained on both the competition-dataset and the full dataset. It is obvious MAE values are considerably lower on the competition dataset.
 
 \paragraph{Train-test split}
-The competition data-set is split into training-set (called dev-set by the competition hosts), validation- and test-set with the ground truth being provided only for the first two sets. The split is not random. Instead, the validation- and test-set contain larger molecules than the training-set. Building models that can extrapolate from smaller molecules to larger molecules is useful for pharmacological research~\cite{Chen2019}. However, in order to focus on the core topic of GCNN for molecules, I only use a simple random split where training-, validation- and test-set are randomly drawn without replacement from the same population.
+The competition data-set is split into training-set (called dev-set by the competition hosts), validation- and test-set with the ground truth being provided only for the first two sets. The split is not random. Instead, the validation- and test-set contain larger molecules than the training-set. Building models that can extrapolate from smaller molecules to larger molecules is useful for pharmacological research~\cite{Chen2019}.However, in order to focus on the core topic of GCNN for molecules, for most experiments presented in this thesis. I only use a simple random split where training-, validation- and test-set are randomly drawn without replacement from the same population.
+
+Figure [REFERENCE] shows learning curves for both competition-data split and random split to eliminate any differences in validation MAE hailing from the different dataset splits. First of all, it is obvious that the validation MAE is lower on the randomly split data. This comes as no surprise because in the competition-data split, the validation molecules are systematically different (larger) from the training molecules. However, regardless of the kind of data-split, the MAE-values are still consistently lower on the competition data.
+
 
 \paragraph{Target variable normalization}
 
 In the competition data-set, the values are already normalized and the raw values are not available. It is not clear whether the mean and standard deviation used for normalization where calculated separately for the training- and validation-set or if the they are based on all molecules. Furthermore, the order of the target variables is unknown (by design) as their names are hidden with dummy-names property-1, property-2, etc.
 
-The full dataset released after the competition contains the raw values and the real names of the target variables. In for training and evaluation, they were normalized in the same manner as in the competition (subtraction of mean and division by standard deviation). However, a direct comparison with the ranges of the competition dataset is not possible as the names of the target variables are not provided there. The only observation that can be made is that the average range (maximum - minimum) of all target variables is lower in the competition data-set. This suggest that the normalization might have been conducted on per-set basis because the 
+The full dataset released after the competition contains the raw values and the real names of the target variables. For training and evaluation, they were normalized in the same manner as in the competition (subtraction of mean and division by standard deviation). However, a direct comparison with the ranges of the competition dataset is not possible as the names of the target variables are not provided there. 
+
+The only observation that can be made is that the average range (maximum - minimum) of all target variables is lower in the competition data-set. This suggest that the normalization might have been conducted on per-set basis because the range within a subset of the data is necessarily smaller or equal than the range of the full dataset. However, the small difference of an average range of 8.66 in the competition dataset and 9.72 in the full dataset is insufficient to explain the difference in MAE between the two datasets. Furthermore, such a difference could just as well be a function of dataset-size as larger datasets have a higher probability of containing more extreme outliers which increases the range of the target variables.
+
+\paragraph{Molecule data}
+
+The raw data and thus the input into the model is exactly the same in the full dataset as in the competition dataset. This has been thoroughly tested and verified.
+
+\paragraph{Conclusion}
+
+With the input-data as well as the data-splits being identical, the reason for the difference in MAE can only be explained by the different values of the target variables. As explained above, the absence of raw data in the competition dataset prevents a direct comparison of the target variables between the two datasets. Thus, no further information can be obtained to pinpoint the difference of to find a possible explanation. The only conclusion to be made is that for some reason the target variables in the new data prevent the net from learning to predict them as well as in the competition data. For this reason, I chose to use the labeled competition data for the majority of experiments in this thesis. This comprises 103727 molecules from the training- and validation-set of the competition data. However, unlike in the competition, I split these molecules randomly into 70\% training-, 15\% validation- and 15\% test-set.
+
+ 
+
+
 
 
 \subsection{Experiments}

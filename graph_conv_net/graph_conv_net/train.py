@@ -9,16 +9,19 @@ import mlflow
 
 import torch
 from torch import nn
+from torch.utils.data.dataset import ConcatDataset
 from torch_geometric.data import DataLoader
 
-from graph_conv_net.graph_conv_net import tencent_mpnn, tools
+from graph_conv_net import tencent_mpnn, tools
 
 DATA_DIR = '/scratch1/rpeer/tmp'
-ID_DF = pd.read_csv('../../../old_ds_split.csv')
-# ID2SET = {row.gdb_idx: row.set_ for _, row in ID_DF.iterrows()}
-TST_IDS = set(ID_DF.query('set_ == "test"').gdb_idx)
-VAL_IDS = set(ID_DF.query('set_ == "valid"').gdb_idx)
-DEV_IDS = set(ID_DF.query('set_ == "dev"').gdb_idx)
+
+
+# ID_DF = pd.read_csv('../../old_ds_split.csv')
+# # ID2SET = {row.gdb_idx: row.set_ for _, row in ID_DF.iterrows()}
+# TST_IDS = set(ID_DF.query('set_ == "test"').gdb_idx)
+# VAL_IDS = set(ID_DF.query('set_ == "valid"').gdb_idx)
+# DEV_IDS = set(ID_DF.query('set_ == "dev"').gdb_idx)
 
 
 def evaluate(net: nn.Module,
@@ -45,7 +48,7 @@ def train(net: nn.Module,
           optimizer: torch.optim.Optimizer,
           num_epochs: int,
           loss_function: Callable = nn.L1Loss(),
-          lr_scheduler: Union[torch.optim.lr_scheduler._LRScheduler, None] = None) -> pd.DataFrame():
+          lr_scheduler=None) -> pd.DataFrame():
     print('epoch\ttrain-MAE\tvalid-MAE\t\tmin\t\tlr')
     print('-' * 60)
     log_df = pd.DataFrame(columns=['epoch', 'train_mae', 'valid_mae', 'minutes', 'lr'])
@@ -105,17 +108,21 @@ def run_experiment(config: dict):
     root_dir = join(DATA_DIR, config['name'])
     if not os.path.exists(root_dir):
         os.makedirs(root_dir)
-    ds = dataset_class(root=root_dir,
-                       transform=None)  # set according to target parameter in loop
+
+    # ds = dataset_class(root=root_dir,
+    #                    transform=None)  # set according to target parameter in loop
     # ds_dev, ds_valid, ds_test = tools.random_split_dataset(full_ds=ds,
     #                                                        fractions=config['ds_fractions'],
     #                                                        random_seed=config['random_seed'])
-    ds_dev, ds_val, ds_test = tools.split_dataset_by_id(full_ds=ds,
-                                                        ds_ids=[DEV_IDS, VAL_IDS, TST_IDS],
-                                                        id_attr='gdb_idx')
+    # ds_dev, ds_valid, ds_test = tools.split_dataset_by_id(full_ds=ds,
+    #                                                     ds_ids=[DEV_IDS, VAL_IDS, TST_IDS],
+    #                                                     id_attr='gdb_idx')
 
-    # ds_valid = dataset_class(root=root_dir, mode='valid', transform=None)
-    # ds_dev = dataset_class(root=root_dir, mode='dev', transform=None)
+    ds = ConcatDataset([dataset_class(root=root_dir, mode='dev', transform=None),
+                        dataset_class(root=root_dir, mode='valid', transform=None)])
+    ds_dev, ds_valid = tools.random_split_dataset(full_ds=ds,
+                                                  lengths=config['ds_lengths'],
+                                                  random_seed=config['random_seed'])
 
     for i, param in enumerate(config['target_param']['values']):
         print(f'\nUSING {target_param} = {param}:')
@@ -150,10 +157,10 @@ def run_experiment(config: dict):
                                        num_epochs=config['num_epochs'],
                                        lr_scheduler=scheduler)
 
-                test_mae = evaluate(net=model,
-                                    data_loader=DataLoader(ds_test, batch_size=config['batch_size']),
-                                    device=torch.device(f'cuda:{config["cuda"]}'))
-                mlflow.log_metric('MAE', test_mae)
+                # test_mae = evaluate(net=model,
+                #                     data_loader=DataLoader(ds_test, batch_size=config['batch_size']),
+                #                     device=torch.device(f'cuda:{config["cuda"]}'))
+                # mlflow.log_metric('MAE', test_mae)
 
                 lc_file = 'learning_curve.csv'
                 learning_curve.to_csv(lc_file, index=False)
