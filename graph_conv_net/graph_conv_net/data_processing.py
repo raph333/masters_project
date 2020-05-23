@@ -25,11 +25,8 @@ class RawDataProcessor:
                            Chem.rdchem.BondType.AROMATIC])
 
     def __init__(self,
-                 implicit_hydrogens: bool = False,
-                 sample_fraction: float = 1):
+                 implicit_hydrogens: bool = False):
         self.implicit_h = implicit_hydrogens
-        assert 0 < sample_fraction <= 1
-        self.sample_fraction = sample_fraction
 
         if self.implicit_h:
             self.atom_types = self.atom_types[1:]
@@ -102,9 +99,10 @@ class RawDataProcessor:
                    pre_filter,
                    pre_transform) -> list:
         graphs = []
-        file_paths = glob.glob(f'{structures_dir}/atom_*/*')
-        n = int(len(file_paths) * self.sample_fraction)
-        file_paths = np.random.choice(file_paths, size=n, replace=False)
+
+        indices = set(target_df.index)
+        file_paths = [f for f in glob.glob(f'{structures_dir}/atom_*/*') if
+                      int(os.path.basename(f).replace('.sdf', '')) in indices]
 
         for sdf_path in tqdm(file_paths):
 

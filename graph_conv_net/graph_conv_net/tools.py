@@ -1,8 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from typing import Union, List
+from typing import Union, List, Tuple
 
-from torch import nn
+from sklearn.model_selection import train_test_split
+
+import torch
+from torch import nn, tensor, LongTensor
 from torch.utils.data.dataset import Dataset, Subset
 
 
@@ -59,20 +62,22 @@ def split_dataset_by_id(full_ds: Dataset,
     return data_sets
 
 
-def random_split_dataset(full_ds: Dataset,
-                         random_seed: int,
-                         fractions: Union[tuple, None],
-                         lengths: Union[tuple, None] = None) -> List[Dataset]:
+def random_data_split(full_ds: Dataset,
+                      random_seed: Union[int, None] = None,
+                      fractions: Union[tuple, None] = None,
+                      lengths: Union[tuple, None] = None) -> List[Dataset]:
+    n = len(full_ds)
+
     if fractions is not None:
         assert sum(fractions) == 1
-        lengths = [int(f * len(full_ds)) for f in fractions]
+        lengths = [int(f * n) for f in fractions]
     elif lengths is not None:
-        assert sum(lengths) == len(full_ds)
+        assert sum(lengths) == n
     else:
         raise AssertionError('Please provide either fractions or lengths.')
 
-    np.random.seed(random_seed)
-    permuted_indices = np.random.choice(range(len(full_ds)), size=len(full_ds), replace=False)
+    r_state = np.random.RandomState(random_seed)
+    permuted_indices = r_state.permutation(n)
 
     start = 0
     data_sets = []
@@ -84,3 +89,31 @@ def random_split_dataset(full_ds: Dataset,
         start = end
 
     return data_sets
+
+
+def stratified_data_split(ds: Dataset,
+                          strat_col: int = 2,
+                          bin_size: int = 10,
+                          parts: tuple = (8, 1, 1),
+                          random_seed: Union[int, None] = None) -> tuple:
+    assert len(parts) == 3, 'Please provide train-, validation- and test-set parts (can be zero).'
+    assert sum(parts) == bin_size, 'Make sure the ratios sum up to bin-size.'
+
+    r_state = np.random.RandomState(random_seed)
+    targets = torch.cat([d.y for d in ds])[:, strat_col]
+    _, indices = targets.sort()
+    trn_idx = []
+    val_idx = []
+    tst_idx = []
+
+    for i in range(targets.shape[0] // bin_size):
+        start = i * bin_size
+        end = start + bin_size
+        bin_idx = indices[start: end]
+
+        trn, val, tst = torch.split(tensor(r_state.permutation(bin_size)), parts)
+        trn_idx.extend(bin_idx[trn].tolist())
+        val_idx.extend(bin_idx[val].tolist())
+        tst_idx.extend(bin_idx[tst].tolist())
+
+    return Subset(ds, trn_idx), Subset(ds, val_idx), Subset(ds, tst_idx)

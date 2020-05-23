@@ -92,9 +92,14 @@ ggplot(data=df, aes(x=epoch, y=MAE, color=experiment_name, linetype=variable)) +
   geom_line() + 
   scale_y_continuous(limits=c(0, 0.2)) 
 ```
+
+data-set and split experiments:
 ```{r}
-# add competiton-ds with random split
-df <- read.csv(file.path(results_dir, 'competition-vs-full-ds.csv')) %>%
+name <- 'competition-vs-full-ds'
+# cl-args:
+# exponential-decay-test,full-ds,full-ds-competition-split,competition-ds-random-split,competition-ds-random-split-same-ratio -o competition-vs-full-ds
+
+df <- read.csv(file.path(results_dir, paste0(name, '.csv'))) %>%
     select(-c(minutes, 'minutes.', lr)) %>% 
     process_multiple_lc(target_column='experiment_name') %>% 
     mutate(
@@ -104,9 +109,12 @@ df <- read.csv(file.path(results_dir, 'competition-vs-full-ds.csv')) %>%
       experiment_name = as.factor(experiment_name)
       )
 
-ggplot(data=df, aes(x=epoch, y=MAE, color=experiment_name, linetype=variable)) +
+p <- ggplot(data=df, aes(x=epoch, y=MAE, color=experiment_name, linetype=variable)) +
   geom_line() + 
-  scale_y_continuous(limits=c(0, 0.3)) 
+  scale_y_continuous(limits=c(0, 0.3))
+p
+ggsave(file.path(figures_dir, paste0(name, '.pdf')), p)
+
 ```
 
 
@@ -114,7 +122,7 @@ ggplot(data=df, aes(x=epoch, y=MAE, color=experiment_name, linetype=variable)) +
 ## Neighborhood expansion
 
 ```{r, message=F}
-experiment_name <- 'tencent-mpnn-neighborhood-expansion'  # old run with implicit Hs
+experiment_name <- 'tencent-mpnn-neighborhood-expansion'
 
 df <- read.csv(file.path(results_dir, paste0(experiment_name, '.csv')), stringsAsFactors=F) %>%
   process_multiple_lc(target_column='target_param')

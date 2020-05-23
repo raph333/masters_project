@@ -25,15 +25,17 @@ class AlchemyDataset(InMemoryDataset):
                  transform: Union[Callable, None] = None,
                  pre_transform: Union[Callable, None] = None,
                  pre_filter: Union[Callable, None] = None,
-                 re_process: bool = False):
+                 re_process: bool = False,
+                 sample_fraction: float = 1):
 
         if not hasattr(self, 'data_processor'):
             print('Please specify an instance of the "BasicDataProcessor"-class as class-attribute.')
             raise AssertionError('Missing attribute: "data_processor"')
 
         self.re_process = re_process
+        self.sample_fraction = sample_fraction
         self.url = 'https://alchemy.tencent.com/data/alchemy-v20191129.zip'
-        self.target_df = None
+        self.target_df = None  # todo: remove
 
         super().__init__(root, transform, pre_transform, pre_filter)
         self.data, self.slices = torch.load(self.processed_paths[0])
@@ -86,7 +88,10 @@ class AlchemyDataset(InMemoryDataset):
     def process(self):
         target_df = pd.read_csv(join(self.raw_dir, self.labels_file_name))
         target_df = target_df.set_index('gdb_idx').drop('atom number', axis=1)
-        self.target_df = target_df.apply(lambda col: (col - col.mean()) / col.std())
+        target_df = target_df.apply(lambda col: (col - col.mean()) / col.std())
+
+        n = int(len(target_df) * self.sample_fraction)
+        self.target_df = target_df.sample(n)
 
         graphs = self.data_processor.get_graphs(structures_dir=self.raw_dir,
                                                 target_df=self.target_df,

@@ -109,20 +109,10 @@ def run_experiment(config: dict):
     if not os.path.exists(root_dir):
         os.makedirs(root_dir)
 
-    # ds = dataset_class(root=root_dir,
-    #                    transform=None)  # set according to target parameter in loop
-    # ds_dev, ds_valid, ds_test = tools.random_split_dataset(full_ds=ds,
-    #                                                        fractions=config['ds_fractions'],
-    #                                                        random_seed=config['random_seed'])
-    # ds_dev, ds_valid, ds_test = tools.split_dataset_by_id(full_ds=ds,
-    #                                                     ds_ids=[DEV_IDS, VAL_IDS, TST_IDS],
-    #                                                     id_attr='gdb_idx')
-
-    ds = ConcatDataset([dataset_class(root=root_dir, mode='dev', transform=None),
-                        dataset_class(root=root_dir, mode='valid', transform=None)])
-    ds_dev, ds_valid = tools.random_split_dataset(full_ds=ds,
-                                                  lengths=config['ds_lengths'],
-                                                  random_seed=config['random_seed'])
+    ds = dataset_class(root=root_dir)
+    # ds = ConcatDataset([dataset_class(root=root_dir, mode='dev'),
+    #                     dataset_class(root=root_dir, mode='valid')])
+    ds_dev, ds_valid, ds_test = tools.stratified_data_split(ds)
 
     for i, param in enumerate(config['target_param']['values']):
         print(f'\nUSING {target_param} = {param}:')
@@ -157,10 +147,10 @@ def run_experiment(config: dict):
                                        num_epochs=config['num_epochs'],
                                        lr_scheduler=scheduler)
 
-                # test_mae = evaluate(net=model,
-                #                     data_loader=DataLoader(ds_test, batch_size=config['batch_size']),
-                #                     device=torch.device(f'cuda:{config["cuda"]}'))
-                # mlflow.log_metric('MAE', test_mae)
+                test_mae = evaluate(net=model,
+                                    data_loader=DataLoader(ds_test, batch_size=config['batch_size']),
+                                    device=torch.device(f'cuda:{config["cuda"]}'))
+                mlflow.log_metric('test-MAE', test_mae)
 
                 lc_file = 'learning_curve.csv'
                 learning_curve.to_csv(lc_file, index=False)
