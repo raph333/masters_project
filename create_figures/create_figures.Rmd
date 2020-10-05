@@ -82,6 +82,7 @@ process_multiple_lc <- function(df, target_column) {
 
 ## data experiments
 
+
 method validation experiment:
 ```{r}
 df <- read.csv(file.path(results_dir, 'old-vs-new-data.csv')) %>%
@@ -90,7 +91,9 @@ df <- read.csv(file.path(results_dir, 'old-vs-new-data.csv')) %>%
 
 ggplot(data=df, aes(x=epoch, y=MAE, color=experiment_name, linetype=variable)) +
   geom_line() + 
-  scale_y_continuous(limits=c(0, 0.2)) 
+  scale_y_continuous(limits=c(0, 0.2))
+
+# ggsave(file.path(figures_dir, 'dataset_comparison.pdf'), p)
 ```
 
 data-set and split experiments:
@@ -111,10 +114,13 @@ df <- read.csv(file.path(results_dir, paste0(name, '.csv'))) %>%
 
 p <- ggplot(data=df, aes(x=epoch, y=MAE, color=experiment_name, linetype=variable)) +
   geom_line() + 
-  scale_y_continuous(limits=c(0, 0.3))
+  scale_y_continuous(limits=c(0, 0.3)) +
+  theme(plot.title = element_text(hjust = 0.5, size=16)) +
+  labs(title='Dataset and split comparison',
+       color='experiment',
+       linetype=element_blank())
 p
 ggsave(file.path(figures_dir, paste0(name, '.pdf')), p)
-
 ```
 
 

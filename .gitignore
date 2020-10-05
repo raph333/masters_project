@@ -24,4 +24,4 @@ doc/tmp/*
 *.lot
 *.toc
 *.synctex.gz
-*.pdf
+thesis/*.pdf

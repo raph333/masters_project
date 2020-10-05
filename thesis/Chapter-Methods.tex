@@ -47,14 +47,25 @@ The target variable in this dataset is a real-valued vector of length twelve. Th
 
 \subsubsection{Difference between competition-dataset and full-dataset}
 
-\paragraph{Overview.} This subsection explains why the MAE-values presented in this thesis cannot be compared the competition leader-board~\footnote{\url{https://alchemy.tencent.com/\#leaderboard}} including my own score with rank 26. If the reader is only interested in the methods used for the thesis, this subsection may be skipped.
+\paragraph{Overview} This subsection explains why the MAE-values presented in this thesis cannot be compared the competition leader-board~\footnote{\url{https://alchemy.tencent.com/\#leaderboard}} including my own score with rank 26. If the reader is only interested in the methods used for the thesis, this subsection may be skipped.
 
-Unfortunately, the results obtained on the competition dataset cannot be directly compared to results achieved on the full dataset published after the competition. Figure [REFERENCE] shows the learning curves of models being trained on both the competition-dataset and the full dataset. It is obvious MAE values are considerably lower on the competition dataset.
+Unfortunately, the results obtained on the competition dataset cannot be directly compared to results achieved on the full dataset published after the competition. Figure~\ref{fig:competition-vs-full-ds} shows the learning curves of models being trained on both the competition-dataset and the full dataset. The MAE values are considerably lower on the competition dataset.
+
+
+\begin{figure}[H]
+	\includegraphics[width=\linewidth]{figures/competition-vs-full-ds}
+	
+	\caption{Comparing the full (post-competition) and the competition dataset using various methods for splitting the data into training- and validation-set. Both data-sets are evaluated using a random split (70\% training, 15\% validation, 15\% testing) and the train-validation split as it was defined in the competition (bias towards higher weight molecules in the validation set). In addition, the competition data is also subjected to a random split where the fraction of the validation-set is exactly the same as in the competition-data-split. (This last experiment was conducted to make certain the observed difference is due to the method of splitting and not due to the size of the validation set.)}
+	\label{fig:competition-vs-full-ds}
+\end{figure}
 
 \paragraph{Train-test split}
-The competition data-set is split into training-set (called dev-set by the competition hosts), validation- and test-set with the ground truth being provided only for the first two sets. The split is not random. Instead, the validation- and test-set contain larger molecules than the training-set. Building models that can extrapolate from smaller molecules to larger molecules is useful for pharmacological research~\cite{Chen2019}.However, in order to focus on the core topic of GCNN for molecules, for most experiments presented in this thesis. I only use a simple random split where training-, validation- and test-set are randomly drawn without replacement from the same population.
+The competition data-set is split into training-set (called dev-set by the competition hosts), validation- and test-set with the ground truth being provided only for the first two sets. The split is not random. Instead, the validation- and test-set contain larger molecules than the training-set. Building models that can extrapolate from smaller molecules to larger molecules is useful for pharmacological research~\cite{Chen2019}. However, in order to focus on the core topic of GCNN for molecules, for most experiments presented in this thesis. I only use a simple random split where training-, validation- and test-set are randomly drawn without replacement from the same population.
 
-Figure [REFERENCE] shows learning curves for both competition-data split and random split to eliminate any differences in validation MAE hailing from the different dataset splits. First of all, it is obvious that the validation MAE is lower on the randomly split data. This comes as no surprise because in the competition-data split, the validation molecules are systematically different (larger) from the training molecules. However, regardless of the kind of data-split, the MAE-values are still consistently lower on the competition data.
+Figure~\ref{fig:competition-vs-full-ds} shows learning curves for both competition-data split and random split to eliminate any differences in validation MAE hailing from the different dataset splits.
+The figure shows two counterintuitive results. First of all, the MAE on is higher on the full dataset despite it's larger size. Naturally the larger dataset should better (or at least equally good) results. Secondly, the impact of the splitting method varies between the two dataset. The expected result would have been a lower MAE on randomly split data because the training- and validation- molecules come from the same distribution. Having a strong bias towards higher weight molecules in the validation set is expected to increase the MAE. For the full dataset, this is indeed the case. However, for the competition dataset, the random split gives a higher MAE than the biased competition split. As this result contradict our expectation, it was heavily tested and validated.
+
+%First of all, it is obvious that the validation MAE is lower on the randomly split data. This comes as no surprise because in the competition-data split, the validation molecules are systematically different (larger) from the training molecules. However, regardless of the kind of data-split, the MAE-values are still consistently lower on the competition data.
 
 
 \paragraph{Target variable normalization}
@@ -71,13 +82,12 @@ The raw data and thus the input into the model is exactly the same in the full d
 
 \paragraph{Conclusion}
 
-With the input-data as well as the data-splits being identical, the reason for the difference in MAE can only be explained by the different values of the target variables. As explained above, the absence of raw data in the competition dataset prevents a direct comparison of the target variables between the two datasets. Thus, no further information can be obtained to pinpoint the difference of to find a possible explanation. The only conclusion to be made is that for some reason the target variables in the new data prevent the net from learning to predict them as well as in the competition data. For this reason, I chose to use the labeled competition data for the majority of experiments in this thesis. This comprises 103727 molecules from the training- and validation-set of the competition data. However, unlike in the competition, I split these molecules randomly into 70\% training-, 15\% validation- and 15\% test-set.
+With the input-data as well as the data-splits being identical, the reason for the difference in MAE can only be explained by the different values of the target variables. As discussed above, the absence of raw data in the competition dataset prevents a direct comparison of the target variables between the two datasets. Thus, no further information can be obtained to pinpoint the difference of to find a possible explanation. The only conclusion to be made is that for some reason the target variables in the new data prevent the net from learning to predict them as well as in the competition data. For this reason, I chose to use the labeled competition data for the majority of experiments in this thesis. This comprises 103727 molecules from the training- and validation-set of the competition data.
+Furthermore, I chose use the same training-validation split as in the competition because the MAE of the competition-data with this split could not be achieved by any other splitting method. While it is unfortunate not to know the root of this counterintuitive finding, it will have to remain a mystery in order to focus on the core topic of this thesis: graph neural networks. 
+
+%However, unlike in the competition, I split these molecules randomly into 70\% training-, 15\% validation- and 15\% test-set.
 
  
-
-
-
-
 \subsection{Experiments}
 
 Most experiments show learning curves with validation- and training-error rather than just the final errors. The choice was made because, in addition to showing the final error-rates, learning curves allow to estimate whether the model suffers from high bias or high variance and also shows if prolonged training could lead to further improvements or if a plateau has been reached. In contrast, a single error-metric does not show how this metric was obtained and thus offers little information to interpret the results. Furthermore, learning curve averaging of multiple training runs was employed to reduce the impact of noise. Some variation in the learning curves is to be expected even in the absence of any difference in model architecture, input data or optimization strategy. Conduction multiple training runs for each setting and averaging the results reduces the impact of random variation and allow to see the systematic differences instead.
