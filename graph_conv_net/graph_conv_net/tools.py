@@ -1,16 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from typing import Union, List, Tuple
-
-from sklearn.model_selection import train_test_split
+from typing import Union, List
 
 import torch
-from torch import nn, tensor, LongTensor
+from torch import nn, tensor
 from torch.utils.data.dataset import Dataset, Subset
 
 
 def count_parameters(net: nn.Module):
-    return sum([np.prod(x.shape) for x in net.parameters()])
+    return sum(np.prod(x.shape) for x in net.parameters())
 
 
 def print_lr_schedule(lr: float, decay: float, num_epochs=100, steps=10):
@@ -92,7 +90,7 @@ def random_data_split(full_ds: Dataset,
 
 
 def stratified_data_split(ds: Dataset,
-                          strat_col: int = 2,
+                          strat_col: int = 2,  # 2 = HOMO-LUMO gap
                           bin_size: int = 10,
                           parts: tuple = (8, 1, 1),
                           random_seed: Union[int, None] = None) -> tuple:

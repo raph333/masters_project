@@ -162,29 +162,3 @@ class TencentDataProcessor(RawDataProcessor):
             features.append(atom_feature_vector)
 
         return tensor(features).float()
-
-
-# if __name__ == '__main__':
-#
-#     LETTERS = []
-#     explicit = []
-#     implicit = []
-#     total = []
-#     p = RawDataProcessor(implicit_hydrogens=True)
-#     # g = p._read_sdf('../../data_full/raw/atom_10/8273173.sdf')
-#
-#     graphs = []
-#     for file_name in glob.glob('../../data_full/raw/atom_10/*.sdf'):
-#         graph = p._read_sdf(file_name)
-#         graphs.append(graph)
-#
-#     h_types = pd.DataFrame({'explicit': explicit,
-#                             'implicit': implicit,
-#                             'total': total})
-#     h_types['sum_ok'] = (h_types.explicit + h_types.implicit) == h_types.total
-#
-#     atom_counts = pd.Series([g.num_nodes for g in graphs]).value_counts()
-#     print(atom_counts)
-#
-#     print(pd.Series(LETTERS).value_counts())
-

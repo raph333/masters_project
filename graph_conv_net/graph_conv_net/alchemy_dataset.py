@@ -16,6 +16,7 @@ from torch_geometric.data.makedirs import makedirs
 class AlchemyDataset(InMemoryDataset):
     """
     Entire 200k molecule Alchemy dataset: fully labeled, no pre-defined split
+    See https://alchemy.tencent.com/
     """
     labels_file_name = 'ground_truth.csv'
     atom_numbers = (9, 10, 11, 12)
@@ -35,7 +36,7 @@ class AlchemyDataset(InMemoryDataset):
         self.re_process = re_process
         self.sample_fraction = sample_fraction
         self.url = 'https://alchemy.tencent.com/data/alchemy-v20191129.zip'
-        self.target_df = None  # todo: remove
+        self.target_df = None
 
         super().__init__(root, transform, pre_transform, pre_filter)
         self.data, self.slices = torch.load(self.processed_paths[0])
@@ -105,6 +106,7 @@ class AlchemyDataset(InMemoryDataset):
 class AlchemyCompetitionDataset(InMemoryDataset):
     """
     Competition dataset with pre-defined dev-, validation- and unlabeled test-set.
+    See https://alchemy.tencent.com/
     """
     set_names = ('dev', 'valid', 'test')
 

@@ -32,46 +32,6 @@ class CompleteGraph:
         return f'{self.__class__.__name__}()'
 
 
-class AddEdges:
-    """
-    Add an edge between every two atoms with distance <= distance_threshold
-    """
-
-    def __init__(self,
-                 distance_threshold: Union[float, None] = np.inf,
-                 norm_dist: bool = True,
-                 add_dist_feature: bool = False):
-
-        if distance_threshold is None:
-            self.add_edges = False
-        else:
-            self.add_edges = True
-
-        self.t = distance_threshold
-        self.add_dist_feature = add_dist_feature
-
-        self.complete_graph = CompleteGraph()
-        self.distance = Distance(norm=norm_dist)
-        self.distance_threshold = DistanceThreshold(threshold=self.t)
-
-    def __call__(self, data: Data) -> Data:
-        if self.add_edges is False:
-            return data
-
-        data = self.complete_graph(data)
-        data = self.distance(data)
-        data = self.distance_threshold(data)
-
-        if self.add_dist_feature:
-            return data
-
-        data.edge_attr = data.edge_attr[:, :-1]  # remove distance column
-        return data
-
-    def __repr__(self):
-        return f'{self.__class__.__name__}(distance_threshold={self.t})'
-
-
 class DistanceThreshold:
 
     def __init__(self,
@@ -93,6 +53,46 @@ class DistanceThreshold:
 
     def __repr__(self):
         return f'{self.__class__.__name__}(threshold={self.t})'
+
+
+class AddEdges:
+    """
+    Add an edge between every two atoms with distance <= distance_threshold
+    """
+
+    def __init__(self,
+                 distance_threshold: Union[float, None] = np.inf,
+                 norm_dist: bool = True,
+                 add_dist_feature: bool = False):
+
+        if distance_threshold is None:
+            self.add_edges = False
+        else:
+            self.add_edges = True
+
+        self.t = distance_threshold
+        self.add_dist_feature = add_dist_feature
+
+        self.calculate_complete_graph = CompleteGraph()
+        self.calculate_distance = Distance(norm=norm_dist)
+        self.apply_distance_threshold = DistanceThreshold(threshold=self.t)
+
+    def __call__(self, data: Data) -> Data:
+        if self.add_edges is False:
+            return data
+
+        data = self.calculate_complete_graph(data)
+        data = self.calculate_distance(data)
+        data = self.apply_distance_threshold(data)
+
+        if self.add_dist_feature:
+            return data
+
+        data.edge_attr = data.edge_attr[:, :-1]  # remove distance column
+        return data
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}(distance_threshold={self.t})'
 
 
 class NHop(object):
