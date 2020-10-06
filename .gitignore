@@ -2,6 +2,7 @@ tutorials
 data
 data_full
 literature
+tmp
 
 *ipynb_checkpoints
 *__pycache__
