@@ -2,14 +2,13 @@ import os
 from os.path import join
 from pprint import pprint
 import time
-from typing import Union, Callable
+from typing import Callable
 
 import pandas as pd
 import mlflow
 
 import torch
 from torch import nn
-from torch.utils.data.dataset import ConcatDataset
 from torch_geometric.data import DataLoader, Dataset
 
 from graph_conv_net import tencent_mpnn, tools
@@ -19,12 +18,6 @@ from graph_conv_net.data_processing import TencentDataProcessor
 AlchemyDataset.data_processor = TencentDataProcessor()
 
 DATA_DIR = '/scratch1/rpeer/tmp'
-
-
-# ID_DF = pd.read_csv('../../old_ds_split.csv')
-# TST_IDS = set(ID_DF.query('set_ == "test"').gdb_idx)
-# VAL_IDS = set(ID_DF.query('set_ == "valid"').gdb_idx)
-# DEV_IDS = set(ID_DF.query('set_ == "dev"').gdb_idx)
 
 
 def evaluate(net: nn.Module,
@@ -123,22 +116,16 @@ def run_experiment(config: dict):
     if not os.path.exists(root_dir):
         os.makedirs(root_dir)
 
-    # ds = dataset_class(root=root_dir)
-    # ds = ConcatDataset([dataset_class(root=root_dir, mode='dev'),
-    #                     dataset_class(root=root_dir, mode='valid')])
-    # ds_dev, ds_valid, ds_test = tools.stratified_data_split(ds, random_seed=config['random_seed'])
     ds_dev = dataset_class(root=root_dir, mode='dev')
     ds_valid = dataset_class(root=root_dir, mode='valid')
-    ds_test = dataset_class(root=root_dir, mode='test')
-    full_ds = AlchemyDataset(root=join(DATA_DIR, 'full-ds-strat-split'))
-    # ds_test = tools.split_dataset_by_id(full_ds, [TST_IDS])[0]
+    # ds_test = dataset_class(root=root_dir, mode='test')
 
     for i, param in enumerate(config['target_param']['values']):
         print(f'\nUSING {target_param} = {param}:')
 
         ds_dev.transform = transform_creator(param)
         ds_valid.transform = transform_creator(param)
-        ds_test.transform = transform_creator(param)
+        # ds_test.transform = transform_creator(param)
 
         for rep in range(config['repeat']):
 
@@ -167,10 +154,10 @@ def run_experiment(config: dict):
                                        num_epochs=config['num_epochs'],
                                        lr_scheduler=scheduler)
 
-                test_mae = evaluate(net=model,
-                                    data_loader=DataLoader(ds_test, batch_size=config['batch_size']),
-                                    device=torch.device(f'cuda:{config["cuda"]}'))
-                mlflow.log_metric('test-MAE', test_mae)
+                # test_mae = evaluate(net=model,
+                #                     data_loader=DataLoader(ds_test, batch_size=config['batch_size']),
+                #                     device=torch.device(f'cuda:{config["cuda"]}'))
+                # mlflow.log_metric('test-MAE', test_mae)
 
                 lc_file = 'learning_curve.csv'
                 learning_curve.to_csv(lc_file, index=False)
