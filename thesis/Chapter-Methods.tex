@@ -38,7 +38,7 @@ In all experiments presented in this thesis, Adaptive Moment Estimation (Adam)[C
 
 The same considerations were applied to learning rates and learning rate scheduling. Two different optimization schemes were used for different purposes.
 To obtain the lowest possible test-set error, a learning rate schedule that reduces the learning rate after the validation error plateaus has found to be most effective~\footnote{Specifically, the following parameters were chosen: The initial learning rate of 0.01 is reduced by a factor of 0.75 if the validation error did not decrease by a value of $10^{-4}$ or more within the last 10 epochs. The training duration was 300 epochs} This optimization scheme above suffers from the drawback of requiring many training epochs. Furthermore, the resulting learning-rate schedule varies considerably even between trainings with the same parameters. These differences as well as the long training time make it unsuitable for comparing learning curves with different parameters.
-For comparing different learning curves a simpler, exponential learning-rate decay was chosen~\footnote{REFERENCE} [CITATON]. The advantage of this method is that at each epoch, all curves have the same learning rate making them comparable. The final validation error is usually higher than would be achieved with reduce-on-plateau learning rate scheduling. However, this drawback is accepted because the main point of the experiments is to compare different model architectures, parameters or data-transformation rather than to achieve the lowest possible test-set error.
+For comparing different learning curves a simpler, exponential learning-rate decay was chosen~\footnote{The initial learning rate of 0.001 is reduced by a factor of 0.99 after every epoch and the experiment is run for 150 to 200 epochs.} [CITATON]. The advantage of this method is that at each epoch, all curves have the same learning rate making them comparable. The final validation error is usually higher than would be achieved with reduce-on-plateau learning rate scheduling. However, this drawback is accepted because the main point of the experiments is to compare different model architectures, parameters or data-transformation rather than to achieve the lowest possible test-set error.
 
 
 \subsection{Benchmark and evaluation}
@@ -54,7 +54,6 @@ Unfortunately, the results obtained on the competition dataset cannot be directl
 
 \begin{figure}[H]
 	\includegraphics[width=\linewidth]{figures/competition-vs-full-ds}
-	
 	\caption{Comparing the full (post-competition) and the competition dataset using various methods for splitting the data into training- and validation-set. Both data-sets are evaluated using a random split (70\% training, 15\% validation, 15\% testing) and the train-validation split as it was defined in the competition (bias towards higher weight molecules in the validation set). In addition, the competition data is also subjected to a random split where the fraction of the validation-set is exactly the same as in the competition-data-split. (This last experiment was conducted to make certain the observed difference is due to the method of splitting and not due to the size of the validation set.)}
 	\label{fig:competition-vs-full-ds}
 \end{figure}
