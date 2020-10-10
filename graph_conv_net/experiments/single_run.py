@@ -1,5 +1,6 @@
 from typing import Callable
 import numpy as np
+import torch
 
 from graph_conv_net.train import run_experiment
 from graph_conv_net.alchemy_dataset import AlchemyCompetitionDataset
@@ -16,7 +17,7 @@ def get_transform(threshold: float) -> Callable:
 
 
 new_config = {
-    'name': 'test-run',  # todo: set this for each experiment!  (default 'test-run')
+    'name': 'decoupled-weights',  # todo: set this for each experiment!  (default 'test-run')
     'dataset_class': AlchemyCompetitionDataset,
     'data_processor': TencentDataProcessor,
     'get_transform': get_transform,
@@ -30,9 +31,13 @@ new_config = {
     #                'threshold': 1e-4,
     #                'patience': 6}
     # },
-    'cuda': 2,
-    'repeat': 1,
-    'num_epochs': 150
+    'lr_scheduler': {
+        'class': torch.optim.lr_scheduler.ExponentialLR,
+        'kwargs': {'gamma': 0.99}
+    },
+    'cuda': 3,
+    'repeat': 3,
+    'num_epochs': 200
 }
 CONFIG.update(new_config)
 

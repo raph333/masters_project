@@ -11,7 +11,8 @@ import torch
 from torch import nn
 from torch_geometric.data import DataLoader, Dataset
 
-from graph_conv_net import tencent_mpnn, tools
+from graph_conv_net import tools
+from graph_conv_net.decoupled_weight_mpnn import MPNN
 from graph_conv_net.alchemy_dataset import AlchemyDataset
 from graph_conv_net.data_processing import TencentDataProcessor
 
@@ -130,8 +131,8 @@ def run_experiment(config: dict):
         for rep in range(config['repeat']):
 
             print(f'\nrep number {rep}:')
-            model = tencent_mpnn.MPNN(node_input_dim=ds_dev[0].num_features,  # todo for other architectures: configure
-                                      edge_input_dim=ds_dev[0].edge_attr.shape[1])
+            model = MPNN(node_input_dim=ds_dev[0].num_features,  # todo for other architectures: configure
+                         edge_input_dim=ds_dev[0].edge_attr.shape[1])
 
             with mlflow.start_run():
 
