@@ -28,6 +28,7 @@ class MPNN(torch.nn.Module):
             nn.Linear(edge_hidden_dim, node_hidden_dim * node_hidden_dim)
         )
 
+        # initialize each conv-layer independently:
         for i in range(self.num_step_message_passing):
             setattr(self,
                     f'conv_{i}',

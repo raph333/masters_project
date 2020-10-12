@@ -18,7 +18,7 @@ Therefore, the first experiment, we compare the learning curves of graphs when d
 \begin{figure}[H]
 	\includegraphics[width=\linewidth]{figures/tencent-mpnn-neighborhood-expansion}
 	
-	\caption{The learning curves with different neighborhood radii are show over the courses of 100 epochs. The color corresponds to the neighborhood radius, dotted lines the training errors and solid lines show validation errors. Note that for each radius, there is a training- and a validation-error curve. Each curve is an average of three learning curves with the same neighborhood radius. All curves were generated using a simple optimization scheme described in Section~\ref{sec:training}. Both, validation- and training-error could be lowered considerably by employing a more sophisticated optimization scheme. However, this would be at the expense of comparability between curves (see Section~\ref{sec:training}}).
+	\caption{The learning curves with different neighborhood radii are show over the courses of 100 epochs. The color corresponds to the neighborhood radius, dotted lines the training errors and solid lines show validation errors. Note that for each radius, there is a training- and a validation-error curve. Each curve is an average of three learning curves with the same neighborhood radius. All curves were generated using a simple optimization scheme described in Section~\ref{sec:training}. Both, validation- and training-error could be lowered considerably by employing a more sophisticated optimization scheme. However, this would be at the expense of comparability between curves (see Section~\ref{sec:training}).}
 	\label{fig:tencent-mpnn-neighborhood-expansion}
 \end{figure}
 
@@ -72,7 +72,18 @@ The approach of not considering hydrogen atoms explicitly but only as features o
 %However, in experiments, the weight-shared graph layers prove superior.
 %}
 
-% insert experiment: decoupled weights
+In most graph neural networks, the graph-conv layers have shared weights. This allows for efficient training and works well in practice. However, there is no theoretical reason that weight sharing is necessarily superior. For instance, it would be conceivable that independent weights would work better for extracting different kinds of features at each graph-conv step. Recall that the graph-conv layer, the input for a given node update consists only of direct neighbor nodes, at the second layer, the update indirectly contains information from all second-degree neighbor nodes etc. Hence, learning different weights for different graph-conv layers might be beneficial. Note also that in computer vision every layer has independent weights even within blocks of convolutional layers with the same dimension. It is therefore far from clear that weight sharing has to be the preferred approach for graph-conv layers.
+
+In order to investigate the possible benefit of independent weights, the next experiment compares the MPNN described in previous section with an architecture without weight sharing. 
+
+The two architectures are identical in every other aspect to allow isolate the effect of weight sharing. 
+
+\begin{figure}[H]
+	\includegraphics[width=\linewidth]{figures/weight-sharing}
+	
+	\caption{}
+	\label{fig:weight-sharing}
+\end{figure}
 
 \section{relative position edge features improve results slightly}
 

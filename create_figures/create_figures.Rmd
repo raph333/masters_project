@@ -115,6 +115,7 @@ df <- read.csv(file.path(results_dir, paste0(name, '.csv'))) %>%
 p <- ggplot(data=df, aes(x=epoch, y=MAE, color=experiment_name, linetype=variable)) +
   geom_line() + 
   scale_y_continuous(limits=c(0, 0.3)) +
+  theme_bw() +
   theme(plot.title = element_text(hjust = 0.5, size=16)) +
   labs(title='Dataset and split comparison',
        color='experiment',

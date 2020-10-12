@@ -12,7 +12,7 @@ from torch import nn
 from torch_geometric.data import DataLoader, Dataset
 
 from graph_conv_net import tools
-from graph_conv_net.decoupled_weight_mpnn import MPNN
+from graph_conv_net.models.decoupled_weights_mpnn import MPNN
 from graph_conv_net.alchemy_dataset import AlchemyDataset
 from graph_conv_net.data_processing import TencentDataProcessor
 
@@ -91,7 +91,7 @@ def train(net: nn.Module,
         row = {'epoch': epoch,
                'train_mae': train_error,
                'valid_mae': valid_error,
-               'minutes:': minutes,
+               'minutes': minutes,
                'lr': lr}
         log_df = log_df.append(row, ignore_index=True)
 

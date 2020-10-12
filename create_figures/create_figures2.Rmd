@@ -1,0 +1,121 @@
+---
+title: 'create results figures'
+output: html_notebook
+---
+
+
+# Functions and settings
+
+```{r, message=F, warning=F}
+require(ggplot2)
+require(tidyr)
+require(dplyr)
+require(reshape2)
+
+results_dir <- '../graph_conv_net/experiments/results'
+figures_dir <- '../thesis/figures'
+getwd()
+```
+
+
+```{r}
+process_single_lc <- function(df) {
+  processed <- df %>% 
+    melt(id.vars=c('epoch'), value.name='MAE') %>% 
+    mutate(variable = sub('_mae', '', variable),
+           variable = replace(variable, variable == 'valid', 'validation'),
+           variable = replace(variable, variable == 'train', 'training'),
+           variable = factor(variable, levels=c('validation', 'training'))) %>% 
+    mutate(epoch = as.integer(epoch)) %>% 
+    mutate(MAE = as.double(MAE))
+  return(processed)
+}
+```
+
+
+# neighborhood expansion experiments
+
+```{r}
+
+process_multiple_lc <- function(df, target_column) {
+  processed <- df %>% 
+    melt(id.vars=c(target_column, 'epoch'), value.name='MAE') %>% 
+    mutate(variable = sub('_mae', '', variable),
+           variable = replace(variable, variable == 'valid', 'validation'),
+           variable = replace(variable, variable == 'train', 'training'),
+           variable = factor(variable, levels=c('validation', 'training'))) %>% 
+    mutate(target_column = replace(target_column, target_column == 'None', '0'),  # for target param = neighborhood expansion
+           target_column = as.factor(target_column))
+  return(processed)
+}
+```
+
+
+```{r, eval=F}
+
+experiment_name <- 'tencent-mpnn-neighborhood-expansion'
+
+df <- read.csv(file.path(results_dir, paste0(experiment_name, '.csv')), stringsAsFactors=F) %>%
+  process_multiple_lc(target_column='target_param')
+
+
+p <- ggplot(data=df, aes(x=epoch, y=MAE, color=target_param, linetype=variable)) +
+  geom_line() +
+  scale_y_continuous(limits=c(0, 0.4)) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5, size=16)) +
+  labs(title='Neighborhood expansion',
+       y='MAE',
+       color='neighborhood radius',
+       linetype=element_blank())
+p
+# ggsave(file.path(figures_dir, paste0(experiment_name, '.pdf')), p)
+```
+
+
+# No weight sharing
+
+```{r}
+df_decoupled <- read.csv(file.path(results_dir, 'lc-decoupled-weights.csv')) %>%
+    select(-c(minutes, 'minutes.', lr, target_param)) %>%
+    process_single_lc() %>% 
+    mutate(experiment_name = 'independent weigths')
+   # process_single_lc()
+df_decoupled
+
+# todo: get inf-radius run for the ne-experiment for comparison and plot both
+# df_shared <- read.csv(file.path(results_dir, 'ne-real.csv' )%>% 
+#   mutate(experiment_name = 'with weight sharing') %>% 
+#  filter(target_param ==  'inf')
+
+# ...
+
+
+# df <- rbind(df_decoupled, df_shared)
+
+```
+
+
+
+```{r}
+df <- df_decoupled
+p <- ggplot(data=df, aes(x=epoch, y=MAE, linetype=variable)) +  # color=experiment_name, 
+  geom_line() + 
+  theme_bw() + 
+  scale_y_continuous(limits=c(0, 0.2)) +
+  theme(plot.title = element_text(hjust = 0.5, size=16)) +
+  labs(title='Weight sharing between graph-conv layers',
+       #color='experiment',
+       linetype=element_blank())
+
+p
+
+# ggsave(file.path(figures_dir, 'weight-sharing.pdf'), p)
+```
+
+
+
+
+
+
+
