@@ -1,6 +1,8 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
+
+from torch_geometric.data.batch import Batch
 from torch_geometric.nn import NNConv, Set2Set
 
 
@@ -25,7 +27,8 @@ class MPNN(torch.nn.Module):
         edge_network = nn.Sequential(
             nn.Linear(edge_input_dim, edge_hidden_dim),
             nn.ReLU(),
-            nn.Linear(edge_hidden_dim, node_hidden_dim * node_hidden_dim))
+            nn.Linear(edge_hidden_dim, node_hidden_dim * node_hidden_dim)
+        )
 
         self.conv = NNConv(node_hidden_dim,
                            node_hidden_dim,
@@ -39,7 +42,7 @@ class MPNN(torch.nn.Module):
         self.lin1 = nn.Linear(2 * node_hidden_dim, node_hidden_dim)
         self.lin2 = nn.Linear(node_hidden_dim, output_dim)
 
-    def forward(self, data):
+    def forward(self, data: Batch):
         out = F.relu(self.lin0(data.x))
         h = out.unsqueeze(0)
 

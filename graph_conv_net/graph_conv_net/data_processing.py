@@ -17,6 +17,10 @@ from rdkit import RDConfig
 
 
 class RawDataProcessor:
+    """
+    Only one-hot encoded atom-types as atom features
+    and one-hot encoded bond types as bond features
+    """
 
     atom_types = np.array(['H', 'C', 'N', 'O', 'F', 'S', 'Cl'])
     bond_types = np.array([Chem.rdchem.BondType.SINGLE,
@@ -162,3 +166,32 @@ class TencentDataProcessor(RawDataProcessor):
             features.append(atom_feature_vector)
 
         return tensor(features).float()
+
+
+# todo: How are bonds used in Schnet?
+class SchNetDataProcessor(RawDataProcessor):
+
+    atom_types2int = {'H':  1,
+                      'C':  2,
+                      'N':  3,
+                      'O':  4,
+                      'F':  5,
+                      'S':  6,
+                      'Cl': 7}
+
+    def _get_atom_features(self, molecule: Chem.rdchem.Mol) -> tensor:
+        """
+        Simplest atom-features: only atom-type
+        """
+        features = []
+
+        for atom in molecule.GetAtoms():
+
+            atom_int = self.atom_types2int.get(atom.GetSymbol(), 0)
+            features.append(atom_int)
+
+        # requires float for linear layer and long for embedding
+        return tensor(features).long()
+
+    def _get_bonds(self, molecule: Chem.rdchem.Mol):
+        return tensor([]).long(), tensor([]).float()

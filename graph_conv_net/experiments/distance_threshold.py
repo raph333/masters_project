@@ -1,20 +1,3 @@
-# import numpy as np
-# import torch
-# from torch_geometric.transforms import Compose, Distance
-#
-# from graph_conv_net.alchemy_dataset import AlchemyCompetitionDataset
-# from graph_conv_net.transformations import AddEdges
-# from graph_conv_net.train import run_experiment
-# from experiments.base_configuration import CONFIG
-#
-#
-# def get_transform(threshold: float):
-#     return Compose([
-#         AddEdges(distance_threshold=threshold),
-#         Distance(norm=True)
-#     ])
-
-
 from typing import Callable
 import numpy as np
 import torch
@@ -34,7 +17,7 @@ def get_transform(threshold: float) -> Callable:
 
 
 new_config = {
-    'name': 'NE-real',  # todo: set this for each experiment!  (default: 'test-run')
+    'name': 'NE-real-root-weight',  # todo: set this for each experiment!  (default: 'test-run')
     'target_param': {
         'name': 'distance_threshold',
         'values': [None, 1.5, 2, 3, 4, 5, np.inf]
@@ -49,7 +32,7 @@ new_config = {
     'lr':  0.001,
     'model_name': 'tencent_mpnn',
     'num_epochs': 200,
-    'cuda': 1
+    'cuda': 2
 }
 CONFIG.update(new_config)
 

@@ -95,7 +95,7 @@ class AddEdges:
         return f'{self.__class__.__name__}(distance_threshold={self.t})'
 
 
-class NHop(object):
+class NHop:
     """
     Adds the n-hop edges to the edge indices.
     (An edge will be added (if not there already) between any atoms <= n edges apart in the input graph)

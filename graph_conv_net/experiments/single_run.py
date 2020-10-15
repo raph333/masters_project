@@ -4,11 +4,11 @@ import torch
 
 from graph_conv_net.train import run_experiment
 from graph_conv_net.alchemy_dataset import AlchemyCompetitionDataset
-from graph_conv_net.data_processing import TencentDataProcessor
+from graph_conv_net.data_processing import SchNetDataProcessor
 from graph_conv_net.transformations import AddEdges
 from experiments.distance_threshold import CONFIG
 
-AlchemyCompetitionDataset.data_processor = TencentDataProcessor()
+AlchemyCompetitionDataset.data_processor = SchNetDataProcessor()
 
 
 def get_transform(threshold: float) -> Callable:
@@ -17,9 +17,9 @@ def get_transform(threshold: float) -> Callable:
 
 
 new_config = {
-    'name': 'decoupled-weights',  # todo: set this for each experiment!  (default 'test-run')
+    'name': 'test-run',  # todo: set this for each experiment!  (default 'test-run')
     'dataset_class': AlchemyCompetitionDataset,
-    'data_processor': TencentDataProcessor,
+    'data_processor': SchNetDataProcessor,
     'get_transform': get_transform,
     'target_param': {  # usually a parameter for the transformation
         'name': 'distance_threshold',
@@ -41,7 +41,5 @@ new_config = {
 }
 CONFIG.update(new_config)
 
-
 if __name__ == '__main__':
-
     run_experiment(CONFIG)

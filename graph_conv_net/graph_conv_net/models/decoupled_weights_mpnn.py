@@ -1,6 +1,8 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
+
+from torch_geometric.data.batch import Batch
 from torch_geometric.nn import NNConv, Set2Set
 
 
@@ -46,7 +48,7 @@ class MPNN(torch.nn.Module):
         self.lin1 = nn.Linear(2 * node_hidden_dim, node_hidden_dim)
         self.lin2 = nn.Linear(node_hidden_dim, output_dim)
 
-    def forward(self, data):
+    def forward(self, data: Batch):
         out = F.relu(self.lin0(data.x))
         h = out.unsqueeze(0)
 
@@ -59,8 +61,3 @@ class MPNN(torch.nn.Module):
         out = self.set2set(out, data.batch)
         out = F.relu(self.lin1(out))
         return self.lin2(out)
-
-
-# if __name__ == '__main__':
-#     model = MPNN()
-#     print()

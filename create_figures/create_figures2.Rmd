@@ -80,7 +80,6 @@ df_decoupled <- read.csv(file.path(results_dir, 'lc-decoupled-weights.csv')) %>%
     select(-c(minutes, 'minutes.', lr, target_param)) %>%
     process_single_lc() %>% 
     mutate(experiment_name = 'independent weigths')
-   # process_single_lc()
 df_decoupled
 
 # todo: get inf-radius run for the ne-experiment for comparison and plot both
@@ -110,7 +109,7 @@ p <- ggplot(data=df, aes(x=epoch, y=MAE, linetype=variable)) +  # color=experime
 
 p
 
-# ggsave(file.path(figures_dir, 'weight-sharing.pdf'), p)
+ggsave(file.path(figures_dir, 'weight-sharing.pdf'), p)
 ```
 
 
