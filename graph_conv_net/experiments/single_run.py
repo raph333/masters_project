@@ -25,6 +25,7 @@ new_config = {
         'name': 'distance_threshold',
         'values': [np.inf]
     },
+    'batch_size': 1,  # todo: remove (replace by base config) after testing
     # 'lr_scheduler': {
     #     'class': torch.optim.lr_scheduler.ReduceLROnPlateau,
     #     'kwargs': {'factor': 0.75,

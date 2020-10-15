@@ -10,13 +10,22 @@ from torch_geometric.transforms import Distance
 
 
 class CompleteGraph:
+    """
+    Adds an edge between any two nodes in the graph.
+    If present, previous edges and their edge-features are preserved.
+    """
 
     def __call__(self, graph: Data) -> Data:
-        num_bond_features = graph.edge_attr.shape[1]
-        edge_features = torch.zeros(graph.num_nodes**2, num_bond_features).float()
 
-        bond_index = graph.edge_index[0] * graph.num_nodes + graph.edge_index[1]
-        edge_features[bond_index] = graph.edge_attr
+        if graph.edge_attr is not None and graph.edge_attr.shape[0] > 0:
+            # preserve all previous edges and edge-attributes:
+            num_bond_features = graph.edge_attr.shape[1]
+            edge_features = torch.zeros(graph.num_nodes**2, num_bond_features).float()
+            bond_index = graph.edge_index[0] * graph.num_nodes + graph.edge_index[1]
+            edge_features[bond_index] = graph.edge_attr
+
+        else:
+            edge_features = None
 
         all_edges = list(product(range(graph.num_nodes), range(graph.num_nodes)))
         full_edge_index = tensor(all_edges).transpose(0, 1)

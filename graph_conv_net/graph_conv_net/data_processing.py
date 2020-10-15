@@ -194,4 +194,4 @@ class SchNetDataProcessor(RawDataProcessor):
         return tensor(features).long()
 
     def _get_bonds(self, molecule: Chem.rdchem.Mol):
-        return tensor([]).long(), tensor([]).float()
+        return None, None

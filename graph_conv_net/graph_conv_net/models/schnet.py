@@ -3,15 +3,17 @@ import torch
 import torch.nn.functional as F
 from torch.optim import Adam
 
+from torch_geometric.data.batch import Batch
+
 import schnetpack as spk
 import schnetpack.representation as rep
 from schnetpack.datasets import *
 
 # load qm9 dataset and download if necessary
-data = QM9("qm9.db")
+q9 = QM9("qm9.db")
 
 # split in train and val
-train, val, test = data.create_splits(100000, 10000)
+train, val, test = q9.create_splits(100000, 10000)
 loader = spk.data.AtomsLoader(train, batch_size=100, num_workers=4)
 val_loader = spk.data.AtomsLoader(val)
 
@@ -146,10 +148,10 @@ class SchNet(nn.Module):
                 for _ in range(n_interactions)
             ])
 
-    def forward(self, inputs):
+    def forward(self, data: Batch):
         """
         Args:
-            inputs (dict of torch.Tensor): SchNetPack format dictionary of input tensors.
+            data (dict of torch.Tensor): SchNetPack format dictionary of input tensors.
 
         Returns:
             torch.Tensor: Final Atom-wise SchNet representation.
@@ -157,12 +159,12 @@ class SchNet(nn.Module):
         """
         print()
 
-        atomic_numbers = inputs[Structure.Z]
-        positions = inputs[Structure.R]
-        cell = inputs[Structure.cell]
-        cell_offset = inputs[Structure.cell_offset]
-        neighbors = inputs[Structure.neighbors]
-        neighbor_mask = inputs[Structure.neighbor_mask]
+        atomic_numbers = data[Structure.Z]
+        positions = data[Structure.R]
+        cell = data[Structure.cell]
+        cell_offset = data[Structure.cell_offset]
+        neighbors = data[Structure.neighbors]
+        neighbor_mask = data[Structure.neighbor_mask]
 
         # atom embedding
         x = self.embedding(atomic_numbers)
