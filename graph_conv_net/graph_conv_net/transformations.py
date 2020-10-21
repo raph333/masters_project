@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Optional
 from itertools import product
 import numpy as np
 
@@ -70,34 +70,52 @@ class AddEdges:
     """
 
     def __init__(self,
-                 distance_threshold: Union[float, None] = np.inf,
+                 distance_threshold: Optional[float] = np.inf,
                  norm_dist: bool = True,
-                 add_dist_feature: bool = False):
-
-        if distance_threshold is None:
-            self.add_edges = False
-        else:
-            self.add_edges = True
+                 add_dist_feature: bool = False,
+                 allow_removal_of_original_edges: bool = False):
 
         self.t = distance_threshold
+        self.norm_dist = norm_dist
         self.add_dist_feature = add_dist_feature
+        self.remove_edges_ok = allow_removal_of_original_edges
 
         self.calculate_complete_graph = CompleteGraph()
-        self.calculate_distance = Distance(norm=norm_dist)
+        self.calculate_distance = Distance(norm=False)
         self.apply_distance_threshold = DistanceThreshold(threshold=self.t)
 
     def __call__(self, data: Data) -> Data:
-        if self.add_edges is False:
+
+        # no edges to add:
+        if self.t is None or self.t == 0:
+
+            if self.add_dist_feature:
+                data = self.calculate_distance(data)
+
+                if self.norm_dist:
+                    max_dist = data.edge_attr[:, -1].max()
+                    data.edge_attr[:, -1] = data.edge_attr[:, -1] / max_dist
+                    # problem: manual normalization is very slow
+                    # maybe calculate normalized distance threshold first and use build-in normalization
+
             return data
 
+        # add edges:
+        num_original_edges = data.edge_attr.shape[0]
         data = self.calculate_complete_graph(data)
         data = self.calculate_distance(data)
         data = self.apply_distance_threshold(data)
 
-        if self.add_dist_feature:
-            return data
+        if data.edge_attr.shape[0] < num_original_edges and self.remove_edges_ok is False:
+            raise AssertionError(f'Original edges are removed with threshold {self.t}')
 
-        data.edge_attr = data.edge_attr[:, :-1]  # remove distance column
+        if self.add_dist_feature is False:
+            data.edge_attr = data.edge_attr[:, :-1]  # remove distance column
+
+        elif self.norm_dist:
+            max_dist = data.edge_attr[:, -1].max()
+            data.edge_attr[:, -1] = data.edge_attr[:, -1] / max_dist
+
         return data
 
     def __repr__(self):

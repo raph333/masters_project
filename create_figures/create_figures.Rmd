@@ -128,16 +128,22 @@ ggsave(file.path(figures_dir, paste0(name, '.pdf')), p)
 
 ## Neighborhood expansion
 
+```{r}
+df
+```
+
+
 ```{r, message=F}
-experiment_name <- 'tencent-mpnn-neighborhood-expansion'
+experiment_name <- 'lc-NE-real'
 
 df <- read.csv(file.path(results_dir, paste0(experiment_name, '.csv')), stringsAsFactors=F) %>%
-  process_multiple_lc(target_column='target_param')
+  process_multiple_lc(target_column='target_param') %>% 
+  # filter(!target_param %in% c(4, 5) )  # exclude to get a less crowded figure: add info in comment
 
 
 p <- ggplot(data=df, aes(x=epoch, y=MAE, color=target_param, linetype=variable)) +
   geom_line() +
-  scale_y_continuous(limits=c(0, 0.4)) +
+  scale_y_continuous(limits=c(0, 0.2)) +
   theme_bw() +
   theme(plot.title = element_text(hjust = 0.5, size=16)) +
   labs(title='Neighborhood expansion',
@@ -145,6 +151,28 @@ p <- ggplot(data=df, aes(x=epoch, y=MAE, color=target_param, linetype=variable))
        color='neighborhood radius',
        linetype=element_blank())
 p
-# ggsave(file.path(figures_dir, paste0(experiment_name, '.pdf')), p)
+ggsave(file.path(figures_dir, paste0(experiment_name, '.pdf')), p)
+```
+
+
+```{r}
+experiment_name <- 'lc-NE-real-root-weight'
+
+df <- read.csv(file.path(results_dir, paste0(experiment_name, '.csv')), stringsAsFactors=F) %>%
+  process_multiple_lc(target_column='target_param') %>% 
+  # filter(!target_param %in% c(4, 5) )  # exclude to get a less crowded figure: add info in comment
+
+
+p <- ggplot(data=df, aes(x=epoch, y=MAE, color=target_param, linetype=variable)) +
+  geom_line() +
+  scale_y_continuous(limits=c(0, 0.2)) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5, size=16)) +
+  labs(title='Neighborhood expansion',
+       y='MAE',
+       color='neighborhood radius',
+       linetype=element_blank())
+p
+ggsave(file.path(figures_dir, paste0(experiment_name, '.pdf')), p)
 ```
 
