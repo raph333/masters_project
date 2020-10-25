@@ -15,14 +15,20 @@ def get_transform(threshold: float) -> Callable:
     return AddEdges(distance_threshold=threshold,
                     add_dist_feature=True,
                     norm_dist=False,
-                    allow_removal_of_original_edges=False)
+                    allow_removal_of_original_edges=True  # happens only in edge-cases
+                    )
 
 
 new_config = {
-    'name':  'test-run',  #'NE-real-fix',  # todo: set this for each experiment!  (default: 'test-run')
+    'name':  'NE-real-fix-root-weight',  # todo: set this for each experiment!  (default: 'test-run')
     'target_param': {
         'name': 'distance_threshold',
-        'values': [None, 2, 3, 4, 5, np.inf]
+        'values': [None,
+                   2,
+                   3,
+                   4,
+                   5,
+                   np.inf]
     },
     'lr_scheduler': {
         'class': torch.optim.lr_scheduler.ExponentialLR,
@@ -30,11 +36,11 @@ new_config = {
     },
     'dataset_class': AlchemyCompetitionDataset,
     'get_transform': get_transform,
-    'repeat': 1, # 3,  todo: update
+    'repeat': 3,
     'lr':  0.001,
     'model_name': 'tencent_mpnn',
-    'num_epochs': 3,  #150,  todo: update
-    'cuda': 0
+    'num_epochs': 150,
+    'cuda': 1
 }
 CONFIG.update(new_config)
 

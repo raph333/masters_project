@@ -34,7 +34,7 @@ class MPNN(torch.nn.Module):
                            node_hidden_dim,
                            edge_network,
                            aggr='mean',
-                           root_weight=False)
+                           root_weight=True)
         self.gru = nn.GRU(node_hidden_dim, node_hidden_dim)
 
         self.set2set = Set2Set(node_hidden_dim,

@@ -3,6 +3,7 @@
 
 
 \section{Using graph convolution in the way it's meant to be used gives poor results on molecular structures}
+\label{sec:neighborhood-expansion}
 
 In the paper Chen et al.~\cite{Chen2019} at Tencent Lab, the authors modify a well performing GCNN architecture for quantum chemistry invented by Gilmer et al.~\cite{Gilmer2017}. The authors expand this model by using both, categorical bond type and euclidean distance as edge features and observe considerably better performance. At first glance, the use of both kinds of features - which seems to be implied in the paper - looks like a plausible explanation for the success. However, upon closer inspection, the reasoning does not add up. Bond types almost completely determine the euclidean distance. E.g. ever carbon-carbon single bond has a distance of 154Å, every carbon-oxygen double bond is 120Å long, etc.~\footnote{\url{https://courses.lumenlearning.com/suny-potsdam-organicchemistry/chapter/1-3-basics-of-bonding}} (The same applies to the reverse: knowing the distance between two atoms as well as the atom types allows to deduce the type of covalent bond or lack thereof.) Therefore, no additional information is added by including the euclidean distance as a feature. Inspection of the implementation reveals anther possible reason for the good performance of the Tencent Lab-paper: Not only is the euclidean distance added as a feature to existing edges, every atom is connected to every other atom in the molecule with the euclidean distance being the only not-null feature~\footnote{\url{https://github.com/tencent-alchemy/Alchemy}}. Thus, the structure of the graph is changed dramatically form the graph of covalent bonds to complete graph where every node is connected to every other node. The complete graph is a special case of graph and is rather untypical because in most applications, the presence or absence of an edge between two nodes is the most important kind of information. Simply connecting all nodes with each other seems to diminish this information (although in this case, the euclidean distance allows to distinguish between important and less important edges). With these considerations it is surprising but very interesting that the approach of Tencent Labs works so well.
 
@@ -16,7 +17,7 @@ As explained in the introduction, we can define the neighborhood of a node as al
 Therefore, the first experiment, we compare the learning curves of graphs when defining the neighborhood with different thresholds. First of all, covalent bonds are always represented as edges in the graph. Then, for increasing radii, edges to all non-covalently bonded atoms within the radius are added to the graph. A neighborhood radius of zero thus means that no additional edges are added to the graph - the graph only has edges between covalently bonded atoms. At a radius of 1.5 Ångström (1Å = 10nm), an edge is added between any two non-covalently bonded atoms with a distance of at most 1.5Å. The same is done for 2Å, etc. For perspective, most covalent bonds in organic molecules have a distance of around 1 - 1.5 Å~\footnote{\url{https://courses.lumenlearning.com/suny-potsdam-organicchemistry/chapter/1-3-basics-of-bonding}}. 1.5Å is very close for non-covalently bonded atoms such that only very few non-covalently bonded atoms - if any - will be within 1.5Å of an atom in an organic molecule. With a 2Å radius, every atom in the molecule will get some new neighbors due to this rule. With a 4Å radius, many atoms will be included in the neighborhood that have very little to no interaction with the central atom. At 5Å, for many small molecules, every atom is considered a neighbor of any other atom - applying this radius is therefore similar to connecting every atom with every other atom in the molecule. Finally, with an infinite radius, a complete graph is obtained.
 
 \begin{figure}[H]
-	\includegraphics[width=\linewidth]{figures/tencent-mpnn-neighborhood-expansion}
+	\includegraphics[width=\linewidth]{figures/tencent-mpnn-neighborhood-expansion-old}
 	
 	\caption{The learning curves with different neighborhood radii are show over the courses of 100 epochs. The color corresponds to the neighborhood radius, dotted lines the training errors and solid lines show validation errors. Note that for each radius, there is a training- and a validation-error curve. Each curve is an average of three learning curves with the same neighborhood radius. All curves were generated using a simple optimization scheme described in Section~\ref{sec:training}. Both, validation- and training-error could be lowered considerably by employing a more sophisticated optimization scheme. However, this would be at the expense of comparability between curves (see Section~\ref{sec:training}).}
 	\label{fig:tencent-mpnn-neighborhood-expansion}
@@ -42,7 +43,7 @@ An interesting experiment to test this hypothesis is to include graph-level info
 
 Ideally, the use of such a root node would allow to achieve a similar performance as when using complete graphs without the high computational cost - while the number of edges increases quadratically with the number of nodes in the complete graph, the root node only introduces one new edge per node. At the very least, the effect of of decreasing performance with decreasing neighborhood radius shown in Figure~\ref{fig:tencent-mpnn-neighborhood-expansion} should be less pronounced if the root node has the expected effect.
 
-% insert figure here
+
 
 
 
@@ -62,26 +63,21 @@ The approach of not considering hydrogen atoms explicitly but only as features o
 % => use explicit hydrogen atoms from now on
 
 
-\section{graph-conv layers with independent weights do not improve results}
+\section{graph-conv layers with independent weights decrease the loss slightly}
 
-%{\itshape
-%	
-%
-%It's reasonable to assume, that different layers need different feature extraction properties (low vs. high level features). In cv, the layers don't share weights.
-%
-%However, in experiments, the weight-shared graph layers prove superior.
-%}
 
 In most graph neural networks, the graph-conv layers have shared weights. This allows for efficient training and works well in practice. However, there is no theoretical reason that weight sharing is necessarily superior. For instance, it would be conceivable that independent weights would work better for extracting different kinds of features at each graph-conv step. Recall that the graph-conv layer, the input for a given node update consists only of direct neighbor nodes, at the second layer, the update indirectly contains information from all second-degree neighbor nodes etc. Hence, learning different weights for different graph-conv layers might be beneficial. Note also that in computer vision every layer has independent weights even within blocks of convolutional layers with the same dimension. It is therefore far from clear that weight sharing has to be the preferred approach for graph-conv layers.
 
-In order to investigate the possible benefit of independent weights, the next experiment compares the MPNN described in previous section with an architecture without weight sharing. 
+In order to investigate the possible benefit of independent weights, the next experiment compares the MPNN described in previous section with an architecture without weight sharing. The two architectures are identical in every other aspect to allow isolate the effect of weight sharing. Figure~\ref{fig:weight-sharing} shows a small but not negligible advantage of the net using independent weights in the graph-conv layers. Another interesting observation is that the learning curves are almost identical apart from the lower MAE of the model with independent weights. It would not have been surprising for the independent weights to require more training time as each graph-conv layers weights are only updated once for a given batch in a given epoch. In weight-sharing architectures on the other hand, the conv-layer is updated $n$ times for each batch and epoch in a model with $n$ conv-layers. Nevertheless, Figure~\ref{fig:weight-sharing} clearly shows that the two approaches are equal in terms of training-time. This means that the use of independent weights is a simple way to gain a small improvement sacrificing efficiency.
 
-The two architectures are identical in every other aspect to allow isolate the effect of weight sharing. 
+One caveat worth mentioning is that only because independent weights were found to be beneficial for the architecture at hand does not mean that they will be beneficial in every single graph-conv net. However, the results at hand make a strong case for independent weights as a way to improve the performance of graph convolutional networks. 
+
+
 
 \begin{figure}[H]
-	\includegraphics[width=\linewidth]{figures/weight-sharing}
+	\includegraphics[width=\linewidth]{figures/weight-sharing.pdf}
 	
-	\caption{}
+	\caption{Independent weights between graph-conv layers outperform weight-shared layers by a small margin. Note that the two architectures are identical in every other way apart from weight-sharing of graph-conv layers. Complete graphs were used as the input data as this was shown to be the best performing transformation in earlier experiments (Section~\ref{sec:neighborhood-expansion}). Importantly, each learning curve in this figure represents an average over three independently trained model to minimize the influence of random fluctuations between training-runs. The learning rate was set to a start value of $0.001$ with a learning rate decay of 0.99 each epoch. While a more sophisticated optimization scheme and training for more epochs could have given slightly a somewhat lower MAE, the results a at hand show clearly the relative advantage of independent weights.}
 	\label{fig:weight-sharing}
 \end{figure}
 
