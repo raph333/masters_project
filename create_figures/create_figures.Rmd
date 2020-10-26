@@ -128,10 +128,6 @@ ggsave(file.path(figures_dir, paste0(name, '.pdf')), p)
 
 ## Neighborhood expansion
 
-```{r}
-df
-```
-
 
 ```{r, message=F}
 experiment_name <- 'lc-NE-real'

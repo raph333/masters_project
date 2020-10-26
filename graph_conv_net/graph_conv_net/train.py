@@ -14,10 +14,7 @@ from torch_geometric.data import DataLoader, Dataset
 from graph_conv_net import tools
 # from graph_conv_net.models.schnet.schnet_model import SchNet
 from graph_conv_net.models.tencent_mpnn import MPNN
-from graph_conv_net.alchemy_dataset import AlchemyDataset
-from graph_conv_net.data_processing import TencentDataProcessor
 
-AlchemyDataset.data_processor = TencentDataProcessor()
 
 DATA_DIR = '/scratch1/rpeer/tmp'
 
@@ -119,45 +116,6 @@ def run_experiment(config: dict):
         os.makedirs(root_dir)
 
     ds_dev = dataset_class(root=root_dir, mode='dev')
-
-    # tmp: just for debugging: todo remove
-    # from graph_conv_net.transformations import AddEdges
-    # import numpy as np
-    #
-    # tNone = AddEdges(distance_threshold=None,
-    #                  add_dist_feature=True)
-    # # t1 = AddEdges(distance_threshold=1,
-    # #               add_dist_feature=True,
-    # #               allow_removal_of_original_edges=True)
-    # t15 = AddEdges(distance_threshold=1.5,
-    #                add_dist_feature=True,
-    #                allow_removal_of_original_edges=True)
-    # t2 = AddEdges(distance_threshold=2,
-    #               add_dist_feature=True)
-    # t3 = AddEdges(distance_threshold=3,
-    #               add_dist_feature=True)
-    # t4 = AddEdges(distance_threshold=4,
-    #               add_dist_feature=True)
-    # t5 = AddEdges(distance_threshold=5,
-    #               add_dist_feature=True)
-    # tinf = AddEdges(distance_threshold=np.inf,
-    #                 add_dist_feature=True)
-    # print(tNone(ds_dev[0]))
-    # # print(1, t1(ds_dev[0]))
-    # print(1.5, t15(ds_dev[0]))
-    # print(2, t2(ds_dev[0]))
-    # print(3, t3(ds_dev[0]))
-    # print(4, t4(ds_dev[0]))
-    # print(5, t5(ds_dev[0]))
-    # print('inf', tinf(ds_dev[0]))
-
-    # normalization happens before thresholding....
-
-    # t05 = AddEdges(distance_threshold=0.5,
-    #                add_dist_feature=True)
-    # print(t05(ds_dev[0]))
-    # ... now the thresholding works
-
     ds_valid = dataset_class(root=root_dir, mode='valid')
     # ds_test = dataset_class(root=root_dir, mode='test')
 

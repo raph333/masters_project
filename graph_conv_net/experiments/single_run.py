@@ -4,12 +4,12 @@ import torch
 
 from graph_conv_net.train import run_experiment
 from graph_conv_net.alchemy_dataset import AlchemyCompetitionDataset
-from graph_conv_net.data_processing import TencentDataProcessor
+from graph_conv_net.data_processing import RawDataProcessor
 # from graph_conv_net.data_processing import SchNetDataProcessor
 from graph_conv_net.transformations import AddEdges
 from experiments.distance_threshold import CONFIG
 
-AlchemyCompetitionDataset.data_processor = TencentDataProcessor()
+AlchemyCompetitionDataset.data_processor = RawDataProcessor(implicit_hydrogens=False)
 # AlchemyCompetitionDataset.data_processor = SchNetDataProcessor()
 
 
@@ -22,11 +22,11 @@ def get_transform(threshold: float) -> Callable:
 new_config = {
     'name': 'test-run',  # todo: set this for each experiment!  (default 'test-run')
     'dataset_class': AlchemyCompetitionDataset,
-    'data_processor': TencentDataProcessor,  # SchNetDataProcessor,
+    'data_processor': RawDataProcessor,  # SchNetDataProcessor,
     'get_transform': get_transform,
     'target_param': {  # usually a parameter for the transformation
         'name': 'distance_threshold',
-        'values': [None]
+        'values': [np.inf]
     },
     # 'lr_scheduler': {
     #     'class': torch.optim.lr_scheduler.ReduceLROnPlateau,
@@ -35,16 +35,21 @@ new_config = {
     #                'patience': 6}
     # },
     'batch_size': 1,
-    'lr': 0.01,  # start high
+    # 'lr': 0.01,  # start high
+    # 'lr_scheduler': {
+    #     'class': torch.optim.lr_scheduler.ExponentialLR,
+    #     'kwargs': {'gamma': 0.97  # ... and decrease quickly
+    #                }
+    #     # after the test run: figure out a better starting learning rate and decrease more slowly
+    # },
+    'lr': 0.001,
     'lr_scheduler': {
         'class': torch.optim.lr_scheduler.ExponentialLR,
-        'kwargs': {'gamma': 0.97  # ... and decrease quickly
-                   }
-        # after the test run: figure out a better starting learning rate and decrease more slowly
+        'kwargs': {'gamma': 0.995}
     },
-    'cuda': 3,
-    'repeat': 1,
-    'num_epochs': 200
+    'repeat': 3,
+    'cuda': 2,
+    'num_epochs': 150
 }
 CONFIG.update(new_config)
 

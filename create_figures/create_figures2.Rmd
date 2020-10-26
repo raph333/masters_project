@@ -75,11 +75,6 @@ process_multiple_lc <- function(df, target_column) {
 
 # No weight sharing
 
-```{r}
-colnames(df_decoupled)
-df_decoupled
-```
-
 
 ```{r}
 df_decoupled <- read.csv(file.path(results_dir, 'lc-decoupled-weights.csv')) %>%
@@ -109,6 +104,38 @@ p <- ggplot(data=df_comb, aes(x=epoch, y=MAE, linetype=variable, color=experimen
 p
 
 ggsave(file.path(figures_dir, 'weight-sharing.pdf'), p)
+```
+
+
+# Implicit Hydrogens
+
+
+
+```{r}
+df_implicit_h <- read.csv(file.path(results_dir, 'lc-implicit-hydrogens.csv')) %>%
+    select(-c(minutes, lr, target_param)) %>%
+    process_single_lc() %>% 
+    mutate(experiment_name = 'implicit')
+
+df_explicit_h <- df_shared %>% 
+    mutate(experiment_name = 'explict') %>% 
+    filter(epoch < 150)
+  
+
+df_comb <- rbind(df_implicit_h, df_explicit_h)
+write.csv(df_comb, file.path(results_dir, 'lc-implicit-hydrogens-augmented.csv'))
+
+p <- ggplot(data=df_comb, aes(x=epoch, y=MAE, linetype=variable, color=experiment_name)) +
+  geom_line() + 
+  theme_bw() + 
+  scale_y_continuous(limits=c(0, 0.2)) +
+  theme(plot.title = element_text(hjust = 0.5, size=16)) +
+  labs(title='Implicit vs. explicit hydrogen atoms',
+       color='hydrogen representation',
+       linetype=element_blank())
+
+ggsave(file.path(figures_dir, 'implict-hydrogens.pdf'), p, width = 30, height = 20, units = "cm")
+p
 ```
 
 

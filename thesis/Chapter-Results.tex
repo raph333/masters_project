@@ -55,12 +55,25 @@ Ideally, the use of such a root node would allow to achieve a similar performanc
 
 \section{Excluding hydrogen atoms from the molecule-graph speeds up training but reduces prediction accuracy}
 
-Another possible preprocessing step is to disregard hydrogen atoms and instead add the number of hydrogen atoms bonded to a given heavy atom as a node feature. The rational behind this step is that the properties chemical properties of hydrogen atoms depend strongly on the heavy atom to which it is bound. While some information is lost during this step, the number of atoms in the molecule is reduced by an average factor of [CHECK value]. This modest reduction in the number of nodes leads to a very dramatic reduction in the number of edges. Naturally, this effect is most pronounced in complete graphs where the number of edges increases quadratically with the number of nodes ($\frac{n(n - 1)}{2}$ edges for $n$ nodes). While the average number of edges using complete graphs is [CHECK value] in the AlChemy dataset, this number drops to [CHECK value] after excluding hydrogen atoms.
+Another possible preprocessing step is to disregard hydrogen atoms and instead add the number of hydrogen atoms bonded to a given heavy atom as a node feature. The rational behind this step is that the properties chemical properties of hydrogen atoms depend strongly on the heavy atom to which it is bound. While some information is lost during this step, the average number of atoms in the molecule is reduced by an average factor of
+%21.61315346375882 ->
+%9.712215362411802
+%
+%455.46524214239895 ->
+%84.99518922386144
+from 21.6 to 9.7 in the training-set. This modest reduction in the number of nodes leads to a very dramatic reduction in the number of edges. Naturally, this effect is most pronounced in complete graphs where the number of edges increases quadratically with the number of nodes ($\frac{n(n - 1)}{2}$ edges for $n$ nodes). While the average number of edges using complete graphs is 455.5 in the training-set, this number drops to 85 after excluding hydrogen atoms. Thus the data representation becomes much more compact leading to a dramatic decrease in training time (from around three minutes per epoch to only 0.9 minutes). For 
 
-The approach of not considering hydrogen atoms explicitly but only as features of heavy atoms is known as using \textit{implicit hydrogen atoms}. In short, it is a way of summarizing raw data which speeds up training considerably while loosing some information. Figure [] shows...
+\begin{figure}[H]
+	\includegraphics[width=\linewidth]{figures/implict-hydrogens.pdf}
+	
+	\caption{}
+	\label{fig:implicit-hydrogens}
+\end{figure}
 
-% probably: larger error
-% => use explicit hydrogen atoms from now on
+
+The approach of not considering hydrogen atoms explicitly but only as features of heavy atoms is known as using \textit{implicit hydrogen atoms}. In short, it is a way of summarizing raw data which speeds up training considerably while loosing some information. The reason it can be called 'implicit hydrogen representation' is that the information how many hydrogens (but not their exact position) is inherent in the structural information given all the other atoms and the distances between them. From the distances, the bond-type can be deduced. 
+
+
 
 
 \section{graph-conv layers with independent weights decrease the loss slightly}
