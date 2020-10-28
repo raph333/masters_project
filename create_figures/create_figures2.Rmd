@@ -78,13 +78,14 @@ process_multiple_lc <- function(df, target_column) {
 
 ```{r}
 df_decoupled <- read.csv(file.path(results_dir, 'lc-decoupled-weights.csv')) %>%
-    select(-c(minutes, 'minutes.', lr, target_param)) %>%
-    process_single_lc() %>% 
-    mutate(experiment_name = 'independent')
-
-df_shared <- read.csv(file.path(results_dir, 'lc-NE-real.csv')) %>% 
-  filter(target_param == 'inf') %>% 
   select(-c(minutes, 'minutes.', lr, target_param)) %>%
+  filter(epoch < 150) %>% 
+  process_single_lc() %>% 
+  mutate(experiment_name = 'independent')
+
+df_shared <- read.csv(file.path(results_dir, 'lc-NE-real-fix.csv')) %>%   # todo: swap with better reference (also used below)
+  filter(target_param == 'inf') %>% 
+  select(-c(minutes, lr, target_param)) %>%
   process_single_lc() %>% 
   mutate(experiment_name = 'shared')
 
@@ -106,9 +107,40 @@ p
 ggsave(file.path(figures_dir, 'weight-sharing.pdf'), p)
 ```
 
+# Raw Data: only atom type and bond type
+
+
+```{r}
+df_raw <- read.csv(file.path(results_dir, 'lc-raw-data-processor.csv')) %>%
+    select(-c(minutes, lr, target_param)) %>%
+    process_single_lc() %>% 
+    mutate(experiment_name = 'raw')
+
+df_tencent <- df_shared %>% 
+    mutate(experiment_name = 'augmented with features')
+
+df_comb <- rbind(df_raw, df_tencent)
+write.csv(df_comb, file.path(results_dir, 'lc-raw-data-processor-augmented.csv'))
+
+p <- ggplot(data=df_comb, aes(x=epoch, y=MAE, linetype=variable, color=experiment_name)) +
+  geom_line() + 
+  theme_bw() + 
+  scale_y_continuous(limits=c(0, 0.2)) +
+  theme(plot.title = element_text(hjust = 0.5, size=16)) +
+  labs(title='Raw vs. feature engineering',
+       color='input data',
+       linetype=element_blank())
+
+# the difference is probably due to the new optimization scheme used in the raw data experiment: only lr-decay of 0.995
+# => use NE-real-fix as reference instead
+
+ggsave(file.path(figures_dir, 'raw-data.pdf'), p, width = 20, height = 13, units = "cm")
+p
+```
+
+
 
 # Implicit Hydrogens
-
 
 
 ```{r}
@@ -118,9 +150,7 @@ df_implicit_h <- read.csv(file.path(results_dir, 'lc-implicit-hydrogens.csv')) %
     mutate(experiment_name = 'implicit')
 
 df_explicit_h <- df_shared %>% 
-    mutate(experiment_name = 'explict') %>% 
-    filter(epoch < 150)
-  
+    mutate(experiment_name = 'explict')
 
 df_comb <- rbind(df_implicit_h, df_explicit_h)
 write.csv(df_comb, file.path(results_dir, 'lc-implicit-hydrogens-augmented.csv'))
@@ -134,7 +164,7 @@ p <- ggplot(data=df_comb, aes(x=epoch, y=MAE, linetype=variable, color=experimen
        color='hydrogen representation',
        linetype=element_blank())
 
-ggsave(file.path(figures_dir, 'implict-hydrogens.pdf'), p, width = 30, height = 20, units = "cm")
+ggsave(file.path(figures_dir, 'implict-hydrogens.pdf'), p, width = 20, height = 13, units = "cm")
 p
 ```
 
