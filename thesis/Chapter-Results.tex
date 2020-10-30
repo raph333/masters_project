@@ -17,10 +17,10 @@ As explained in the introduction, we can define the neighborhood of a node as al
 Therefore, the first experiment, we compare the learning curves of graphs when defining the neighborhood with different thresholds. First of all, covalent bonds are always represented as edges in the graph. Then, for increasing radii, edges to all non-covalently bonded atoms within the radius are added to the graph. A neighborhood radius of zero thus means that no additional edges are added to the graph - the graph only has edges between covalently bonded atoms. At a radius of 1.5 Ångström (1Å = 10nm), an edge is added between any two non-covalently bonded atoms with a distance of at most 1.5Å. The same is done for 2Å, etc. For perspective, most covalent bonds in organic molecules have a distance of around 1 - 1.5 Å~\footnote{\url{https://courses.lumenlearning.com/suny-potsdam-organicchemistry/chapter/1-3-basics-of-bonding}}. 1.5Å is very close for non-covalently bonded atoms such that only very few non-covalently bonded atoms - if any - will be within 1.5Å of an atom in an organic molecule. With a 2Å radius, every atom in the molecule will get some new neighbors due to this rule. With a 4Å radius, many atoms will be included in the neighborhood that have very little to no interaction with the central atom. At 5Å, for many small molecules, every atom is considered a neighbor of any other atom - applying this radius is therefore similar to connecting every atom with every other atom in the molecule. Finally, with an infinite radius, a complete graph is obtained.
 
 \begin{figure}[H]
-	\includegraphics[width=\linewidth]{figures/tencent-mpnn-neighborhood-expansion-old}
+	\includegraphics[width=\linewidth]{figures/neighborhood-expansion}
 	
 	\caption{The learning curves with different neighborhood radii are show over the courses of 100 epochs. The color corresponds to the neighborhood radius, dotted lines the training errors and solid lines show validation errors. Note that for each radius, there is a training- and a validation-error curve. Each curve is an average of three learning curves with the same neighborhood radius. All curves were generated using a simple optimization scheme described in Section~\ref{sec:training}. Both, validation- and training-error could be lowered considerably by employing a more sophisticated optimization scheme. However, this would be at the expense of comparability between curves (see Section~\ref{sec:training}).}
-	\label{fig:tencent-mpnn-neighborhood-expansion}
+	\label{fig:neighborhood-expansion}
 \end{figure}
 
 As Figure~\ref{fig:tencent-mpnn-neighborhood-expansion} shows, the best performance is indeed achieved with the complete graph - connecting every atom with every other atom in the molecule with an edge. In general, the larger the neighborhood radius, the better the performance~\footnote{Exception: radius 0}. This result is in line with the suspicion that the real reason for the good performance of Tencent Lab's model is the addition of new edges rather than the addition of the euclidean distance feature.
@@ -33,7 +33,7 @@ For small molecules and with considerable computational power at hand, one could
 %Does no one notice?
 
 
-\section{Introducing a graph-state at every graph-conv layer improves results}
+\section{Introducing a graph-state as added input to every graph-conv layer does not improve the results}
 
 
 What the usage if complete graphs in graph convolutional networks essentially does is that it ensures that during every node update, a representation of every other node in the graph contributes to the update - even nodes that are too far away to have any direct interaction with the updated node (atom).
@@ -43,7 +43,11 @@ An interesting experiment to test this hypothesis is to include graph-level info
 
 Ideally, the use of such a root node would allow to achieve a similar performance as when using complete graphs without the high computational cost - while the number of edges increases quadratically with the number of nodes in the complete graph, the root node only introduces one new edge per node. At the very least, the effect of of decreasing performance with decreasing neighborhood radius shown in Figure~\ref{fig:tencent-mpnn-neighborhood-expansion} should be less pronounced if the root node has the expected effect.
 
-
+\begin{figure}[H]
+	\includegraphics[width=\linewidth]{figures/neighborhood-expansion-root-weight}
+	\caption{add caption}
+	\label{fig:neighborhood-expansion-root-weight}
+\end{figure}
 
 
 
@@ -55,13 +59,13 @@ Ideally, the use of such a root node would allow to achieve a similar performanc
 
 \section{Excluding hydrogen atoms from the molecule-graph speeds up training but reduces prediction accuracy}
 
-Another possible preprocessing step is to disregard hydrogen atoms and instead add the number of hydrogen atoms bonded to a given heavy atom as a node feature. The rational behind this step is that the properties chemical properties of hydrogen atoms depend strongly on the heavy atom to which it is bound. While some information is lost during this step, the average number of atoms in the molecule is reduced by an average factor of
+Another possible preprocessing step is to disregard hydrogen atoms and instead add the number of hydrogen atoms bonded to a given heavy atom as a node feature. The rational behind this step is that the chemical properties of hydrogen atoms depend strongly on the heavy atom to which it is bound. While some information is lost during this step, the average number of atoms in the molecule is reduced by an average factor of
 %21.61315346375882 ->
 %9.712215362411802
 %
 %455.46524214239895 ->
 %84.99518922386144
-from 21.6 to 9.7 in the training-set. This modest reduction in the number of nodes leads to a very dramatic reduction in the number of edges. Naturally, this effect is most pronounced in complete graphs where the number of edges increases quadratically with the number of nodes ($\frac{n(n - 1)}{2}$ edges for $n$ nodes). While the average number of edges using complete graphs is 455.5 in the training-set, this number drops to 85 after excluding hydrogen atoms. Thus the data representation becomes much more compact leading to a dramatic decrease in training time (from around three minutes per epoch to only 0.9 minutes). For 
+from 21.6 to 9.7 in the training-set. This modest reduction in the number of nodes leads to a very dramatic reduction in the number of edges. Naturally, this effect is most pronounced in complete graphs where the number of edges increases quadratically with the number of nodes ($\frac{n(n - 1)}{2}$ edges for $n$ nodes). While the average number of edges using complete graphs is 455.5 in the training-set, this number drops to 85 after excluding hydrogen atoms. Thus the data representation becomes much more compact leading to a dramatic decrease in training time (from around three minutes per epoch to only 0.9 minutes). This is a strong incentive to investigate whether ignoring hydrogen atoms in the molecular structure is a viable option. Figure~\ref{fig:implicit-hydrogens} clearly shows that this is not the case. The loss is far higher when using the hydrogen-less structure compared to the full structure. For this reason, every other experiment in this thesis uses full structures including hydrogen atoms.
 
 \begin{figure}[H]
 	\includegraphics[width=\linewidth]{figures/implict-hydrogens.pdf}
@@ -70,9 +74,8 @@ from 21.6 to 9.7 in the training-set. This modest reduction in the number of nod
 	\label{fig:implicit-hydrogens}
 \end{figure}
 
-
-The approach of not considering hydrogen atoms explicitly but only as features of heavy atoms is known as using \textit{implicit hydrogen atoms}. In short, it is a way of summarizing raw data which speeds up training considerably while loosing some information. The reason it can be called 'implicit hydrogen representation' is that the information how many hydrogens (but not their exact position) is inherent in the structural information given all the other atoms and the bonds between them. The only piece of knowledge from organic chemistry required to understand this is that every given atom type, such as carbon only engages in a fixed number of bonds: four for carbon, two for oxygen, one for hydrogen, etc (with double or triple bonds counting twice or trice, respectively). In a molecular structure without hydrogen atoms, the number of 
-
+\paragraph{Further information: Why a hydrogen-less structure contains implicit information about hydrogen atoms}
+Despite dropping all hydrogen atoms from the molecule structure, the information how many hydrogen atoms there are and to which atoms they are bound is still implicitly contained in the structure. In short, it is a way of summarizing raw data which speeds up training considerably while loosing some information. The reason it can be called 'implicit hydrogen representation' is that the information how many hydrogens (but not their exact position) is inherent in the structural information given all the other atoms and the bonds between them. The only piece of knowledge from organic chemistry required to understand this is that every given atom type, such as carbon or oxygen, only engages in a fixed number of bonds: four for carbon, two for oxygen, one for hydrogen, etc. (with double or triple bonds counting twice or trice, respectively). This number is called valence and is dependent on the number of electrons in the outer orbital - called valence electrons. In a molecular structure without hydrogen atoms, all bonds to heavy atoms (i.e. non-hydrogen atoms) is given for each atom as the number of it's neighbor nodes. The number of hydrogen atoms bound any given atom is thus it's valence minus the number of neighbor nodes. It is for this reason that omitting hydrogens from the structure can be thought of as equivalent of adding the feature 'number of hydrogen atoms' to each heavy atom. Note that while this number is implicit in the structure, the exact position of the hydrogen atoms is lost when they are omitted from the structure.
 
 
 
