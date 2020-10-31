@@ -65,10 +65,12 @@ During each message passing step, the hidden representation of each node $h_v^t$
 \begin{equation}
 m_v^{t+1} = \sum_{w \in N(v)} M_t(h_v^t, h_w^t, e_{vw})
 \end{equation}
+\label{eq:message-function}
 
 \begin{equation}
 h_v^{t+1} = U_t(h_v^t, m_v^{t+1})
 \end{equation}
+\label{eq:update-function}
 
 The above two steps are comprised of three functions:
 

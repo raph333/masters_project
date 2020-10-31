@@ -23,10 +23,10 @@ Therefore, the first experiment, we compare the learning curves of graphs when d
 	\label{fig:neighborhood-expansion}
 \end{figure}
 
-As Figure~\ref{fig:tencent-mpnn-neighborhood-expansion} shows, the best performance is indeed achieved with the complete graph - connecting every atom with every other atom in the molecule with an edge. In general, the larger the neighborhood radius, the better the performance~\footnote{Exception: radius 0}. This result is in line with the suspicion that the real reason for the good performance of Tencent Lab's model is the addition of new edges rather than the addition of the euclidean distance feature.
-The result is somewhat counterintuitive and in contrast with the principle of (graph-)convolution. As described in the introduction, in theory, graph convolutions update node-representation based on the local neighborhood of each node. Eventually, after $t$ layers, each node representation would contain indirect contributions from all other nodes with $t$ or less edges between. However, the results shown here show that the performance is best if the graph convolution considers all atoms at every layer. This contrast clearly shows that much remains to be discovered about the use of GCNN for molecules.
+As Figure~\ref{fig:neighborhood-expansion} shows, the best performance is indeed achieved with the complete graph - connecting every atom with every other atom in the molecule with an edge. In general, the larger the neighborhood radius, the better the performance~\footnote{Exception: radius 0}. This result is in line with the suspicion that the real reason for the good performance of Tencent Lab's model is the addition of new edges rather than the addition of the euclidean distance feature.
+The result is somewhat counterintuitive and in contrast with the principle of (graph-)convolution. As described in the introduction, in theory, graph convolutions update node-representation based on the local neighborhood of each node. Eventually, after $t$ layers, each node representation would contain indirect contributions from all other nodes with $t$ or less edges between. However, the results at hand show that the performance is best if the graph convolution considers all atoms at every layer. This contrast between theory and empiric results clearly shows that much remains to be discovered about the use of GCNN for molecules.
 
-For small molecules and with considerable computational power at hand, one could simply accept this finding as it is and represent molecules as complete graphs. However, for larger molecules with hundreds of atoms, this would be computationally not feasible as the number of edges increases quadratically ($\frac{n(n - 1)}{2}$ edges for $n$ nodes). Therefore, further experiments will aim at finding an alternative way that captures the advantage of the complete graph-approach without the excessively high computational cost.
+For small molecules and with considerable computational power available, one could simply accept this finding as it is and represent molecules as complete graphs. However, for larger molecules with hundreds of atoms, this would be computationally not feasible as the number of edges increases quadratically ($\frac{n(n - 1)}{2}$ edges for $n$ nodes). Therefore, the next experiments will aim at finding an alternative way that captures the advantage of the complete graph-approach without the excessively high computational cost.
 
 %Emphasize that this is not really appreciated in the literature.
 %Cite Alchemy paper and point out that the high-performing kaggle-teams all use fully connected graphs.
@@ -36,26 +36,24 @@ For small molecules and with considerable computational power at hand, one could
 \section{Introducing a graph-state as added input to every graph-conv layer does not improve the results}
 
 
-What the usage if complete graphs in graph convolutional networks essentially does is that it ensures that during every node update, a representation of every other node in the graph contributes to the update - even nodes that are too far away to have any direct interaction with the updated node (atom).
+What the usage of complete graphs in graph convolutional networks essentially does is to ensures that during every node update, a representation of every other node in the graph contributes to the update - even nodes that are too far away to have any direct interaction with the updated node (atom).
 A possible explanation of this behavior is that the node update benefits from having access to information about the whole graph / molecule. This interpretation begs the question if a similar effect can be achieved by a different architecture (that does not require the use of computationally prohibitive complete graphs).
 
 An interesting experiment to test this hypothesis is to include graph-level information at every node update (without having to use complete graphs.) One such idea is the use of a root node. A root node is a virtual node that is connected to every other node in the graph. In the molecule case, the root node does not represent a real atom. Instead, it can be used to represent information about the whole molecule. Then, as every node is connected to the root node, every node update has access to information about the whole molecule. On could initialize the root node representation with molecule level features (such as number of atoms, electric dipole, etc.[CITATION]). However, all those features are implicit in the 3D molecular structure. Sticking to the pure deep learning philosophy, the root node representation can also be learned solely from the raw data.
 
-Ideally, the use of such a root node would allow to achieve a similar performance as when using complete graphs without the high computational cost - while the number of edges increases quadratically with the number of nodes in the complete graph, the root node only introduces one new edge per node. At the very least, the effect of of decreasing performance with decreasing neighborhood radius shown in Figure~\ref{fig:tencent-mpnn-neighborhood-expansion} should be less pronounced if the root node has the expected effect.
+Ideally, the use of such a root node would allow to achieve a similar performance as when using complete graphs without the high computational cost - while the number of edges increases quadratically with the number of nodes in the complete graph, the root node only introduces one new edge per node. At the very least, the effect of decreasing performance with decreasing neighborhood radius shown in Figure~\ref{fig:neighborhood-expansion} should be less pronounced if the root node has the desired effect.
 
 \begin{figure}[H]
 	\includegraphics[width=\linewidth]{figures/neighborhood-expansion-root-weight}
-	\caption{add caption}
+	\caption{The results illustrated by this figure have been produced in exactly the same manner is Figure~\ref{fig:neighborhood-expansion} with the addition of a root node as the only difference. This allows a direct comparison between the figures such that any difference could be attributed to the presence or absence of a root node. The results show no difference beyond stochastic variation thus indicating that the addition of a root node is no substitute to the use of complete graph representation of molecules.}
 	\label{fig:neighborhood-expansion-root-weight}
 \end{figure}
 
+Figure~\ref{fig:neighborhood-expansion-root-weight} show the same experiment as Figure~\ref{fig:neighborhood-expansion} with the addition of a root node as the only difference. Unfortunately, there is no noticeable difference between the results of the two experiments. This indicates that the superior performance of complete graphs is not solely due to the fact that every node update includes input from the whole molecule. A possible reason for the failure of the root node to replace a complete graph approach could be that the root node cannot contribute geometric information about non-neighboring atoms. On the other hand, in the complete graph, each node's representation is considered in the update only in conjunction with the it's distance from the updated node. Recall Equation~\ref{eq:message-function} which defines the message form a node to another node as a function of both nodes as well as the connecting edge. While a root node representation can encode information about the whole molecule, such as number and types of atoms, their position relative to the updated node / atom is missing.
 
 
 
-\section{Manual feature engineering does not improve prediction accuracy.}
 
-% compare raw vs. tencent features.
-% after the point has been made, use only raw data
 
 \section{Excluding hydrogen atoms from the molecule-graph speeds up training but reduces prediction accuracy}
 
@@ -76,6 +74,17 @@ from 21.6 to 9.7 in the training-set. This modest reduction in the number of nod
 
 \paragraph{Further information: Why a hydrogen-less structure contains implicit information about hydrogen atoms}
 Despite dropping all hydrogen atoms from the molecule structure, the information how many hydrogen atoms there are and to which atoms they are bound is still implicitly contained in the structure. In short, it is a way of summarizing raw data which speeds up training considerably while loosing some information. The reason it can be called 'implicit hydrogen representation' is that the information how many hydrogens (but not their exact position) is inherent in the structural information given all the other atoms and the bonds between them. The only piece of knowledge from organic chemistry required to understand this is that every given atom type, such as carbon or oxygen, only engages in a fixed number of bonds: four for carbon, two for oxygen, one for hydrogen, etc. (with double or triple bonds counting twice or trice, respectively). This number is called valence and is dependent on the number of electrons in the outer orbital - called valence electrons. In a molecular structure without hydrogen atoms, all bonds to heavy atoms (i.e. non-hydrogen atoms) is given for each atom as the number of it's neighbor nodes. The number of hydrogen atoms bound any given atom is thus it's valence minus the number of neighbor nodes. It is for this reason that omitting hydrogens from the structure can be thought of as equivalent of adding the feature 'number of hydrogen atoms' to each heavy atom. Note that while this number is implicit in the structure, the exact position of the hydrogen atoms is lost when they are omitted from the structure.
+
+
+\section{Manual feature engineering does not improve results compared to using only raw input data}
+
+The previous experiments included some hand-crafted features calculated with the computation chemistry python library \textit{rdkit}. This was done in order replicate the approach of Chen et. at.~\cite{Chen2019}
+
+\begin{figure}[H]
+	\includegraphics[width=\linewidth]{figures/raw-data}
+	\caption{add caption}
+	\label{fig:raw-data}
+\end{figure}
 
 
 
