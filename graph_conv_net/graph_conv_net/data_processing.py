@@ -3,7 +3,6 @@ from os.path import join
 import glob
 from tqdm import tqdm
 from typing import Tuple, Union
-from collections import defaultdict
 
 import numpy as np
 import pandas as pd

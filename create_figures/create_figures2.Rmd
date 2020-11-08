@@ -74,7 +74,7 @@ p <- ggplot(data=df, aes(x=epoch, y=MAE, color=target_param, linetype=variable))
        color='neighborhood radius',
        linetype=element_blank())
 p
-ggsave(file.path(figures_dir, paste0('neighborhood-expansion.pdf')), p)
+# ggsave(file.path(figures_dir, paste0('neighborhood-expansion.pdf')), p)
 ```
 
 
@@ -96,7 +96,7 @@ p <- ggplot(data=df, aes(x=epoch, y=MAE, color=target_param, linetype=variable))
        color='neighborhood radius',
        linetype=element_blank())
 p
-ggsave(file.path(figures_dir, paste0('neighborhood-expansion-root-weight.pdf')), p)
+# ggsave(file.path(figures_dir, paste0('neighborhood-expansion-root-weight.pdf')), p)
 ```
 
 
@@ -131,7 +131,7 @@ p <- ggplot(data=df_comb, aes(x=epoch, y=MAE, linetype=variable, color=experimen
 
 p
 
-ggsave(file.path(figures_dir, 'weight-sharing.pdf'), p)
+# ggsave(file.path(figures_dir, 'weight-sharing.pdf'), p)
 ```
 
 # Raw Data: only atom type and bond type
@@ -161,7 +161,7 @@ p <- ggplot(data=df_comb, aes(x=epoch, y=MAE, linetype=variable, color=experimen
 # the difference is probably due to the new optimization scheme used in the raw data experiment: only lr-decay of 0.995
 # => use NE-real-fix as reference instead
 
-ggsave(file.path(figures_dir, 'raw-data.pdf'), p, width = 20, height = 13, units = "cm")
+# ggsave(file.path(figures_dir, 'raw-data.pdf'), p, width = 20, height = 13, units = "cm")
 p
 ```
 
@@ -191,11 +191,37 @@ p <- ggplot(data=df_comb, aes(x=epoch, y=MAE, linetype=variable, color=experimen
        color='hydrogen representation',
        linetype=element_blank())
 
-ggsave(file.path(figures_dir, 'implict-hydrogens.pdf'), p, width = 20, height = 13, units = "cm")
+# ggsave(file.path(figures_dir, 'implict-hydrogens.pdf'), p, width = 20, height = 13, units = "cm")
 p
 ```
 
 
+## relative direction vectors as additional edge features
+
+```{r}
+
+df_implicit_h <- read.csv(file.path(results_dir, 'lc-edge-direction-vectors.csv')) %>%
+  select(-c(minutes, lr, target_param)) %>%
+  process_single_lc() %>% 
+  mutate(experiment_name = 'with direction vectors')
+
+df_explicit_h <- df_shared %>% 
+  mutate(experiment_name = 'only distance')
+
+df_comb <- rbind(df_implicit_h, df_explicit_h)
+write.csv(df_comb, file.path(results_dir, 'lc-edge-direction-vectors-augmented.csv'))
+
+p <- ggplot(data=df_comb, aes(x=epoch, y=MAE, linetype=variable, color=experiment_name)) +
+  geom_line() + 
+  theme_bw() + 
+  scale_y_continuous(limits=c(0, 0.2)) +
+  theme(plot.title = element_text(hjust = 0.5, size=16)) +
+  labs(title='Direction vectors as additional edge features',
+       color='edge features')
+
+# ggsave(file.path(figures_dir, 'edge-direction-vectors.pdf'), p, width = 20, height = 13, units = "cm")
+p
+```
 
 
 

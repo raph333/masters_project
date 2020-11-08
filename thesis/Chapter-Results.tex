@@ -76,17 +76,6 @@ from 21.6 to 9.7 in the training-set. This modest reduction in the number of nod
 Despite dropping all hydrogen atoms from the molecule structure, the information how many hydrogen atoms there are and to which atoms they are bound is still implicitly contained in the structure. In short, it is a way of summarizing raw data which speeds up training considerably while loosing some information. The reason it can be called 'implicit hydrogen representation' is that the information how many hydrogens (but not their exact position) is inherent in the structural information given all the other atoms and the bonds between them. The only piece of knowledge from organic chemistry required to understand this is that every given atom type, such as carbon or oxygen, only engages in a fixed number of bonds: four for carbon, two for oxygen, one for hydrogen, etc. (with double or triple bonds counting twice or trice, respectively). This number is called valence and is dependent on the number of electrons in the outer orbital - called valence electrons. In a molecular structure without hydrogen atoms, all bonds to heavy atoms (i.e. non-hydrogen atoms) is given for each atom as the number of it's neighbor nodes. The number of hydrogen atoms bound any given atom is thus it's valence minus the number of neighbor nodes. It is for this reason that omitting hydrogens from the structure can be thought of as equivalent of adding the feature 'number of hydrogen atoms' to each heavy atom. Note that while this number is implicit in the structure, the exact position of the hydrogen atoms is lost when they are omitted from the structure.
 
 
-\section{Manual feature engineering does not improve results compared to using only raw input data}
-
-The previous experiments included some hand-crafted features calculated with the computation chemistry python library \textit{rdkit}. This was done in order replicate the approach of Chen et. at.~\cite{Chen2019}
-
-\begin{figure}[H]
-	\includegraphics[width=\linewidth]{figures/raw-data}
-	\caption{add caption}
-	\label{fig:raw-data}
-\end{figure}
-
-
 
 \section{graph-conv layers with independent weights give the same results as with shared weights}
 
@@ -113,17 +102,45 @@ Summing up the results confirm the common practice of using weight-sharing acros
 	\label{fig:weight-sharing}
 \end{figure}
 
-\section{relative position edge features improve results slightly}
 
-{\itshape
- Show that relative position edge features slightly improve the results but not much
- 
- explain that the problem is probably that they are not rotation-invariant
+\section{Manual feature engineering does not improve results compared to using only raw input data}
+
+The previous experiments included some hand-crafted features calculated with the computation chemistry python library \textit{rdkit}. This was done in order replicate the approach of Chen et. at.~\cite{Chen2019} In the literature, there are conflicting [TODO cite] indications about the uses of manually engineered chemical features as input into graph-conv networks. In most cases, the literature lacks a direct comparison between using only raw data (atom-type, position and edges) and adding manually computed features. It is therefore often hard to deduce whether the good results are due to an effective graph-conv architecture or due the smartly engineered chemical features used as input.
+
+The next experiment trains two almost identical graph-conv nets: one uses the same chemical features as Chen et. at.~\cite{Chen2019} while the other one uses only atom-type, edge-type and distance as input. The two nets are identical in every aspect except of course for the different dimension of the input layer. All chemical features~\footnote{TODO: add feature description} are computed from the structure without additional information. Hence - if they are relevant for predicting the target variable - they represent exactly the kind of information that the graph-conv layers should extract from the structure. If that's the case, the addition of the computed chemical features is expected to have no effect on the model's loss. Indeed, Figure~\ref{fig:raw-data} shows no difference between the two models.
+
+\begin{figure}[H]
+	\includegraphics[width=\linewidth]{figures/raw-data}
+	\caption{add caption}
+	\label{fig:raw-data}
+\end{figure}
+
+Therefore, we can conclude that the graph-conv layers are able to extract relevant chemical information to predict the target variable. The results do not preclude that another architecture might benefit from the addition of computed chemical features or that more and more sophisticated manually engineered features might even provide some benefit for the model at hand. Nevertheless, the results show that manual feature engineering is far from essential and strengthen the believe that the deep-learning approach of using raw data instead of manual feature engineering is also preferable for chemical applications of graph-conv nets.
+
+
+\section{Direction vectors as edge features have no impact}
+\label{sec:direction-vectors}
+
+It stands to reason that one of the main limitations of using graph neural networks for data embedded in spacial dimensions is the loss of a part of spacial information as explained in Section~\ref{sec:lack-of-3d-structure}. (While this theses focuses on molecules, representing any other three-dimensional data as graphs would be suffer from the same limitation). 
+
+
+\begin{figure}[H]
+	\includegraphics[width=\linewidth]{figures/edge-direction-vectors}
+	\caption{add caption}
+	\label{fig:edge-direction-vectors}
+\end{figure}
+
+
+% Show that relative position edge features slightly improve the results but not much
+% 
+% explain that the problem is probably that they are not rotation-invariant
 	
 	
-OPTIONAL PART:\\
-review the results of the 3DGCN-paper and show that this doesn't work really well on the Alchemy data - probably for the same reason given above
-}
+%optional:
+%review the results of the 3DGCN-paper and show that this doesn't work really well on the Alchemy data - probably for the same reason given above
+
+
+
 
 
 
