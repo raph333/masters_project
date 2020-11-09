@@ -19,7 +19,7 @@ Therefore, the first experiment, we compare the learning curves of graphs when d
 \begin{figure}[H]
 	\includegraphics[width=\linewidth]{figures/neighborhood-expansion}
 	
-	\caption{The learning curves with different neighborhood radii are show over the courses of 100 epochs. The color corresponds to the neighborhood radius, dotted lines the training errors and solid lines show validation errors. Note that for each radius, there is a training- and a validation-error curve. Each curve is an average of three learning curves with the same neighborhood radius. All curves were generated using a simple optimization scheme described in Section~\ref{sec:training}. Both, validation- and training-error could be lowered considerably by employing a more sophisticated optimization scheme. However, this would be at the expense of comparability between curves (see Section~\ref{sec:training}).}
+	\caption{The learning curves with different neighborhood radii are show over the courses of 150 epochs. The color corresponds to the neighborhood radius. Dotted lines show the training- and solid lines the validation errors. Note that for each radius, there is a training- and a validation-error curve. Each curve is an average of three learning curves with the same neighborhood radius. All curves were generated using a simple optimization scheme described in Section~\ref{sec:training}. Both, validation- and training-error could be lowered considerably by employing a more sophisticated optimization scheme. However, this would be at the expense of comparability between curves (see Section~\ref{sec:training}).}
 	\label{fig:neighborhood-expansion}
 \end{figure}
 
@@ -79,8 +79,21 @@ Despite dropping all hydrogen atoms from the molecule structure, the information
 
 \section{graph-conv layers with independent weights give the same results as with shared weights}
 
+Recall the message function $M_t$ and the (node-)update-function $U_t$ defined in Equation~\ref{eq:message-function} and~\ref{eq:update-function}, respectively. In this general definition, each graph-conv layer (each message passing step) $t$ has it's own $M_t$ and $U_t$. However, in most implementations of graph-conv networks, $M_t = M~~\forall~t$ and $U_t = U~~\forall~t$ which simplifies the two equations~\ref{eq:message-function} and~\ref{eq:update-function} to
 
-In most graph neural networks, the graph-conv layers have shared weights. This allows for efficient training and works well in practice. However, there is no theoretical reason that weight sharing is necessarily superior. For instance, it would be conceivable that independent weights would work better for extracting different kinds of features at each graph-conv step. Recall that the graph-conv layer, the input for a given node update consists only of direct neighbor nodes, at the second layer, the update indirectly contains information from all second-degree neighbor nodes etc. Hence, learning different weights for different graph-conv layers might be beneficial. Note also that in regular convolutional networks used for computer vision, every layer has independent weights even within blocks of convolutional layers with the same dimension. It is therefore far from clear that weight sharing has to be the preferred approach for graph-conv layers.
+\begin{equation}
+m_v^{t+1} = \sum_{w \in N(v)} M(h_v^t, h_w^t, e_{vw})
+\end{equation}
+\label{eq:message-function-shared}
+
+\begin{equation}
+h_v^{t+1} = U(h_v^t, m_v^{t+1})
+\end{equation}
+\label{eq:update-function-shared}
+
+% TODO: cite
+
+In plain English, this means that the weights between the graph-conv layers (message passing steps) are shared. This allows for efficient training and works well in practice. However, there is no theoretical reason that weight sharing is necessarily superior. For instance, it would be conceivable that independent weights would work better for extracting different kinds of features at each graph-conv step. Recall that the graph-conv layer, the input for a given node update consists only of direct neighbor nodes, at the second layer, the update indirectly contains information from all second-degree neighbor nodes, etc. Hence, learning different weights for different graph-conv layers might be beneficial. Note also that in regular convolutional networks used for computer vision, every layer has independent weights even within blocks of convolutional layers with the same dimension. It is therefore far from clear that weight sharing has to be the preferred approach for graph-conv layers.
 
 In order to investigate the possible benefit of independent weights, the next experiment compares the MPNN described in previous section with an architecture without weight sharing. The two architectures are identical in every other aspect to allow isolate the effect of weight sharing. Figure~\ref{fig:weight-sharing} shows that there is no noticeable difference between the learning curves.
 
@@ -98,7 +111,8 @@ Summing up the results confirm the common practice of using weight-sharing acros
 \begin{figure}[H]
 	\includegraphics[width=\linewidth]{figures/weight-sharing.pdf}
 	
-	\caption{Independent weights between graph-conv layers outperform weight-shared layers by a small margin. Note that the two architectures are identical in every other way apart from weight-sharing of graph-conv layers. Complete graphs were used as the input data as this was shown to be the best performing transformation in earlier experiments (Section~\ref{sec:neighborhood-expansion}). Importantly, each learning curve in this figure represents an average over three independently trained model to minimize the influence of random fluctuations between training-runs. The learning rate was set to a start value of $0.001$ with a learning rate decay of 0.99 each epoch. While a more sophisticated optimization scheme and training for more epochs could have given slightly a somewhat lower MAE, the results a at hand show clearly the relative advantage of independent weights.}
+	% todo update
+	\caption{The result of using independent weights between graph-conv layers is the same as when using weight-shared layers. Note that the two architectures are identical in every other way apart from weight-sharing of graph-conv layers. Complete graphs were used as the input data as this was shown to be the best performing transformation in earlier experiments (Section~\ref{sec:neighborhood-expansion}). Each curve is an average of three learning curves with the same neighborhood radius. All curves were generated using a simple optimization scheme described in Section~\ref{sec:training}. While a more sophisticated optimization scheme and training for more epochs could have given slightly a somewhat lower MAE, the results a at hand show clearly the relative advantage of independent weights.}
 	\label{fig:weight-sharing}
 \end{figure}
 
@@ -111,7 +125,7 @@ The next experiment trains two almost identical graph-conv nets: one uses the sa
 
 \begin{figure}[H]
 	\includegraphics[width=\linewidth]{figures/raw-data}
-	\caption{add caption}
+	\caption{Raw data alone gives as good results as with manually engineered features. As in the previous experiments, each line is an average of three independent learning curves and were obtained using the simple optimization scheme described in Section~\ref{sec:training}.}
 	\label{fig:raw-data}
 \end{figure}
 
@@ -121,21 +135,24 @@ Therefore, we can conclude that the graph-conv layers are able to extract releva
 \section{Direction vectors as edge features have no impact}
 \label{sec:direction-vectors}
 
-It stands to reason that one of the main limitations of using graph neural networks for data embedded in spacial dimensions is the loss of a part of spacial information as explained in Section~\ref{sec:lack-of-3d-structure}. (While this theses focuses on molecules, representing any other three-dimensional data as graphs would be suffer from the same limitation). 
+It stands to reason that one of the main limitations of using graph neural networks for data embedded in spacial dimensions is the loss of a part of spacial information as explained in Section~\ref{sec:lack-of-3d-structure}. (While this theses focuses on molecules, representing any other three-dimensional data as graphs would be suffer from the same limitation).
+
+In an attempt to address this limitation, an additional (vector-valued) edge-feature was included as input into the message-function $M_t$ (Equation~\ref{eq:message-function}): the direction vector from the sending atom $h_v$ to the receiving (i.e. to be updated) atom $h_w$ as added to the features of edge $e_{vw}$. This vector is invariant to translation of the molecule making it potentially more informative than using raw atom-coordinates as raw features~\footnote{Adding the raw coordinate values to the node features gave no improvement at all. As this is expected given that the coordinates depend on the arbitrary positioning and rotation of the coordinate system, the results are not shown here.} However, the direction vector is still not invariant the the arbitrarily chosen rotation of molecule in the coordinate system.
+
+In order to provide the direction vector with some useful information the molecule's center was chosen as the origin of coordinate system. Thanks to this transformation, a direction vector $pos(h_w) - pos(h_v)$ from atom $h_v$ to atom $h_w$ always provided the information if $h_v$ lies closer to the center (positive values) or closer to the periphery of the molecule (negative values) in relation to $h_w$.
+
+For this reason, the direction vector could contain useful information despite the lack of rotational invariance. Nevertheless, no improvement was achieved by the addition of the direction vector to the edge features as shown in Figure~\ref{fig:edge-direction-vectors}. The results do not give evidence whether the additional edge features do not contain relevant information at all or whether the graph-convolution was just not able to extract useful higher-level features from the information. The possibility that another grap-conv architecture might benefit from using direction vectors as edge-features cannot be ruled out completely but the results at hand do not provide evidence for it either.
+
+
 
 
 \begin{figure}[H]
 	\includegraphics[width=\linewidth]{figures/edge-direction-vectors}
-	\caption{add caption}
+	\caption{Direction vectors as edge features do note improve the results. As in the previous experiments, each line is an average of three independent learning curves and were obtained using the simple optimization scheme described in Section~\ref{sec:training}.}
 	\label{fig:edge-direction-vectors}
 \end{figure}
 
 
-% Show that relative position edge features slightly improve the results but not much
-% 
-% explain that the problem is probably that they are not rotation-invariant
-	
-	
 %optional:
 %review the results of the 3DGCN-paper and show that this doesn't work really well on the Alchemy data - probably for the same reason given above
 
