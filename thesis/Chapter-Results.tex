@@ -78,6 +78,7 @@ Despite dropping all hydrogen atoms from the molecule structure, the information
 
 
 \section{graph-conv layers with independent weights give the same results as with shared weights}
+\label{sec:weight-sharing}
 
 Recall the message function $M_t$ and the (node-)update-function $U_t$ defined in Equation~\ref{eq:message-function} and~\ref{eq:update-function}, respectively. In this general definition, each graph-conv layer (each message passing step) $t$ has it's own $M_t$ and $U_t$. However, in most implementations of graph-conv networks, $M_t = M~~\forall~t$ and $U_t = U~~\forall~t$ which simplifies the two equations~\ref{eq:message-function} and~\ref{eq:update-function} to
 
@@ -118,6 +119,7 @@ Summing up the results confirm the common practice of using weight-sharing acros
 
 
 \section{Manual feature engineering does not improve results compared to using only raw input data}
+\label{sec:raw-data}
 
 The previous experiments included some hand-crafted features calculated with the computation chemistry python library \textit{rdkit}. This was done in order replicate the approach of Chen et. at.~\cite{Chen2019} In the literature, there are conflicting [TODO cite] indications about the uses of manually engineered chemical features as input into graph-conv networks. In most cases, the literature lacks a direct comparison between using only raw data (atom-type, position and edges) and adding manually computed features. It is therefore often hard to deduce whether the good results are due to an effective graph-conv architecture or due the smartly engineered chemical features used as input.
 
@@ -142,8 +144,6 @@ In an attempt to address this limitation, an additional (vector-valued) edge-fea
 In order to provide the direction vector with some useful information the molecule's center was chosen as the origin of coordinate system. Thanks to this transformation, a direction vector $pos(h_w) - pos(h_v)$ from atom $h_v$ to atom $h_w$ always provided the information if $h_v$ lies closer to the center (positive values) or closer to the periphery of the molecule (negative values) in relation to $h_w$.
 
 For this reason, the direction vector could contain useful information despite the lack of rotational invariance. Nevertheless, no improvement was achieved by the addition of the direction vector to the edge features as shown in Figure~\ref{fig:edge-direction-vectors}. The results do not give evidence whether the additional edge features do not contain relevant information at all or whether the graph-convolution was just not able to extract useful higher-level features from the information. The possibility that another grap-conv architecture might benefit from using direction vectors as edge-features cannot be ruled out completely but the results at hand do not provide evidence for it either.
-
-
 
 
 \begin{figure}[H]
