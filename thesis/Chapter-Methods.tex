@@ -3,7 +3,7 @@
 
 %describe in detail architecture of the tencent MPNN and its variants, optionally discuss the code explain where the code is found and how to run it
 
-\subsection{Data and features}
+\section{Data and features}
 \label{sec:data-and-features}
 
 The new quantum chemistry dataset \textit{Alchemy}, created by Tencent Quantum Lab, was used for this thesis~\cite{Chen2019}. The dataset is similar to the well established QM9 dataset with the same quantum mechanical properties available and a similar number of molecules. The main advantage of the new \textit{Alchemy} dataset is that it also contains larger molecules of up to 14 heavy atoms (i.e. non-hydrogen atoms) as opposed to the maximum of nine heavy atoms in the Q9 dataset. This property makes it more relevant for medically oriented research as potential drugs are not limited to only very small molecules.
@@ -21,21 +21,21 @@ The other approach is to calculate all sorts of chemical features using chemistr
 % explain target properties
 % mae, normalization
 
-\subsection{Base network architecture}
+\section{Base network architecture}
 \label{sec:base-architecture}
 
 % TODO
 
 
-\subsection{Software}
+\section{Software}
 
 The models presented in this theses were implemented using the python deep learning library \textit{PyTorch}~\footnote{\url{https://pytorch.org/}} and its extension for graph neural networks, \textit{PyTorch Geometric}~\footnote{\url{https://pytorch-geometric.readthedocs.io/en/latest/}}.
 
-The code is available at github: \url{https://github.com/raph333/masters_project}
+The code is available at github: \url{https://github.com/raph333/masters\_project}
 
 
 
-\subsection{Training}
+\section{Training}
 \label{sec:training}
 
 All experiments presented in this thesis use Adaptive Moment Estimation (Adam)[CITATION] for gradient descent. For certain experiments, other optimizers might give slightly better results. However, comparison between differences in data processing and network architectures would be impeded by employing different optimization schemes because one would never know if the different outcomes are a result of the model or the optimization. For this reason, optimization strategies were kept as constant as possible for all experiments.
@@ -45,11 +45,11 @@ To obtain the lowest possible test-set error, a learning rate schedule that redu
 For comparing different learning curves a simpler, exponential learning-rate decay was chosen~\footnote{The initial learning rate of 0.001 is reduced by a factor of 0.995 after every epoch and the experiment is run for 150.} [CITATON]. The advantage of this method is that at each epoch, all curves have the same learning rate which makes them comparable. The final validation error is usually higher than would be achieved with reduce-on-plateau learning rate scheduling. However, this drawback is accepted because the main point of the experiments is to compare different model architectures, parameters or data-transformation rather than to achieve the lowest possible test-set error.
 
 
-\subsection{Benchmark and evaluation}
+\section{Benchmark and evaluation}
 
 The target variable in this dataset is a real-valued vector of length twelve. The error-metric used throughout this work is the mean absolute error (MAE) - which was also the metric in the Alchemy Contest. As the twelve quantum mechanical properties have vastly different ranges, they have to be normalized - otherwise the properties with larger ranges would contribute far more to the MAE than the properties with smaller ranges. Normalization was performed by subtracting the mean and dividing by the standard deviation.
 
-\subsubsection{Difference between competition-dataset and full-dataset}
+\subsection{Difference between competition-dataset and full-dataset}
 
 %This subsection explains why the MAE-values presented in this thesis cannot be compared the competition leader-board including my own score with rank 26.
 
@@ -94,7 +94,7 @@ Furthermore, I chose use the same training-validation split as in the competitio
 %However, unlike in the competition, I split these molecules randomly into 70\% training-, 15\% validation- and 15\% test-set.
 
  
-\subsection{Experiments}
+\section{Experiments}
 
 Most experiments show learning curves with validation- and training-error rather than just the final errors. The choice was made because, in addition to showing the final error-rates, learning curves allow to estimate whether the model suffers from high bias or high variance and also shows if prolonged training could lead to further improvements or if a plateau has been reached. In contrast, a single error-metric does not show how this metric was obtained and thus offers little information to interpret the results. Furthermore, learning curve averaging of multiple training runs was employed to reduce the impact of noise. Some variation in the learning curves is to be expected even in the absence of any difference in model architecture, input data or optimization strategy. Therefore, any given learning curve shown in this thesis is an average of three independent learning curves using the exact same models parameters and input data. Conduction multiple training runs for each setting and averaging the results reduces the impact of random variation and allow to see the systematic differences instead. 
 

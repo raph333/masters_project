@@ -148,13 +148,7 @@ In order to provide the direction vector with some useful information, the molec
 
 For this reason, the direction vector could contain useful information despite the lack of rotational invariance. Nevertheless, no improvement was achieved by the addition of the direction vector to the edge features as shown in Figure~\ref{fig:edge-direction-vectors}. The results do not give evidence whether the additional edge features do not contain relevant information at all or whether the graph-convolution was just not able to extract useful higher-level features from this information. The possibility that another graph-convolution architecture might benefit from using direction vectors as edge-features cannot be ruled out completely but the results at hand do not provide evidence for it.
 
-
-
-%optional:
-%review the results of the 3DGCN-paper and show that this doesn't work really well on the Alchemy data - probably for the same reason given above
-
-
-
+An interesting attempt at modeling 3D structural information in GCNNs is made in the 3D-embedded graph convolutional network of Cho et. al.~\cite{Cho2018}. However, upon closer inspection the approach seems to suffer from same issue as the experiment above that the input data is not invariant to the arbitrary rotation of the molecule. Adapting this model to and applying it to the \textit{Alchemy} dataset gave only disappointing results. After 200 epochs, the validation MAE plateaued at around 1.8 which is about three times higher than the validation MAE achieved with the models based on Tencent's simple MPNN~\cite{Chen2019} used for the other experiments in this thesis. Even the training error did not even go below the validation error achieved with the simple MPNN but plateaued at around 0.85.
 
 
 

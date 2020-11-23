@@ -26,7 +26,8 @@ def get_transform(threshold: float) -> Callable:
 
 
 new_config = {
-    'name': 'edge-direction-vectors',  # todo: set this for each experiment!  (default 'test-run')
+    'name': 'best-optim',  # todo: set this for each experiment!  (default 'test-run')
+    'root_weight': True,
     'dataset_class': AlchemyCompetitionDataset,
     'data_processor': RawDataProcessor,  # SchNetDataProcessor,
     'get_transform': get_transform,
@@ -34,28 +35,22 @@ new_config = {
         'name': 'distance_threshold',
         'values': [np.inf]
     },
-    # 'lr_scheduler': {
-    #     'class': torch.optim.lr_scheduler.ReduceLROnPlateau,
-    #     'kwargs': {'factor': 0.75,
-    #                'threshold': 1e-4,
-    #                'patience': 6}
-    # },
+    'lr': 0.01,  # start high
+    'lr_scheduler': {
+        'class': torch.optim.lr_scheduler.ReduceLROnPlateau,
+        'kwargs': {'factor': 0.75,
+                   'threshold': 1e-4,
+                   'patience': 6}
+    },
     'batch_size': 64,
-    # 'lr': 0.01,  # start high
+    # 'lr': 0.001,
     # 'lr_scheduler': {
     #     'class': torch.optim.lr_scheduler.ExponentialLR,
-    #     'kwargs': {'gamma': 0.97  # ... and decrease quickly
-    #                }
-    #     # after the test run: figure out a better starting learning rate and decrease more slowly
+    #     'kwargs': {'gamma': 0.995}
     # },
-    'lr': 0.001,
-    'lr_scheduler': {
-        'class': torch.optim.lr_scheduler.ExponentialLR,
-        'kwargs': {'gamma': 0.995}
-    },
     'repeat': 3,
-    'cuda': 0,
-    'num_epochs': 150
+    'cuda': 3,
+    'num_epochs': 500
 }
 CONFIG.update(new_config)
 

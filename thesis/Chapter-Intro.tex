@@ -3,9 +3,9 @@
 
 
 
-\section{Deep neural networks for graph structured data}
+%\section{Deep neural networks for graph structured data}
 
-\subsection{Overview}
+\section{Motivation}
 
 In the past decade, deep neural networks have been responsible for several breakthroughs in machine learning ranging from computer vision to natural language processing. [add some citations]. These astounding achievements suggest that deep neural networks have the potential to achieve many more groundbreaking applications of machine learning. However, a closer look at the breakthroughs cited above reveals that most of these applications focus on one of two kinds of data: images and natural language. An image (in the most general sense) can described as data-points (pixels) on a two-dimensional grid. Natural language on the other hand has a purely one-dimensional structure. In text-form, it can be described as a sequence of words, syllables or characters. In the form of speech, it is a sequence of sounds. In either case, the structure of the data is purely sequential meaning that each data point (e.g. a word or a character) is fully described by it's position in the 1D-sequence.
 
@@ -21,12 +21,14 @@ Obvious applications of GCNNs are molecular structures (the topic of this thesis
 [insert figures, some more examples and maybe explanations]
 In the remainder of this section we will mostly refer to molecular structures as examples of graph structured data but please keep in mind that most principles apply to other kinds of graphs as well. In particular, the most important challenge when modeling molecular structures as graphs is the loss of some of the 3D structural information as discussed in Section~\ref{sec:lack-of-3d-structure}. This challenge is exactly the same for any other 3D data that is represented as a graph.
 
-\subsection{Graph convolutional network architecture}
+\section{Graph convolutional network architecture}
 
-\subsubsection{Challenges of graph structured data for graph convolutional neural networks}
+In this section we will review graph convolutional neural networks (GCNNs) in general. While all those considerations hold will also apply when the input graphs represent molecules, Section~\ref{3d-molecules-for-gcnns} will show the specific challenges for this use case.
+
+\subsection{Challenges of graph structured data for deep neural networks}
 \label{sec:graph-challenges}
 
-There are several challenges of designing neural network architectures for graphs:
+There are several challenges of designing neural network architectures for graphs.
 
 \paragraph{No fix-sized dimensionality (globally)}
 Each graph can have a different dimensionality in terms of number of nodes and edges. This per se is nothing graph-specific. After all, images also come in different sizes. However, while images can be cropped and scaled to have the same dimension if needed, there is no easy way to do something equivalent with graphs. For instance, in a dataset of 3D molecular structures, the molecules typically have different numbers of atoms (nodes) and there is no reasonable way to change this.
@@ -39,7 +41,7 @@ From the last two paragraphs, one can already suspect that graph convolutions re
 
 Now that we briefly described the properties of the input data, we will examine the possible output formats of a GCNN in the next section. With the input data and the output defined, we will then focus on the transformations that map the input to the output in GCNNs.
 
-\subsubsection{Output format of graph convolutional neural networks}
+\subsection{Output format of graph convolutional neural networks}
 \label{sec:graph-output}
 
 GCNNs can be used to predict three kinds of target variables:
@@ -101,6 +103,7 @@ In summary, a GCNN is composed of two parts: graph convolutional layers and a re
 
 
 \section{Predicting molecular properties from 3D structure with graph convolutional neural networks}
+\label{3d-molecules-for-gcnns}
 
 \subsection{Importance of extracting information form 3D molecular structures}
 
@@ -113,23 +116,45 @@ For these reasons, the use of DNNs to predict molecular properties from 3D struc
 \subsection{Modeling molecules as graphs}
 \label{sec:molecules-as-graphs}
 
-When it comes to 3D structures there are really only two basic ways of representing them modeling with DNNs. The first is to describe them as 3D grids and using 3D convolutional networks simply extending the same architectures used in computer vision by an additional dimension~\cite{Wallach2015}. The problem with this approach is two-fold: First of all, the cubic number of data-points make this method computationally very expensive thus defeating the purpose of finding a less costly alternative for MDS. The second problem is that the information encoded in all these data-points is redundant. In molecular structures, coordinates and types of atoms are fully sufficient to describe the molecule. All other information - such as atomic radius, etc. - are functions of the types of atoms (Hydrogen, Carbon, etc.) or the types of atoms in the neighborhood. Thus when for instance a ten-atom molecule is fully described by ten coordinate vectors and ten atom types (40 numbers), it is excessive and inefficient to model it as a 3D image with tens or hundreds of thousands of pixels. The advantage of the 3D convolutional approach is that 3D structure information is necessarily provided to the model which is a challenge for GCNNs as explained in Section~\ref{sec:limitations}.
+Figure~\ref{fig:molecule-3d} shows an illustration of a 3D molecule structure. The raw data contains only coordinates and atom types. The bonds presence or absence of bonds between atoms can be derived from the types of atoms and the distance between them. Thus the raw data of a molecule is only an unordered set of vectors
+
+
+
+$M = \{\vec{a}, \vec{b}, ... \}$
+
+where $\vec{a}, \vec{b}, ... = \begin{bmatrix}
+t \\
+x_1 \\
+x_2 \\
+x_3 \\
+\end{bmatrix} $
+
+with $x_1, x_3, x_3 \in \mathbb{R}$
+
+and $t \in \{1, 2, ... T\} $ with T being the number of atom-types in the dataset which is seven in the dataset at hand~\footnote{Hydrogen (H), carbon (C), nitrogen (N), oxygen (O), fluoride (F),  sulfur (S) and chlorine (Cl)}.
+
+
+The cardinality of the set is the number of atoms in the molecule and varies from molecule to molecule.
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=\linewidth]{figures/molecule-3d-1}
-	\caption{
+	\caption{A 3D structure of a small organic molecule. Carbon and hydrogen atoms are shown in gray and white, respectively. The red spheres show oxygen atoms and the blue one shows a nitrogen atom according to the common coloring convention. In size of the spheres is chosen such atoms that covalently bonded atoms have no or almost no space between them. 
 	}
 	\label{fig:molecule-3d}
 \end{figure}
 
-The idea of using graphs to model molecules comes quite naturally when looking common representations of molecules such as those shown in Figure~\ref{fig:caffeine}. A molecule is usually defined as a number of atoms connected by covalent bonds. These kind of bonds involve the sharing of one or more electron-pairs between the bonded atoms and chemically very stable - i.e. it takes considerable energy or the involvement of enzymes to break them up. In laymen's terms, covalent bonds can be regarded as 'stable under normal conditions'. In the commonly used molecule graph representation, atoms are shown as letters denoting their type and the covalent bonds are drawn as edges between them as shown in Figure~\ref{fig:caffeine}. Thus defining a graph where atoms are the nodes and covalent bonds are the edges seems like the most natural way of modeling molecules. However, upon closer examination, the situation is somewhat more complicated.
+When it comes to 3D structures there are really only two basic ways of representing them modeling with DNNs. The first is to describe them as 3D grids and using 3D convolutional networks simply extending the same architectures used in computer vision by an additional dimension~\cite{Wallach2015}. In this approach, you would literally use the the 3D color image shown in Figure~\ref{fig:molecule-3d} as model input. The problem with this approach is two-fold: First of all, the cubic number of data-points make this method computationally very expensive. The second problem is that the information encoded in all these data-points is highly redundant. In molecular structures, coordinates and types of atoms are fully sufficient to describe the molecule. All other information - such as atomic radius, etc. - are functions of the types of atoms (hydrogen, carbon, etc.). Thus when for instance a ten-atom molecule is fully described by ten coordinate vectors and ten atom types (40 numbers), it is excessive and inefficient to model it as a 3D image with tens or hundreds of thousands of pixels. The advantage of the 3D convolutional approach is that 3D structure information is necessarily provided to the model which is a challenge for GCNNs as explained in the next Section~\ref{sec:limitations}.
+
+
+
+The idea of using graphs to model molecules comes quite naturally when looking at the most common way of representing small molecules in text books: so called molecule graphs such as the one shown in Figure~\ref{fig:caffeine}. A molecule is usually defined as a number of atoms connected by covalent bonds. These kind of bonds involve the sharing of one or more electron-pairs between the bonded atoms and chemically very stable - i.e. it takes considerable energy or the involvement of enzymes to break them up. In laymen's terms, covalent bonds can be regarded as 'stable under normal conditions'. In the commonly used molecule graph representation, atoms are shown as letters denoting their type and the covalent bonds are drawn as edges between them as shown in Figure~\ref{fig:caffeine}. Thus defining a graph where atoms are the nodes and covalent bonds are the edges seems like the most natural way of modeling molecules. However, upon closer examination, the situation is somewhat more complicated.
 
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.7\linewidth]{figures/caffeine}
-	\caption{The standard molecule graph representation of the molecule caffeine which was consumed in vast amounts during the writing of this thesis is shown above. The lines represent edges in the graph. Line intersections or end-points show atoms which represent nodes in the graph. Most of these atoms are carbon atoms as in (almost) all organic molecules which are not indicated by a letter in the molecule graph - instead every line intersection or endpoint without a letter represents a carbon atom. Other heavy atoms are denoted by their single letter code such as Oxygen an Nitrogen shown as O and N, respectively.
+	\caption{The standard molecule graph representation of caffeine which was consumed in large amounts during the writing of this thesis is shown above. The lines represent edges in the graph. Line intersections or end-points show atoms which represent nodes in the graph. Most of these atoms are carbon atoms as in (almost) all organic molecules which are not indicated by a letter in the molecule graph - instead every line intersection or endpoint without a letter represents a carbon atom. Other heavy atoms are denoted by their single letter code such as Oxygen an Nitrogen shown as O and N, respectively.
 	By convention, hydrogen atoms are not drawn at all because their presence can be deduced from the information shown and is thus redundant. (For instance the carbon atom represented by the bottom-most line endpoint has three hydrogen atoms attached to it. That can be deduced form the fact that each carbon atom engages in four bonds with other atoms. As the only one such bond is shown as the edge between the bottom-most carbon and the bottom-most nitrogen atom, three are left. These are assumed to be occupied by hydrogen atoms by convention if they are not drawn explicitly. These considerations become relevant when trying to omit hydrogen atoms from the input data as described in Section~\ref{sec:no-hydrogens}.)
 	Furthermore, double- and triple-bonds are shown in such graphs as two or three lines between two atoms. These bonds are stronger and the distance between the atoms is shorter than in the case of single bonds. In the graph representation, these types of bonds are represented as edge-attributes because there is no such thing as several edges between any two nodes in a graph. Instead, every edge has a categorical feature bond-type which can be either singe, double or triple.
 	}
@@ -137,11 +162,18 @@ The idea of using graphs to model molecules comes quite naturally when looking c
 \end{figure}
 
 
-Atoms interact not only if they are covalently bonded. There is a wide array of non-covalent interactions that have a large influence on molecular properties or function - a simple example being positive and negative (partial) charges. The strength of non-covalent interactions is a function, atom types, distance and the local environment in the 3D structure. Thus, only including covalent bonds leads to considerable loss of information. As an example, consider two atoms can be close in space and interact non-covalently even though the path length in the covalent graph may be quite large.
-With these considerations, another way of representing a molecule as graph would be to simply define an edge between every pair of atoms if the distance is below a certain threshold. Furthermore, the distance could be added as an edge-feature along with a binary feature indicating whether the atoms are covalently bonded or not. This representation has the advantage of considering non-covalent interactions but also introduces many more edges which increases the computational workload. Another way of constructing a graph from a molecular structure is to draw an edge between any given atom and it's k nearest neighbors.
+Atoms interact not only if they are covalently bonded. There is a wide array of non-covalent interactions that have a large influence on molecular properties or function - a simple example being positive and negative (partial) charges. The strength of non-covalent interactions is a function of atom types, distance and the local environment in the 3D structure. Thus, only including covalent bonds leads to considerable loss of information. As an example, consider that two atoms can be close in space and interact non-covalently even though the path length in the covalent graph may be quite large.
+
+
+With these considerations, another way of representing a molecule as graph would be to simply define an edge between every pair of atoms if the distance is below a certain threshold. Another way of constructing a graph from a molecular structure is to draw an edge between any given atom and it's k nearest neighbors.
+
+All approaches that define the presence or absence of edges by certain rules suffer from inductive bias: we decide in advance which relations between nodes in the graph (atoms) are relevant and which are not. Hence the model cannot learn this information from the raw data but is restrained by predefined rules. Ideally, of course, we would prefer to allow the model to learn everything from the raw data only which is the reason behind the success of deep neural networks in other fields. One way to get rid of this inductive bias is to simply add an edge between any two atoms in the molecule - thus creating a complete graph - and add the distance between the atoms as an edge feature. This way, the model can 'decide' whether a relation between two atoms is relevant based on the distance. The disadvantage of this approach is the high computational cost which makes it impossible to apply to large molecules. This trade-off between inductive bias an computational feasibility lies at the core of one of the key experiments in the thesis described in Section~\ref{sec:neighborhood-expansion}.
+
+%Furthermore, the distance could be added as an edge-feature.
+%
+% along with a binary feature indicating whether the atoms are covalently bonded or not. This representation has the advantage of considering non-covalent interactions but also introduces many more edges which increases the computational workload.
 
 These examples highlight an importance difference between the theory of GCNNs and their application. In the theory, the starting point is graph structured data and all the effort goes into construction the best possible model architecture to extraction information from this data. For practical application, the data has to be modeled as graphs in a way that captures the available information in the best possible manner. The choices made in this process may have more influence on the quality of the predictions than the choice of GCNN architecture. After all, if incomplete information is fed into the model, even the best model will yield disappointing results. In the next section, we will examine some challenges that arise modeling molecules as graphs for GCNNs.
-
 
 
 \subsection{Limitations of Graph convolutional neural networks for molecular structures}
@@ -150,11 +182,22 @@ These examples highlight an importance difference between the theory of GCNNs an
 \subsubsection{Lack of 3D structure representation}
 \label{sec:lack-of-3d-structure}
 
-In principle, 3D coordinates could simply be added to the node features to obtain a 3D graph. However, this is not meaningful for representing 3D molecular structures. First of all, there is no logical reference point for the origin of the coordinate system. The molecule can be translated arbitrarily along one, two or all three spacial axes without changing anything of relevance. The second problem is, that molecules have no natural orientations i.e. they can be arbitrarily rotated where every rotation is just as valid as any other one (In contrast to everyday objects, such as cupboards or cars, where certain rotations are unlikely to be encountered in everyday life.)
+In principle, 3D coordinates could simply be added to the node features to obtain a 3D graph. However, this is not meaningful for representing 3D molecular structures. First of all, there is no logical reference point for the origin of the coordinate system. The molecule can be translated arbitrarily along one, two or all three spacial axes without changing anything of relevance. The second problem is, that molecules have no natural orientations i.e. they can be arbitrarily rotated where every rotation is just as valid as any other one (in contrast to everyday objects, such as cupboards or cars, where certain rotations are unlikely to be encountered in everyday life). Figure~\ref{fig:rotation} shows two randomly chosen rotations of a small organic molecule. While two images represent the exact same information, the actual atom coordinates are completely different.
 
-For these reasons, the concrete values of the 3D coordinates which depend on this arbitrary positioning and rotation of the coordinate system do not posses relevant information as such. The translation issue could be addressed by instead using directional vectors from one atom to another as edge-features. These vectors are invariant to the arbitrary translation of the molecule in the coordinate system. However, they depend on the arbitrary rotation of the molecule rendering them also not useful to encode the 3D structure as shown in Section~\ref{sec:direction-vectors}.
+\begin{figure}[H]
+	\centering
+	\includegraphics[angle=270, width=\linewidth]{figures/rotation}
+	\caption{Two randomly chosen rotations of the same molecule. The values of the atom coordinates are completely different between the two rotations even though the underlying information is the same.}
+	\label{fig:rotation}
+\end{figure}
 
-In most GCNN architectures, the euclidean distance is provided as an edge feature. This encodes part of the 3D structure in the graph but still looses vital information. It is straightforward to see that for most graphs with distance as edge feature, there are many 3D structures satisfying these constraints. In other words the mapping from 3D structure to graph with distances is unambiguous but the inverse operation is not. It does not take much chemical expertise to conjecture that not providing the full 3D structural information to the model limits it's capability to make accurate predictions. However, there is no easy way to avoid this dilemma and to my knowledge, no satisfying solution has been found so far.
+For these reasons, the concrete values of the 3D coordinates which depend on this arbitrary positioning and rotation of the coordinate system do not posses relevant information as such. The translation issue could be addressed by instead using directional vectors from one atom to another as edge-features. These vectors are invariant to the arbitrary translation of the molecule in the coordinate system. However, they depend on the arbitrary rotation of the molecule rendering them also not useful to encode the 3D structure as shown in the experiment of Section~\ref{sec:direction-vectors}.
+
+In most GCNN architectures, the euclidean distance is provided as an edge feature. This encodes part of the 3D structure in the graph but still looses vital information. Consider for instance the case of the neighborhood of the the blue nitrogen atom in Figure~\ref{fig:rotation}. The set of distances to the other atoms is unambiguously derived from the 3D structure (irrespective of the rotation). However, only by knowing the distance to each other atom in the molecule the structure cannot be derived. There could be a completely different structure giving rise to the same set of distances. For instance, the fact that the blue nitrogen atom is at the margin of the molecule and not in the center is not contained in the information provided by the distances to all other atoms.
+
+%It is straightforward to see that for most graphs with distance as edge feature, there are many 3D structures satisfying these constraints. In other words the mapping from 3D structure to graph with distances is unambiguous but the inverse operation is not.
+
+It does not take much chemical expertise to conjecture that not providing the full 3D structural information to the model limits it's capability to make accurate predictions. However, there is no easy way to avoid this dilemma and to my knowledge, no satisfying solution has been found so far.
 
 %optional:
 %review the results of the 3DGCN-paper and show that this doesn't work really well on the Alchemy data - probably for the same reason given above
