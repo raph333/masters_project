@@ -10,6 +10,7 @@ tmp
 .idea
 notes.md
 
+papers
 graph_conv_net/experiments/mlruns/*
 graph_conv_net/experiments/results/archive/*
 doc/tmp/*

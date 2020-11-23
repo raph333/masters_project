@@ -15,16 +15,10 @@ There are two different approaches to go about this task. The pure deep learning
 The other approach is to calculate all sorts of chemical features using chemistry python libraries and feed them in to the model alongside the raw data. Such features are node (atom) features (whether the atom is an electron donor or acceptor, whether it is an an aromatic ring, it's hybridization type, etc.) as well as bond (edge) features. The fact that these features are calculated from the raw data without any additional information means that the model should also be able to learn to compute them if required. Hence, calculating features and feeding them into the model should in theory be obsolete but could slightly improve predictions if the model is unable to learn those features. Since the focus of this thesis is deep-learning, no manual feature computation is performed here except if it is required to allow comparison with results from the literature.
 
 
-
-% alchemy ds: train, validation, testset split
-% competition data vs. full data difference
-% explain target properties
-% mae, normalization
-
 \section{Base network architecture}
 \label{sec:base-architecture}
 
-% TODO
+% TODO add section
 
 
 \section{Software}
@@ -38,7 +32,7 @@ The code is available at github: \url{https://github.com/raph333/masters\_projec
 \section{Training}
 \label{sec:training}
 
-All experiments presented in this thesis use Adaptive Moment Estimation (Adam)[CITATION] for gradient descent. For certain experiments, other optimizers might give slightly better results. However, comparison between differences in data processing and network architectures would be impeded by employing different optimization schemes because one would never know if the different outcomes are a result of the model or the optimization. For this reason, optimization strategies were kept as constant as possible for all experiments.
+All experiments presented in this thesis use Adaptive Moment Estimation (Adam) for gradient descent~\cite{Kingma2015}. For certain experiments, other optimizers might give slightly better results. However, comparison between differences in data processing and network architectures would be impeded by employing different optimization schemes because one would never know if the different outcomes are a result of the model or the optimization. For this reason, optimization strategies were kept as constant as possible for all experiments.
 
 The same considerations were applied to learning rates and learning rate scheduling. Two different optimization schemes were used for different purposes.
 To obtain the lowest possible test-set error, a learning rate schedule that reduces the learning rate after the validation error plateaus has found to be most effective~\footnote{Specifically, the following parameters were chosen: The initial learning rate of 0.01 is reduced by a factor of 0.75 if the validation error did not decrease by a value of $10^{-4}$ or more within the last 10 epochs. The training duration was 300 epochs} This optimization scheme above suffers from the drawback of requiring many training epochs. Furthermore, the resulting learning-rate schedule varies considerably even between trainings with the same parameters. These differences as well as the long training time make it unsuitable for comparing learning curves with different parameters.
