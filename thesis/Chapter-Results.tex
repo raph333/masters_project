@@ -1,13 +1,43 @@
 \chapter{Results}
 \label{chapter:Results}
 
+\section{Predicting atomic interactions from 3D structure}
+\label{sec:champs}
 
-\section{Using graph convolution in the way it's meant to be used gives poor results on molecular structures}
+This section describes my experiments for the Kaggle competition 'Predicting Molecular Properties' hosted by CHAMPS (CHemistry And Mathematics in Phase Space)~\footnote{\url{https://www.kaggle.com/c/champs-scalar-coupling}}. The dataset is described in Section~\ref{sec:data-and-features}.
+% TODO: link to correct subsection.
+
+Target variable is a magnetic interaction between two atoms measured by Nuclear Magnetic Resonance (NMR) - the so called scalar coupling constant or J-coupling constant.
+% TODO add citation: NMR and Jcoupling
+Not that in the graph notation, this is an edge-property as described in Section~\ref{sec:graph-output}. This interaction does not have to be predicted for any two atoms in the molecule but rather for a per-defined set of atom-pairs. These can be directly bonded to each other or be two or three covalent bonds apart. Furthermore, the can involve different atom types. The interactions are categorized by the involved atom types and the number of bonds between them. For instance, $2JHC$ is the J-coupling type of a hydrogen- and a carbon-atom with two bonds between them. % TODO: link EDA kernels
+
+
+\subsection{Boosted Tree models with manually engineered features}
+\label{sec:champs-boosted-tree}
+
+Simple machine learning models based on manually engineered features, such as various versions of boosted trees can give surprisingly good results with short training time. They do not reach the performance of well tuned MPNNs but easily surpass not yet fully optimized MPNN models.
+
+As the main topic of this thesis are MPNNs, this section will describe feature engineering approaches on a high level. 
+
+\subsubsection{Distance and atom-type features}
+
+The first type of engineered features were calculated in the following way: The center point between the two atoms whose J-coupling constant has to be predicted 
+
+
+
+\subsection{MPNNs for edge property prediction}
+\label{sec:alchemy}
+
+
+\section{Predicting molecular properties from 3D structure}
+
+
+\subsection{Using graph convolution in the way it's meant to be used gives poor results on molecular structures}
 \label{sec:neighborhood-expansion}
 
 In the paper Chen et al.~\cite{Chen2019} at Tencent Lab, the authors modify a well performing GCNN architecture for quantum chemistry invented by Gilmer et al.~\cite{Gilmer2017}. The authors expand this model by using both, categorical bond type and euclidean distance as edge features and observe considerably better performance. At first glance, the use of both kinds of features - which seems to be implied in the paper - looks like a plausible explanation for the success. However, upon closer inspection, the reasoning does not add up. Bond types almost completely determine the euclidean distance. E.g. ever carbon-carbon single bond has a distance of 1.54Å, every carbon-oxygen double bond is 1.20Å long, etc.~\footnote{\url{https://courses.lumenlearning.com/suny-potsdam-organicchemistry/chapter/1-3-basics-of-bonding}} (The same applies to the reverse: knowing the distance between two atoms as well as the atom types allows to deduce the type of covalent bond or lack thereof.) Therefore, no additional information is added by including the euclidean distance as a feature. Inspection of the implementation reveals anther possible reason for the good performance: Not only is the euclidean distance added as a feature to existing edges, every atom is connected to every other atom in the molecule with the euclidean distance being the only not-null feature~\footnote{\url{https://github.com/tencent-alchemy/Alchemy}}. Thus, the structure of the graph is changed dramatically form the graph of covalent bonds to complete graph where every node is connected to every other node. The complete graph is a special case of graph and is rather untypical because in most applications, the presence or absence of an edge between two nodes is the most important kind of information. Simply connecting all nodes with each other seems to diminish this information (although in this case, the euclidean distance allows to distinguish between important and less important edges). With these considerations in mind it is surprising but very interesting that the approach of Tencent Labs works so well.
 
-In preparation for this thesis, I participated in the Tencent-Alchemy competition~\footnote{\url{https://alchemy.tencent.com}} using approach described above a baseline architecture. This competition provided a labeled training- and validation-set of as well as an unlabeled test-set of 3D molecular structures described in more detail in Section~\ref{sec:data-and-features}. Despite many experiments, I achieved the best results simply fine-tuning Tencent Labs model and finished 26th out of 53 participants~\footnote{\url{https://alchemy.tencent.com/\#leaderboard}}. The fact that half the participants did not beat the baseline published in the official competition paper, shows that the approach is indeed quite effective an warrants a closer examination why the peculiar approach of using complete graphs works quite well.
+During the practical work for this thesis, I participated in the Tencent-Alchemy competition~\footnote{\url{https://alchemy.tencent.com}} using approach described above a baseline architecture. This competition provided a labeled training- and validation-set of as well as an unlabeled test-set of 3D molecular structures described in more detail in Section~\ref{sec:data-and-features}. Despite many experiments, I achieved the best results simply fine-tuning Tencent Labs model and finished 26th out of 53 participants~\footnote{\url{https://alchemy.tencent.com/\#leaderboard}}. The fact that half the participants did not beat the baseline published in the official competition paper, shows that the approach is indeed quite effective an warrants a closer examination why the peculiar approach of using complete graphs works quite well.
 
 %As discussed in the introduction, a central concept of graph convolution (and regular convolution as well), is to compute a representation of a local neighborhood. In the case of graphs, a local neighborhood is a node and its neighbor nodes while on images, it is a small patch of pixels, such as 3x3 or 5x5.
 
@@ -27,20 +57,17 @@ The result is somewhat counterintuitive and in contrast with the principle of gr
 
 For small molecules and with considerable computational power available, one could simply accept this finding as it is and represent molecules as complete graphs. However, for larger molecules with hundreds of atoms, this would be computationally not feasible as the number of edges increases quadratically ($\frac{n(n - 1)}{2}$ edges for $n$ nodes). Therefore, the next experiments will aim at finding an alternative way that captures the advantage of the complete graph-approach without the excessively high computational cost.
 
-%Emphasize that this is not really appreciated in the literature.
 %Cite Alchemy paper and point out that the high-performing kaggle-teams all use fully connected graphs.
 %Does no one notice?
 
 
-\section{Introducing a graph-state as added input to every graph-conv layer does not improve the results}
+\subsection{Introducing a graph-state as added input to every graph-conv layer does not improve the results}
 
 
 What the usage of complete graphs in graph convolutional networks essentially does is to ensures that during every node update, a representation of every other node in the graph contributes to the update - even nodes that are too far away to have any direct interaction with the updated node (atom).
 A possible explanation of this behavior is that the node update benefits from having access to information about the whole graph (molecule). This interpretation begs the question if a similar effect can be achieved by a different architecture (that does not require the use of computationally prohibitive complete graphs).
 
-An interesting experiment to test this hypothesis is to include graph-level information at every node update (without having to use complete graphs.) One such idea is the use of a root node. A root node is a virtual node that is connected to every other node in the graph. In the molecule case, the root node does not represent a real atom. Instead, it can be used to represent information about the whole molecule. Then, as every node is connected to the root node, every node update has access to information about the whole molecule. On could initialize the root node representation with molecule level features (such as number of atoms, electric dipole, etc.).
-% TODO add citation
-However, all those features are implicit in the 3D molecular structure. Sticking to the pure deep learning philosophy, the root node representation can also be learned solely from the raw data.
+An interesting experiment to test this hypothesis is to include graph-level information at every node update (without having to use complete graphs.) One such idea is the use of a root node. A root node (called master node in Gilmer et. al.~\cite{Gilmer2017}) is a virtual node that is connected to every other node in the graph. In the molecule case, the root node does not represent a real atom. Instead, it can be used to represent information about the whole molecule. Then, as every node is connected to the root node, every node update has access to information about the whole molecule. On could initialize the root node representation with molecule level features (such as number of atoms, electric dipole, etc.). However, all those features are implicit in the 3D molecular structure. Sticking to the pure deep learning philosophy, the root node representation can also be learned solely from the raw data.
 % TODO: add info about implementation and update
 
 Ideally, the use of such a root node would allow to achieve a similar performance as when using complete graphs without the high computational cost - while the number of edges increases quadratically with the number of nodes in the complete graph, the root node only introduces one new edge per node. At the very least, the negative effect of decreasing performance with decreasing neighborhood radius shown in Figure~\ref{fig:neighborhood-expansion} should be less pronounced if the root node has the desired effect.
@@ -54,7 +81,7 @@ Ideally, the use of such a root node would allow to achieve a similar performanc
 Figure~\ref{fig:neighborhood-expansion-root-weight} show the same experiment as Figure~\ref{fig:neighborhood-expansion} with the addition of a root node as the only difference. Unfortunately, there is no noticeable difference between the results of the two experiments. This indicates that the superior performance of complete graphs is not solely due to the fact that every node update includes input from the whole molecule. A possible reason for the failure of the root node to replace a complete graph approach could be that the root node cannot contribute geometric information about non-neighboring atoms. On the other hand, in the complete graph, each node's representation is considered in the update only in conjunction with the it's distance from the updated node. Recall Equation~\ref{eq:message-function} which defines the message from a node to another node as a function of both nodes as well as the connecting edge. While a root node representation can encode information about the whole molecule, such as number and types of atoms, their position relative to the updated node (atom) is missing.
 
 
-\section{Excluding hydrogen atoms from the molecule-graph speeds up training but reduces prediction accuracy}
+\subsection{Excluding hydrogen atoms from the molecule-graph speeds up training but reduces prediction accuracy}
 \label{sec:no-hydrogens}
 
 Another possible preprocessing step is to disregard hydrogen atoms and instead add the number of hydrogen atoms bonded to a given heavy atom as a node feature. The rational behind this step is that the chemical properties of hydrogen atoms depend strongly on the heavy atom to which it is bound. While some information is lost during this step, the average number of atoms in the molecule is reduced by an average factor of
@@ -77,7 +104,7 @@ Despite dropping all hydrogen atoms from the molecule structure, the information
 
 
 
-\section{Graph-convolution layers with independent weights give the same results as with shared weights}
+\subsection{Graph-convolution layers with independent weights give the same results as with shared weights}
 \label{sec:weight-sharing}
 
 Recall the message function $M_t$ and the (node-)update-function $U_t$ defined in Equation~\ref{eq:message-function} and~\ref{eq:update-function}, respectively. In this general definition, each graph-convolution layer (each message passing step) $t$ has it's own $M_t$ and $U_t$. However, in most implementations of GCNNs, $M_t = M~~\forall~t$ and $U_t = U~~\forall~t$ which simplifies the two equations~\ref{eq:message-function} and~\ref{eq:update-function} to
@@ -117,7 +144,7 @@ Furthermore, while we can see that they do not decrease the loss, we still do no
 Summing up, the results confirm the common practice of using weight-sharing across graph-convolution layers but the question why weight-sharing works in GCNNs is still left open and worth investigating.
 
 
-\section{Manual feature engineering does not improve results compared to using only raw input data}
+\subsection{Manual feature engineering does not improve results compared to using only raw input data}
 \label{sec:raw-data}
 
 The previous experiments included some hand-crafted features calculated with the computation chemistry python library \textit{rdkit}. This was done in order replicate the approach of Chen et. at.~\cite{Chen2019} In the literature, there are conflicting [TODO cite] indications about the uses of manually engineered chemical features as input for GCNNS. In most cases, the literature lacks a direct comparison between using only raw data (atom-type, position and edges) and adding manually computed features. It is therefore often hard to deduce whether the good results are due to an effective model architecture or due to the smartly engineered chemical features used as input.
@@ -135,7 +162,7 @@ are computed from the structure without additional information. Hence - if they 
 Therefore, we can conclude that the graph-convolution layers are able to extract relevant chemical information to predict the target variable. The results do not preclude that another architecture might benefit from the addition of computed chemical features or that more and more sophisticated manually engineered features might even provide some benefit for the model at hand. Nevertheless, the results show that manual feature engineering is far from essential and strengthen the believe that the deep-learning approach of using raw data instead of manual feature engineering is also preferable for chemical applications of GCNNS.
 
 
-\section{Direction vectors as edge features have no impact}
+\subsection{Direction vectors as edge features have no impact}
 \label{sec:direction-vectors}
 
 It stands to reason that one of the main limitations of using graph neural networks for data embedded in spacial dimensions is the loss of a part of spacial information as explained in Section~\ref{sec:lack-of-3d-structure}. (While this thesis focuses on molecules, representing any other three-dimensional data as graphs would be suffer from the same limitation).
