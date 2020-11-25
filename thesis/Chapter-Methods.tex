@@ -3,31 +3,79 @@
 
 %describe in detail architecture of the tencent MPNN and its variants, optionally discuss the code explain where the code is found and how to run it
 
-\section{Data and features}
+\section{Data}
 \label{sec:data-and-features}
 
-% TODO: add champs
 
-The new quantum chemistry dataset \textit{Alchemy}, created by Tencent Quantum Lab, was used for this thesis~\cite{Chen2019}. The dataset is similar to the well established QM9 dataset with the same quantum mechanical properties available and a similar number of molecules. The main advantage of the new \textit{Alchemy} dataset is that it also contains larger molecules of up to 14 heavy atoms (i.e. non-hydrogen atoms) as opposed to the maximum of nine heavy atoms in the Q9 dataset. This property makes it more relevant for medically oriented research as potential drugs are not limited to only very small molecules.
+\subsection{The CHAMPS dataset}
+\label{sec:champs-dataset}
 
-There 119487 molecules [CHECK: old vs. new dataset] in the dataset containing the 3D coordinates for each atom, its type and the information which atoms are covalently bonded with which bond type and twelve important quantum mechanical properties~\cite{Chen2019} of the molecule. The task is to predict those twelve properties from the raw data.
+% TODO: fill section
 
-There are two different approaches to go about this task. The pure deep learning approach is to use only coordinates and bonds and rely on the network to learn to extract any features required to predict the target properties. After all, coordinates, atom types and bonds contain all the available information (actually the bonds could be reliably calculated from coordinates and atom types and thus, strictly speaking are also redundant information).
+\subsection{The \textit{Alchemy} dataset}
+\label{sec:alchemy-dataset}
+The new quantum chemistry dataset \textit{Alchemy}, created by Tencent Quantum Lab, was used for this thesis~\cite{Chen2019}. The dataset is similar to the well established QM9 dataset~\cite{Ramakrishnan2014} with the same quantum mechanical properties available and a similar number of molecules. The main advantage of the new \textit{Alchemy} dataset is that it also contains larger molecules of up to 14 heavy atoms (i.e. non-hydrogen atoms) as opposed to the maximum of nine heavy atoms in the QM9 dataset. This property makes it more relevant for medically oriented research as potential drugs are not limited to only very small molecules. 
+There 119487 molecules in the dataset containing the 3D coordinates for each atom, its type and the information which atoms are covalently bonded with which bond type and twelve important quantum mechanical properties~\cite{Chen2019} of the molecule~\footnote{
+	Unfortunately, due to the issue described in Section~\ref{sec:diff-old-new-ds}, the test set could not be used for reliable evaluation. The remaining dataset consists of 99776 molecules in the training-set and 3951 molecules in the validation set.
+}. The task is to predict those twelve properties~\footnote{
+	The 12 target variables
+	(Dipole moment, Polarizability, HOMO, LUMO, gap, R\textsuperscript2, Zero point energy, Internal energy, Internal energy at 298.15 K, Enthalpy at 298.15 K, Free energy at 298.15 K, Heat capacity at 298.15 K) are shown in Table~2 of Chen et. al.~\cite{Chen2019}.
+} from the raw data. The target properties have been calculated using computationally highly expensive quantum chemical computations using the python library \textit{PySCF}~\cite{Sun2017}.
 
-The other approach is to calculate all sorts of chemical features using chemistry python libraries and feed them in to the model alongside the raw data. Such features are node (atom) features (whether the atom is an electron donor or acceptor, whether it is an an aromatic ring, it's hybridization type, etc.) as well as bond (edge) features. The fact that these features are calculated from the raw data without any additional information means that the model should also be able to learn to compute them if required. Hence, calculating features and feeding them into the model should in theory be obsolete but could slightly improve predictions if the model is unable to learn those features. Since the focus of this thesis is deep-learning, no manual feature computation is performed here except if it is required to allow comparison with results from the literature.
 
 
-\section{Base network architecture}
-\label{sec:base-architecture}
+\subsection{Features}
+\label{sec:features}
+
+There are two different approaches to go about the task. The pure deep learning approach is to use only coordinates and bonds and rely on the network to learn any features required to predict the target properties. After all, coordinates, atom types and bonds contain all the available information (actually the bonds could be reliably calculated from coordinates and atom types and thus, strictly speaking are also redundant information).
+
+The other approach is to calculate all sorts of chemical features using chemistry python libraries and feed them in to the model alongside the raw data. These include node (atom) features (whether the atom is an electron donor or acceptor, whether it is part of an aromatic ring, it's hybridization type, etc.~\cite{Organic-chemistry}) as well as bond (edge) features. The fact that these features are calculated from the raw data without any additional information means that the model should also be able to learn to compute them if required. Hence, calculating features and feeding them into the model should in theory be obsolete but could slightly improve predictions if the model is unable to learn those features. Since the focus of this thesis is deep-learning, no manual feature computation is performed here except if it is required to allow comparison with results from the literature.
+
+
+\section{Model architecture}
+\label{sec:architecture}
 
 % TODO add section
+
+\subsection{\textit{SchNet}}
+\label{sec:schnet-architecture}
+
+\subsection{base MPNN architecture}
+\label{sec:mpnn-architecture}
+
+The basic architecture used as a starting point for most of the experiments in this thesis (Section~\ref{sec:alchemy}) comes from the MPNN variant from Chen et. al.~\cite{Chen2019} whose code is available on GitHub~\footnote{\url{https://github.com/tencent-alchemy/Alchemy}}. This model, in turn is based on the MPNN model proposed by Gilmer et. al.~\cite{Gilmer2017}.
+
+The networks starts with an embedding of the atom-type of each node. In this particular implementation, this is achieved by passing a the one-hot encoded atom type through a regular linear layer. This first layer essentially extracts the n\textsuperscript{nt} column from the weight matrix when the n\textsuperscript{th} position of the input vector is one which is easy to see from the following example.
+
+\begin{equation}
+\begin{bmatrix} 
+w_{11} & w_{12} & w_{13} \\
+w_{21} & w_{22} & w_{23} \\
+w_{31} & w_{32} & w_{33} \\
+\end{bmatrix}
+*
+\begin{bmatrix} 
+1 \\
+0 \\
+0 \\
+\end{bmatrix}
+=
+\begin{bmatrix} 
+w_{11} \\
+w_{21} \\
+w_{31} \\
+\end{bmatrix}
+\end{equation}
+
+Thus, the first linear layer essentially corresponds to a mapping from a categorical, integer-valued variable to vector $\in \mathbb{R}^d$ where $d$ is the output dimension of the linear layer.
+            
 
 
 \section{Software}
 
-The models presented in this theses were implemented using the python deep learning library \textit{PyTorch}~\footnote{\url{https://pytorch.org/}} and its extension for graph neural networks, \textit{PyTorch Geometric}~\footnote{\url{https://pytorch-geometric.readthedocs.io/en/latest/}}.
+Most of the models presented in this thesis (Section~\ref{sec:alchemy}) were implemented using the python deep learning library \textit{PyTorch}~\footnote{\url{https://pytorch.org/}} and its extension for graph neural networks, \textit{PyTorch Geometric}~\footnote{\url{https://pytorch-geometric.readthedocs.io/en/latest/}}. The \textit{SchNet} model (Section~\ref{sec:schnet}) was implemented using the python library DGL (deep graph library)~\footnote{\url{https://www.dgl.ai/}}. In my humble opinion, \textit{PyTorch Geometric} is by far superior to DGL. It's API is much more in line with \textit{PyTorch}, the documentation is clear and the code works reliably. On the other hand, DGL is not easy to use and the work on the \textit{SchNet} model was severely hampered by a memory leak: the GPU memory filled-up over time and not released again. In order to fix this issue, all caches have to be cleared after each batch leading extremely slow training making it impossible to try different approaches in limited time. Summing up, \textit{PyTorch Geometric} is the best \textit{PyTorch} compatible library for MPNN I have come across during the work for this thesis.
 
-The code is available at github: \url{https://github.com/raph333/masters\_project}
+The code of the models trained on the \textit{Alchemy} dataset is available at github: \url{https://github.com/raph333/masters\_project}.
 
 
 
@@ -45,7 +93,8 @@ For comparing different learning curves a simpler, exponential learning-rate dec
 
 The target variable in this dataset is a real-valued vector of length twelve. The error-metric used throughout this work is the mean absolute error (MAE) - which was also the metric in the Alchemy Contest. As the twelve quantum mechanical properties have vastly different ranges, they have to be normalized - otherwise the properties with larger ranges would contribute far more to the MAE than the properties with smaller ranges. Normalization was performed by subtracting the mean and dividing by the standard deviation.
 
-\subsection{Difference between competition-dataset and full-dataset}
+\section{Difference between competition-dataset and full-dataset}
+\label{sec:diff-old-new-ds}
 
 %This subsection explains why the MAE-values presented in this thesis cannot be compared the competition leader-board including my own score with rank 26.
 
@@ -86,8 +135,6 @@ The raw data and thus the input into the model is exactly the same in the full d
 
 With the input-data as well as the data-splits being identical, the reason for the difference in MAE can only be explained by the different values of the target variables. As discussed above, the absence of raw data in the competition dataset prevents a direct comparison of the target variables between the two datasets. Thus, no further information can be obtained to pinpoint the difference or to find a possible explanation. The only conclusion to be made is that for some reason the target variables in the new data prevent the net from learning to predict them as well as in the competition data. For this reason, I chose to use the labeled competition data for the experiments in this thesis. This comprises 103727 molecules from the training- and validation-set of the competition data.
 Furthermore, I chose use the same training-validation split as in the competition because the MAE of the competition-data with this split could not be achieved by any other splitting method. While it is unfortunate not to know the root of this counterintuitive finding, it will have to remain a mystery in order to focus on the core topic of this thesis: graph neural networks. 
-
-%However, unlike in the competition, I split these molecules randomly into 70\% training-, 15\% validation- and 15\% test-set.
 
  
 \section{Experiments}

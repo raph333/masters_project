@@ -4,30 +4,47 @@
 \section{Predicting atomic interactions from 3D structure}
 \label{sec:champs}
 
-This section describes my experiments for the Kaggle competition 'Predicting Molecular Properties' hosted by CHAMPS (CHemistry And Mathematics in Phase Space)~\footnote{\url{https://www.kaggle.com/c/champs-scalar-coupling}}. The dataset is described in Section~\ref{sec:data-and-features}.
-% TODO: link to correct subsection.
+This section describes my experiments for the Kaggle competition 'Predicting Molecular Properties'~\footnote{\url{https://www.kaggle.com/c/champs-scalar-coupling}} hosted by CHAMPS (CHemistry And Mathematics in Phase Space)
+%~\footnote{\url{https://champsproject.com}}.
+The dataset is described in Section~\ref{sec:champs-dataset}.
 
-Target variable is a magnetic interaction between two atoms measured by Nuclear Magnetic Resonance (NMR) - the scalar coupling constant or J-coupling constant.
-% TODO add citation: NMR and Jcoupling
+Target variable is a magnetic interaction between two atoms measured by Nuclear Magnetic Resonance (NMR) - the scalar coupling constant or J-coupling constant~\cite{NMR}.
 Note that in the graph notation, this is an edge-property as described in Section~\ref{sec:graph-output}. This interaction does not have to be predicted for any two atoms in the molecule but rather for a per-defined set of atom-pairs. These can be directly bonded to each other or be two or three covalent bonds apart. Furthermore, the can involve different atom types. The interactions are categorized into eight categories by the involved atom types and the number of bonds between them. For instance, $2JHC$ is the J-coupling type of a hydrogen- and a carbon-atom with two bonds between them. For a more detailed investigation, please follow the links to two Kaggle-notebooks in the footnotes~\footnote{\url{https://www.kaggle.com/rpeer333/molecular-properties-detailed-eda}}
 	~\footnote{\url{https://www.kaggle.com/rpeer333/champs-competition-baseline-trivial-predictions}}.
 In a general model, this category would be the most important basic feature as the ranges of J-coupling constants differ markedly between those categories. However, another approach is to simply train a different model for each type. This approach has been shown to be effective with boosted tree-models as well as MPNNs and was therefore used in both cases.
 
+\begin{table}[H]
+	\begin{tabular}{||c c c||} 
+		\hline
+		Experiment & Section & Quadratic kappa \\ [0.5ex] 
+		\hline\hline
+		\textit{LightGBM} with distance and atom type & \ref{sec:dist-atom-type} & -1.19 \\ 
+		\textit{LightGBM} with distance, angle and atom type & \ref{sec:dist-angle-atom-type} & -1.38 \\
+		\textit{SchNet} DGL implementation & \ref{sec:schnet} & 0.52  \\
+		\textit{SchNet} Chainer-implementation (fine-tuned) & \ref{sec:schnet} & -1.95 \\ [1ex] 
+		\hline
+	\end{tabular}
+	\vspace{0.5cm}
+	\caption{Summary of the results of different experiments from the Kaggle competition 'Predicting Molecular Properties'.}
+	\label{tab:champs-results}
+\end{table}
 
 
 \subsection{Boosted Tree models with manually engineered features}
 \label{sec:champs-boosted-tree}
 
-Simple machine learning models based on manually engineered features, such as various versions of boosted trees can give surprisingly good results with short training time. They do not reach the performance of well tuned MPNNs but easily surpass not yet fully optimized MPNN models. The next two subsection will briefly outline two experiments with manually engineered features used for a Light Gradient Boosted Model (LightGBM)~\cite{Ke2017}.
+Simple machine learning models based on manually engineered features, such as various versions of boosted trees can give surprisingly good results with short training time. They do not reach the performance of well tuned MPNNs but easily surpass not yet fully optimized MPNN models. The next two subsection will briefly outline two experiments with manually engineered features used for a Light Gradient Boosted Model (\textit{LightGBM})~\cite{Ke2017}.
+
 
 \subsubsection{Distance and atom-type features}
+\label{sec:dist-atom-type}
 
 The first type of engineered features were calculated in the following way: The center point between the two atoms whose J-coupling constant has to be predicted was calculated (on a straight line). Then, the distances to the ten closest other atoms were calculated and added as features along with the types of the atoms as categorical variables. Finally, the distance between the two J-coupled (interacting) atoms was added to the features as well yielding a total of 21 features. These features were fed into eight different LightGBMs
 for the eight different J-coupling types to predict the scalar coupling constant. The models are fitted quickly and give reasonable results without hyper-parameter tuning. The experiment can be easily reproduced by running the publicly available Kaggle-notebook \url{https://www.kaggle.com/rpeer333/super-simple-10-nearest-atoms-features}.
 
 Several factors limit the effectiveness of this simple approach.
 
-\paragraph{Lack pf geometric information} The features only specify an atoms distance from the center point and not it's position relative to the J-coupled atoms.
+\paragraph{Lack of geometric information} The features only specify an atoms distance from the center point and not it's position relative to the J-coupled atoms.
 
 \paragraph{Features are not permutation invariant} As atoms in a molecule have no objective order that makes them comparable to other atoms in other molecules (at least in the general case), the feature order is somewhat arbitrary limiting the model's ability to generalize. Granted, some patterns are shared between interactions. E.g. in the case of a J2XX interaction where the J-coupled molecules are two bonds apart, the atom closes to the center point is most likely the atom to which both j-coupled atoms are bound, making the first distance and the first atom-type feature comparable across interactions. But in the general cases, the n\textsuperscript{th} closes atom in an arbitrary interaction is not equivalent to the n\textsuperscript{th} closes atom in another interaction.
 
@@ -35,27 +52,31 @@ Several factors limit the effectiveness of this simple approach.
 
 
 \subsubsection{Distance, atom-type and angle features}
+\label{sec:dist-angle-atom-type}
 
 Regarding the three limitations in the previous section, this experiment attempted to address the first one. Recall that the distance was calculated from the center point of the straight line between the two J-coupled atoms. In this approach an additional set of features was added to indicate whether a given atom is closer to one or the other of the j-coupled atoms. We define the J-coupled atoms as atom-0 and atom-1. E.g. for the interaction type 1JHC, the hydrogen atom H is always atom-0 and the the carbon atom C is always atom-1. Then, the cosine of the angle between a given atom-x, the center point and atom-1 is added to the features. This feature is automatically scaled between 0 and 1. A feature value close to -1 indicates that atom-x is closer to atom-0 while a value closer to 1 indicates proximity to atom-1. The experiment can be reproduced by running the following Kaggle-notebook:~ \url{https://www.kaggle.com/rpeer333/only-distance-type-and-angle-of-10-nearest-atoms}
 
-Adding this set of features to the ones described in the previous section gave 31 features. While some more (but not all) geometric information is provided in this approach, the other two issues described in the previous section are not addressed by this approach. The results were not better than in the above experiment indicating that the main issues are indeed the two open issues of the features not being permutation invariant and the lack of representation of the relation between the features (type of a given atom, it's distance to the center-point and it's cosine).
+Adding this set of features to the ones described in the previous section gave 31 features. While some more (but not all) geometric information is provided in this approach, the other two issues described in the previous section are not addressed by this approach. The results were slightly better than in the above experiment but the difference is not outstanding (see Table~\ref{tab:champs-results}) indicating that the main issues are indeed the two open problems of the features not being permutation invariant and the lack of representation of the relation between features (type of a given atom, it's distance to the center-point and it's cosine).
 
 The same issues would apply to any other manually engineered features. Thus, these results provide good motivation good motivation to explore a MPNN approach shown in the next section.
 
 
 \subsection{MPNNs for edge property prediction}
+\label{sec:schnet}
 
 The \textit{SchNet}~\cite{Schutt2017} model is described using the graph convolution terminology (see Section~\ref{sec:motivation}) but it could equally well be described in the message passing framework proposed by Gilmer et. al.~\cite{Gilmer2017}. The most relevant part of the architecture is the use of what they call \textit{continuous- filter convolutional layers}. In message passing terminology, this refers to the use of the distance as continuous edge feature. In the application of this model to the Kaggle competition at hand, this feature is not thresholded (see for instance this notebook:~\url{https://www.kaggle.com/toshik/schnet-starter-kit}). This means that an edge with distance as edge feature is added between any two atoms in the molecule. In that manner, a complete graph is created where every atom is connected to every other atom in the molecule. It stands to reason that the success of the model might rely on the use of complete graphs rather than on the use of the continuous distance feature. The next section shows a similar example (Section~\ref{sec:neighborhood-expansion}).
 
 In this experiment, a \textit{SchNet} model was implemented using the python library DGL (deep graph library). An implementation in the library \textit{Chainer} for the same competition was used as a template~\footnote{\url{https://www.kaggle.com/toshik/schnet-starter-kit}}. Several changes~\footnote{\label{fn:chainer-schnet}
 	In particular, a graph state was added. This is similar to the concept of a root- or master-node shown in Section~\ref{sec:root-node}. Furthermore the residual short-cuts (first used in \textit{ResNets}~\cite{Sun2016}) in the graph convolution layers were replaced with dense short cuts analogous to the ones form \textit{DenseNets}~\cite{Huang2017}. Neither of those changes is responsible for the poor performance as the results were the same with them.
-} from the template as well as from the paper~\cite{Schutt2017} were implemented and tested but the performance was far off the one from the template as well as the performance of the LightGBM models described above in Section~\ref{sec:champs-boosted-tree}. For this reason, no further experiments were conducted with this architecture.
+} from the template as well as from the paper~\cite{Schutt2017} were implemented and tested but the performance was far off the one from the template as well as the performance of the LightGBM models described above in Section~\ref{sec:champs-boosted-tree} (see Table~\ref{tab:champs-results}). For this reason, no further experiments were conducted with this architecture.
 
 Instead, using the template from Footnote~\ref{fn:chainer-schnet} to create eight different models for the eight different J-coupling types was much more effective. Furthermore, adapting the layer-dimension (smaller dimension for less complex interaction types and vice versa) as well as longer training time gave good enough results to achieve a placement in the top 10\% in the competition~\footnote{Finishing as proud 198\textsuperscript{th} out of 2749 teams (and awarding thesis author a virtual Kaggle-medal).}. The experiments described in this and the previous sections show that achieving competitive results with a truly novel approach would take more experience and more time while simply taking a working solution and adapting it properly to the use-case at hand can give good results with relatively low time investment.
 
 
 \section{Predicting molecular properties from 3D structure}
 \label{sec:alchemy}
+
+All remaining experiments in this thesis have been conducted on the \textit{Alchemy} dataset~\cite{Chen2019} described in Section~\ref{sec:alchemy-dataset}.
 
 \subsection{Using graph convolution in the way it's meant to be used gives poor results on molecular structures}
 \label{sec:neighborhood-expansion}
@@ -126,7 +147,7 @@ from 21.6 to 9.7 in the training-set. This modest reduction in the number of nod
 \end{figure}
 
 \paragraph{Further information: Why a hydrogen-less structure contains implicit information about hydrogen atoms}
-Despite dropping all hydrogen atoms from the molecule structure, the information how many hydrogen atoms there are and to which atoms they are bound is still implicitly contained in the structure. (For the same reason, hydrogen atoms are also excluded from standard molecule graphs as the one shown in Figure~\ref{fig:caffeine}.) In short, it is a way of summarizing raw data which speeds up training considerably while loosing some information. The reason it can be called 'implicit hydrogen representation' is that the information how many hydrogens (but not their exact position) is inherent in the structural information given all the other atoms and the bonds between them. The only piece of knowledge from organic chemistry required to understand this is that every given atom type, such as carbon or oxygen, only engages in a fixed number of bonds: four for carbon, two for oxygen, one for hydrogen, etc. (with double or triple bonds counting twice or trice, respectively). This number is called valence and is dependent on the number of electrons in the outer orbital - called valence electrons. In a molecular structure without hydrogen atoms, the number of bonds to heavy atoms (i.e. non-hydrogen atoms) is given for each atom as the number of it's neighbor nodes. The number of hydrogen atoms bound to any given atom is thus it's valence minus the number of neighbor nodes. It is for this reason that omitting hydrogens from the structure can be thought of as equivalent to adding the feature 'number of hydrogen atoms' to each heavy atom. Note that while this number is implicit in the structure, the exact position of the hydrogen atoms is lost when they are omitted from the structure.
+Despite dropping all hydrogen atoms from the molecule structure, the information how many hydrogen atoms there are and to which atoms they are bound is still implicitly contained in the structure. (For the same reason, hydrogen atoms are also excluded from standard molecule graphs as the one shown in Figure~\ref{fig:caffeine}.) In short, it is a way of summarizing raw data which speeds up training considerably while loosing some information. The reason it can be called 'implicit hydrogen representation' is that the information how many hydrogens (but not their exact position) is inherent in the structural information given all the other atoms and the bonds between them. The only piece of knowledge from organic chemistry required to understand this is that every given atom type, such as carbon or oxygen, only engages in a fixed number of bonds: four for carbon, two for oxygen, one for hydrogen, etc. (with double or triple bonds counting twice or trice, respectively). This number is called valence and is dependent on the number of electrons in the outer orbital - called valence electrons~\cite{Organic-chemistry}. In a molecular structure without hydrogen atoms, the number of bonds to heavy atoms (i.e. non-hydrogen atoms) is given for each atom as the number of it's neighbor nodes. The number of hydrogen atoms bound to any given atom is thus it's valence minus the number of neighbor nodes. It is for this reason that omitting hydrogens from the structure can be thought of as equivalent to adding the feature 'number of hydrogen atoms' to each heavy atom. Note that while this number is implicit in the structure, the exact position of the hydrogen atoms is lost when they are omitted from the structure.
 
 
 
@@ -173,7 +194,9 @@ Summing up, the results confirm the common practice of using weight-sharing acro
 \subsection{Manual feature engineering does not improve results compared to using only raw input data}
 \label{sec:raw-data}
 
-The previous experiments included some hand-crafted features calculated with the computation chemistry python library \textit{rdkit}. This was done in order replicate the approach of Chen et. at.~\cite{Chen2019} In the literature, there are conflicting [TODO cite] indications about the uses of manually engineered chemical features as input for GCNNS. In most cases, the literature lacks a direct comparison between using only raw data (atom-type, position and edges) and adding manually computed features. It is therefore often hard to deduce whether the good results are due to an effective model architecture or due to the smartly engineered chemical features used as input.
+The previous experiments included some hand-crafted features calculated with the computation chemistry python library \textit{rdkit}~\footnote{\url{https://www.rdkit.org}}. This was done in order replicate the approach of Chen et. at.~\cite{Chen2019} In the literature, there are conflicting
+% TODO add citation
+indications about the uses of manually engineered chemical features as input for MPNNs. In most cases, the literature lacks a direct comparison between using only raw data (atom-type, position and edges) and adding manually computed features. It is therefore often hard to deduce whether the good results are due to an effective model architecture or due to the smartly engineered chemical features used as input.
 
 The next experiment trains two almost identical GCNNs: one uses the same chemical features as Chen et. at.~\cite{Chen2019} while the other one uses only atom-type, edge-type and distance as input. The two nets are identical in every aspect except of course for the different dimension of the input layer. All chemical features
 % TODO add feature description
