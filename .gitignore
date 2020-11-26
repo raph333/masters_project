@@ -26,4 +26,6 @@ doc/tmp/*
 *.toc
 *.synctex.gz
 thesis/*.pdf
+thesis/bib_files_archive
+
 /graph_conv_net/graph_conv_net/models/dgl_schnet/

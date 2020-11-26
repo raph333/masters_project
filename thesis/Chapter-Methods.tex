@@ -10,7 +10,14 @@
 \subsection{The CHAMPS dataset}
 \label{sec:champs-dataset}
 
-% TODO: fill section
+% TODO add dataset stats
+
+Target variable is a magnetic interaction between two atoms measured by Nuclear Magnetic Resonance (NMR) - the scalar coupling constant or J-coupling constant~\cite{NMR}.
+Note that in the graph notation, this is an edge-property as described in Section~\ref{sec:graph-output}. This interaction does not have to be predicted for any two atoms in the molecule but rather for a per-defined set of atom-pairs. These can be directly bonded to each other or be two or three covalent bonds apart. Furthermore, the can involve different atom types. The interactions are categorized into eight categories by the involved atom types and the number of bonds between them. For instance, $2JHC$ is the J-coupling type of a hydrogen- and a carbon-atom with two bonds between them. For a more detailed investigation, please follow the links to two Kaggle-notebooks in the footnotes~\footnote{\url{https://www.kaggle.com/rpeer333/molecular-properties-detailed-eda}}
+~\footnote{\url{https://www.kaggle.com/rpeer333/champs-competition-baseline-trivial-predictions}}.
+In a general model, this category would be the most important basic feature as the ranges of J-coupling constants differ markedly between those categories. However, another approach is to simply train a different model for each type. This approach has been shown to be effective with boosted tree-models as well as MPNNs and was therefore used in both cases.
+
+% TODO describe quatratic kappa
 
 \subsection{The \textit{Alchemy} dataset}
 \label{sec:alchemy-dataset}
@@ -35,17 +42,19 @@ The other approach is to calculate all sorts of chemical features using chemistr
 \section{Model architecture}
 \label{sec:architecture}
 
-% TODO add section
-
 \subsection{\textit{SchNet}}
 \label{sec:schnet-architecture}
 
-\subsection{base MPNN architecture}
+As this model has not been used for many experiments, we shall refer to the literature instead. The implementation follows the architecture proposed by Schütt et. al.~\cite{Schutt2017}. Several changes were made in the DGL-implementation~\footnote{\url{https://www.kaggle.com/rpeer333/pytorch-dgl-schnet-a-graph-convolutional-net}} compared to the template \textit{Chainer}-implementation~\footnote{\url{https://www.kaggle.com/toshik/schnet-starter-kit}}. In particular, a graph state was added. This is similar to the concept of a root- or master-node shown in Section~\ref{sec:root-node}. Furthermore the residual short-cuts (first used in \textit{ResNets}~\cite{Sun2016}) in the graph convolution layers were replaced with dense short cuts analogous to the ones form \textit{DenseNets}~\cite{Huang2017}. Neither of those changes is responsible for the poor performance of the model as the results were the same with them.
+
+
+\subsection{Base MPNN architecture}
 \label{sec:mpnn-architecture}
 
 The basic architecture used as a starting point for most of the experiments in this thesis (Section~\ref{sec:alchemy}) comes from the MPNN variant from Chen et. al.~\cite{Chen2019} whose code is available on GitHub~\footnote{\url{https://github.com/tencent-alchemy/Alchemy}}. This model, in turn is based on the MPNN model proposed by Gilmer et. al.~\cite{Gilmer2017}.
 
-The networks starts with an embedding of the atom-type of each node. In this particular implementation, this is achieved by passing a the one-hot encoded atom type through a regular linear layer. This first layer essentially extracts the n\textsuperscript{nt} column from the weight matrix when the n\textsuperscript{th} position of the input vector is one which is easy to see from the following example.
+
+\paragraph{Node embedding}The networks starts with an embedding of the atom-type of each node. In this particular implementation, this is achieved by passing a the one-hot encoded atom type through a regular linear layer. This first layer essentially extracts the n\textsuperscript{nt} column from the weight matrix when the n\textsuperscript{th} position of the input vector is one which is easy to see from the following example.
 
 \begin{equation}
 \begin{bmatrix} 
@@ -67,9 +76,50 @@ w_{31} \\
 \end{bmatrix}
 \end{equation}
 
-Thus, the first linear layer essentially corresponds to a mapping from a categorical, integer-valued variable to vector $\in \mathbb{R}^d$ where $d$ is the output dimension of the linear layer.
-            
+Thus, the first linear layer essentially corresponds to a mapping from a categorical, integer-valued variable to vector $\in \mathbb{R}^d$ where $d$ is the output dimension of the linear layer which defines the dimension of the node hidden state.
 
+\paragraph{Message passing}
+
+The message passing function used in the experiments was the so called edge network message function which was found to be the best among several options by Gilmer et. al.~\cite{Gilmer2017}. The approach is described in more detail and nicely illustrated by Simonovsky et. at.~\cite{Simonovsky2017}. This message passing layer is implemented in the \textit{PyTorch Geometric} class NNConv~\footnote{\url{https://pytorch-geometric.readthedocs.io/en/latest/modules/nn.html}}\label{fn:pytorch-geometric-nn-docs}.
+
+
+The message function has two components. The first one is a two-layer MLP (multi-layer perceptron)  $h_{\mathbf{\Theta}}$ taking the edge features as input and putting out a vector of dimension $d^2$ which is reshaped into a $d$ by $d$ matrix.
+
+\begin{equation}
+	\Theta_{vw} = reshape(~h_{\Theta}(e_{vw})~)
+\end{equation}
+
+In the second step, the sending node representation $h_j$ is multiplied with this edge-conditioned weight matrix. Finally, an aggregation over all sending (neighboring) nodes gives the message for node $w$.
+
+\begin{equation}
+ m_v^{t+1} = \sum_{w \in \mathcal{N}(v)} h_w^t \cdot \Theta_{vw}
+\end{equation}
+
+It is easy to see how the two functions can be combined in a single message-function. Finally, in the default setting, the update function is simply
+
+\begin{equation}
+	h_v^{t+1} = m_v^{t+1}
+\end{equation}
+\label{eq:update-nnconv-simple}
+
+If the root-node concept is used (by setting the parameter root-weight to 'True')\footnote{
+	Technically, as Equation~\ref{eq:update-nnconv-root} shows, there is no root-node in this architecture. There is just the root weight-matrix $\Theta_{root}$ which can be thought of as a representation of an edge between the virtual root node and any real node in the graph. However, that is just an implementation detail which depends on this particular architecture. It is still valid to see $\Theta_{root}$ as the concept of a root node which can be extended to other architectures as well - just implemented differently.
+} the update function becomes
+
+\begin{equation}
+h_v^{t+1} = \Theta_{root}h_v^t~+~m_v^{t+1}
+\end{equation}
+
+\label{eq:update-nnconv-root}
+
+
+Oddly enough, in the simple case of Equation~\ref{eq:update-nnconv-simple}, the updated node hidden state $h_v^{t+1}$ is not a function of the previous hidden state $h_v^t$. While that is counter-intuitive, it was shown to work well in practice. Section~\ref{sec:root-node} compares the same mode with and without the root-node and finds no difference in performance.
+
+\paragraph{Readout function} Finally, the readout function is composed of a \textit{Set2Set} (also documented in the link of Footnote~\ref{fn:pytorch-geometric-nn-docs}) layer mapping the set of node hidden states to an aggregated representation. Then, the output from \textit{Set2Set} is mapped to the target variable with a two-layer MLP. The readout-function can be formalized as
+
+\begin{equation}
+		\hat{y} = MLP(~Set2Set(~\{h_v^T\ | v \in G~\})~)
+\end{equation}
 
 \section{Software}
 

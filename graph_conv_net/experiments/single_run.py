@@ -26,7 +26,7 @@ def get_transform(threshold: float) -> Callable:
 
 
 new_config = {
-    'name': 'best-optim',  # todo: set this for each experiment!  (default 'test-run')
+    'name': 'test-run',  # todo: set this for each experiment!  (default 'test-run')
     'root_weight': True,
     'dataset_class': AlchemyCompetitionDataset,
     'data_processor': RawDataProcessor,  # SchNetDataProcessor,
@@ -49,7 +49,7 @@ new_config = {
     #     'kwargs': {'gamma': 0.995}
     # },
     'repeat': 3,
-    'cuda': 3,
+    'cuda': 0,
     'num_epochs': 500
 }
 CONFIG.update(new_config)

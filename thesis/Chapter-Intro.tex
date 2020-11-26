@@ -87,7 +87,18 @@ The above two steps are comprised of three functions:
 	\item The update function $U$ updates the hidden state $h^t$ based on  $m_v^{t+1}$, the aggregated messages from its neighboring nodes.
 \end{enumerate}
 
-The details of how these functions are constructed are best explained using a specific example, such as the one explained in Chapter~\ref{sec:base-architecture}.
+Finally, if the target variable is a property of the whole graph, a readout function is required to map the node representations to the target.
+
+\begin{equation}
+	\hat{y} = R(\{h_v^T\ | v \in G\}) 
+\end{equation}
+\label{eq:readout-function}
+
+Because the readout function is a function of the all nodes in the graph, it has to handle variable numbers of nodes and be permutation invariant. Thus, just like the message-function defined in Equation~\ref{eq:message-function}, it has to include some sort of aggregation, such as a sum or mean.
+
+
+
+The details of how these functions are constructed are best explained using a specific example, such as the one explained in Chapter~\ref{sec:architecture}.
 For now, it shall suffice to note that both functions $M$ and $U$ could, for instance be a simple MLP (multilayer perceptron) with only one hidden layer. In most architectures the weights of both functions are shared such that $M_t$ and $U_t$ are the same for all $t$. However, this is not a necessity and one could also build a MPNN with different weights for at each graph convolutional layer (= message passing step). Section~\ref{sec:weight-sharing} presents an experiment comparing the two approaches.
 
 Note in the message passing fist step, only first degree neighbor nodes have an impact on the updated node hidden states. In the second step, second degree neighbors have an indirect impact as they already influenced the hidden state of the first degree neighbors in the previous step. Thus at each step $t$, $h_v^t$ is influence by nodes with a path length of at most $t$ apart from node $v$. Depending on the number of steps $T$, eventually the whole graph might have an indirect influence on the hidden state $h_v^T$. However, the first degree neighbors will always have the most direct influence, followed by the second degree neighbors, etc.
