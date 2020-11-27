@@ -1,7 +1,6 @@
-\chapter{Methods, data and evaluation}
+\chapter{Data, models and evaluation}
 \label{chapter:Methods}
 
-%describe in detail architecture of the tencent MPNN and its variants, optionally discuss the code explain where the code is found and how to run it
 
 \section{Data}
 \label{sec:data-and-features}
@@ -10,14 +9,23 @@
 \subsection{The CHAMPS dataset}
 \label{sec:champs-dataset}
 
-% TODO add dataset stats
-
 Target variable is a magnetic interaction between two atoms measured by Nuclear Magnetic Resonance (NMR) - the scalar coupling constant or J-coupling constant~\cite{NMR}.
-Note that in the graph notation, this is an edge-property as described in Section~\ref{sec:graph-output}. This interaction does not have to be predicted for any two atoms in the molecule but rather for a per-defined set of atom-pairs. These can be directly bonded to each other or be two or three covalent bonds apart. Furthermore, the can involve different atom types. The interactions are categorized into eight categories by the involved atom types and the number of bonds between them. For instance, $2JHC$ is the J-coupling type of a hydrogen- and a carbon-atom with two bonds between them. For a more detailed investigation, please follow the links to two Kaggle-notebooks in the footnotes~\footnote{\url{https://www.kaggle.com/rpeer333/molecular-properties-detailed-eda}}
+Note that in the graph notation, this is an edge-property as described in Section~\ref{sec:graph-output}. This interaction does not have to be predicted for any two atoms in the molecule but rather for a per-defined set of atom-pairs. These can be directly bonded to each other or be two or three covalent bonds apart. Furthermore, the can involve different atom types. The interactions are categorized into eight categories by the involved atom types and the number of bonds between them. For instance, $2JHC$ is the J-coupling type of a hydrogen- and a carbon-atom with two bonds between them.
+
+The training-set contains 85012 molecular structures with 4659076 labeled J-coupling interactions while the test has 45777 molecules with 2505190 relevant interactions (whose labels were not visible to the user at the time of the competition but only used for automatic evaluation). The data-set was split on molecule level meaning that either all J-coupling interactions in a given molecule are part of the training set or all of them are in the test-est. For a more detailed investigation, please follow the links to two Kaggle-notebooks in the footnotes~\footnote{\url{https://www.kaggle.com/rpeer333/molecular-properties-detailed-eda}}
 ~\footnote{\url{https://www.kaggle.com/rpeer333/champs-competition-baseline-trivial-predictions}}.
 In a general model, this category would be the most important basic feature as the ranges of J-coupling constants differ markedly between those categories. However, another approach is to simply train a different model for each type. This approach has been shown to be effective with boosted tree-models as well as MPNNs and was therefore used in both cases.
 
-% TODO describe quatratic kappa
+Apart from the raw structural data, the dataset includes also calculated chemical features. However, these are all just functions of the structural data and the J-coupling type and thus not used in the experiments at hand. The same approach was also chosen for the main dataset described in the next section.
+
+The evaluation metric is a derivative of the mean absolute error (MAE).
+
+\begin{equation}
+	score = \frac{1}{8} ~ \sum_{t=1}^{8} ~ log(~\frac{1}{n_t} \sum_{i=1}^{n_t}|y_i~-~\hat{y_i}| ~)
+\end{equation}
+
+The term after the sum is the log MAE for a given J-coupling type - e.g. $1JHC$. This value is then averaged over all J-coupling types. In this way, the final score treats all J-coupling types as equally important independent the number of interactions (which varies a lot from type to type).
+% and the variance of J-coupling constants within the types (which also vary markedly and and would lead to high variance types affecting the MAE more strongly than others if regular MAE was used).
 
 \subsection{The \textit{Alchemy} dataset}
 \label{sec:alchemy-dataset}
@@ -118,7 +126,7 @@ Oddly enough, in the simple case of Equation~\ref{eq:update-nnconv-simple}, the 
 \paragraph{Readout function} Finally, the readout function is composed of a \textit{Set2Set} (also documented in the link of Footnote~\ref{fn:pytorch-geometric-nn-docs}) layer mapping the set of node hidden states to an aggregated representation. Then, the output from \textit{Set2Set} is mapped to the target variable with a two-layer MLP. The readout-function can be formalized as
 
 \begin{equation}
-		\hat{y} = MLP(~Set2Set(~\{h_v^T\ | v \in G~\})~)
+		\hat{y} = MLP(~Set2Set(~\{~h_v^T\ ~|~ v \in G~\}~)~)
 \end{equation}
 
 \section{Software}
@@ -136,7 +144,10 @@ All experiments presented in this thesis use Adaptive Moment Estimation (Adam) f
 
 The same considerations were applied to learning rates and learning rate scheduling. Two different optimization schemes were used for different purposes.
 To obtain the lowest possible test-set error, a learning rate schedule that reduces the learning rate after the validation error plateaus has found to be most effective~\footnote{Specifically, the following parameters were chosen: The initial learning rate of 0.01 is reduced by a factor of 0.75 if the validation error did not decrease by a value of $10^{-4}$ or more within the last 10 epochs. The training duration was 300 epochs} This optimization scheme above suffers from the drawback of requiring many training epochs. Furthermore, the resulting learning-rate schedule varies considerably even between trainings with the same parameters. These differences as well as the long training time make it unsuitable for comparing learning curves with different parameters.
-For comparing different learning curves a simpler, exponential learning-rate decay was chosen~\footnote{The initial learning rate of 0.001 is reduced by a factor of 0.995 after every epoch and the experiment is run for 150.} [CITATON]. The advantage of this method is that at each epoch, all curves have the same learning rate which makes them comparable. The final validation error is usually higher than would be achieved with reduce-on-plateau learning rate scheduling. However, this drawback is accepted because the main point of the experiments is to compare different model architectures, parameters or data-transformation rather than to achieve the lowest possible test-set error.
+For comparing different learning curves a simpler, exponential learning-rate decay was chosen~\footnote{The initial learning rate of 0.001 is reduced by a factor of 0.995 after every epoch and the experiment is run for 150.}. The advantage of this method is that at each epoch, all curves have the same learning rate which makes them comparable. The final validation error is usually higher than would be achieved with reduce-on-plateau learning rate scheduling. However, this drawback is accepted because the main point of the experiments is to compare different model architectures, parameters or data-transformation rather than to achieve the lowest possible test-set error.
+
+% TODO: insert figure with reduce-on-plateau learning rate
+
 
 
 \section{Benchmark and evaluation}

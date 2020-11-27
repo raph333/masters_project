@@ -35,22 +35,22 @@ new_config = {
         'name': 'distance_threshold',
         'values': [np.inf]
     },
-    'lr': 0.01,  # start high
-    'lr_scheduler': {
-        'class': torch.optim.lr_scheduler.ReduceLROnPlateau,
-        'kwargs': {'factor': 0.75,
-                   'threshold': 1e-4,
-                   'patience': 6}
-    },
-    'batch_size': 64,
-    # 'lr': 0.001,
+    # 'lr': 0.01,  # start high
     # 'lr_scheduler': {
-    #     'class': torch.optim.lr_scheduler.ExponentialLR,
-    #     'kwargs': {'gamma': 0.995}
+    #     'class': torch.optim.lr_scheduler.ReduceLROnPlateau,
+    #     'kwargs': {'factor': 0.75,
+    #                'threshold': 1e-4,
+    #                'patience': 6}
     # },
-    'repeat': 3,
-    'cuda': 0,
-    'num_epochs': 500
+    'batch_size': 64,
+    'lr': 0.001,
+    'lr_scheduler': {
+        'class': torch.optim.lr_scheduler.ExponentialLR,
+        'kwargs': {'gamma': 0.995}
+    },
+    'repeat': 2,
+    'cuda': 2,
+    'num_epochs': 150
 }
 CONFIG.update(new_config)
 

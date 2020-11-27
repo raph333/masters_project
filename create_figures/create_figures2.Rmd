@@ -102,7 +102,6 @@ p
 
 # No weight sharing
 
-
 ```{r}
 df_decoupled <- read.csv(file.path(results_dir, 'lc-decoupled-weights.csv')) %>%
   select(-c(minutes, 'minutes.', lr, target_param)) %>%
@@ -125,7 +124,7 @@ p <- ggplot(data=df_comb, aes(x=epoch, y=MAE, linetype=variable, color=experimen
   theme_bw() + 
   scale_y_continuous(limits=c(0, 0.2)) +
   theme(plot.title = element_text(hjust = 0.5, size=16)) +
-  labs(title='Weight sharing between graph-conv layers',
+  labs(title='Weight sharing between message passing steps',
        color='weights',
        linetype=element_blank())
 
@@ -169,7 +168,6 @@ p
 
 # Implicit Hydrogens
 
-
 ```{r}
 df_implicit_h <- read.csv(file.path(results_dir, 'lc-implicit-hydrogens.csv')) %>%
   select(-c(minutes, lr, target_param)) %>%
@@ -197,6 +195,9 @@ p
 
 
 ## relative direction vectors as additional edge features
+```{r}
+df_comb %>% filter(epoch == 149)
+```
 
 ```{r}
 
@@ -224,6 +225,35 @@ p
 ```
 
 
+# best optimization
 
+```{r}
+mlruns_dir <- '/home/raph/Desktop/masters_project/graph_conv_net/experiments/mlruns/34'
+run_dirs <- list.dirs(mlruns_dir, recursive=F)
+df_best_optim <- data.frame()
+
+for (i in 1:3){
+  run_df <- read.csv(file.path(run_dirs[i], 'artifacts/learning_curve.csv')) %>% 
+    select(-c(minutes)) %>% 
+    mutate(run = i) %>% 
+    mutate(run = as.factor(run)) %>% 
+    mutate(epoch = as.integer(epoch)) %>% 
+    mutate(MAE = as.double(valid_mae))
+  df_best_optim <- rbind(df_best_optim, run_df)
+}
+```
+
+
+```{r}
+p <- ggplot(data=df_best_optim, aes(x=epoch, y=valid_mae, color=run)) +
+  geom_line() + 
+  theme_bw() + 
+  #scale_y_continuous(limits=c(0, 0.2)) +
+  theme(plot.title = element_text(hjust = 0.5, size=16)) +
+  labs(title='Variability in different training runs')
+
+# ggsave(file.path(figures_dir, 'edge-direction-vectors.pdf'), p, width = 20, height = 13, units = "cm")
+p
+```
 
 
