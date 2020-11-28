@@ -30,3 +30,11 @@ mlflow experiments csv -x 1 -o experiment_runs.csv
 
 with python API:  
 https://databricks.com/blog/2019/10/03/analyzing-your-mlflow-data-with-dataframes.html
+
+## LaTex
+
+fix bibliography:
+```
+bibtex Thesis.aux
+``` 
+If no new Thesis.bbl and Thesis.blg are created, create them manually using this command.
