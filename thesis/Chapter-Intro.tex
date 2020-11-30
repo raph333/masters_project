@@ -69,15 +69,14 @@ The input data can be described as a graph $G$ with	a set of node features where
 
 During each message passing step, the hidden representation of each node $h_v^t$ is updated to $h_v^{t+1}$ using the following procedure:
 
-\begin{equation}
+\begin{equation}\label{eq:message-function}
 m_v^{t+1} ~=~ \sum_{w \in N(v)} M_t(~h_v^t,~ h_w^t,~ e_{vw}~)
 \end{equation}
-\label{eq:message-function}
 
-\begin{equation}
+\begin{equation}\label{eq:update-function}
 h_v^{t+1} ~=~ U_t(~h_v^t, ~m_v^{t+1}~)
 \end{equation}
-\label{eq:update-function}
+
 
 The above two steps are comprised of three functions:
 
@@ -91,10 +90,10 @@ The above two steps are comprised of three functions:
 
 Finally, if the target variable is a property of the whole graph, a readout function is required to map the node representations to the target.
 
-\begin{equation}
+\begin{equation}\label{eq:readout-function}
 	\hat{y} ~=~ R~(~\{~h_v^T\ ~|~ v \in G~\}~) 
 \end{equation}
-\label{eq:readout-function}
+
 
 Because the readout function is a function of the all nodes in the graph, it has to handle variable numbers of nodes and be permutation invariant. Thus, just like the message-function defined in Equation~\ref{eq:message-function}, it has to include some sort of aggregation, such as a \textit{sum} or \textit{mean}.
 
@@ -115,6 +114,8 @@ With a block of $T$ message passing steps, one has successfully constructed a ma
 
 In summary, a MPNN is composed of two parts: message passing (graph convolution) layers and a readout function. The framework introduced here allows to describe highly different architectures using the same terminology. In Chapter~\ref{sec:mpnn-architecture}, the basic architecture of a the MPNN used in this thesis is described in detail. While several different models were trained and evaluated in this work, most of them based on this architecture.
 
+% TODO: subsection literature review
+
 
 \section{Predicting molecular properties from 3D structure with Message Passing Neural Networks}
 \label{3d-molecules-for-gcnns}
@@ -128,7 +129,7 @@ One way to address this issue is to create purely computational experiments. In 
 %Such in in-silico experiments can be created with molecular structures using molecular dynamics simulations (MDS). In short, MDS creates artificial force-fields to simulate real physical forces to simulated the behavior of molecules under certain conditions~\cite{Hospital2015}. Large biomolecules are usually modeled down to the level of atoms while small molecules are modeled down to the level of subatomic particles (electrons, protons, etc.). MDS is extremely valuable not only as a proxy for in-vitro experiment but also for understanding the underlying dynamics that produce the experiments outcome. However, it is also extremely challenging to mimic realistic experimental conditions: it requires an enormous amount of expertise in life science and chemistry, strong computational skills and extensive experience with MDS itself. Furthermore, MDS is also computationally very expensive and thus cannot be used as a cheap proxy for in-vitro experiments at a large scale.
 
 
-For these reasons, the use of DNNs to predict molecular properties from 3D structures have received increasing attention in recent years. In 2012, the 'Merck Molecular Activity Challenge', a machine learning competition hosted on Kaggle~\footnote{\url{https://www.kaggle.com/c/MerckActivity}} was won using a deep neural network (while the raw data was not 3D structures in this case it still fueled the interest in deep neural networks for chemical applications)~\cite{Ma2015}. More recently, another competition - called 'Predicting Molecular Properties' and also hosted on Kaggle~\footnote{\url{https://www.kaggle.com/c/champs-scalar-coupling}} - to predict interactions between atoms from 3D molecule structures was dominated by various graph neural network architectures. For this thesis, I also participated in the competition and tried several different approaches described in Section~\ref{sec:champs}. Another competition was hosted by the Tencent-sponsored \textit{Alchemy} Lab~\footnote{\url{https://alchemy.tencent.com}} with the goal of predicting molecular properties from a new dataset of 3D structures. The majority of the experiments in this thesis were conducted with this dataset and are shown in Section~\ref{sec:alchemy}.
+For these reasons, the use of DNNs to predict molecular properties from 3D structures have received increasing attention in recent years. In 2012, the 'Merck Molecular Activity Challenge', a machine learning competition hosted on Kaggle~\footnote{\url{https://www.kaggle.com/c/MerckActivity}} was won using a deep neural network (while the raw data was not 3D structures in this case it still fueled the interest in deep neural networks for chemical applications)~\cite{Ma2015}. More recently, another competition - called 'Predicting Molecular Properties' and also hosted on Kaggle~\footnote{\url{https://www.kaggle.com/c/champs-scalar-coupling}} - to predict interactions between atoms from 3D molecule structures was dominated by various graph neural network architectures. For this thesis, I also participated in the competition and tried several different approaches described in Section~\ref{sec:champs}. Another competition was hosted by Tencent Quantum Lab~\footnote{\url{https://alchemy.tencent.com}} with the goal of predicting molecular properties from a new dataset of 3D structures. The majority of the experiments in this thesis were conducted with this dataset and are shown in Section~\ref{sec:alchemy}.
 
 % dnns have the potential to extract valuable information from 3D structures using vast amounts of data with ground-truth without having to explicitly model the underlying physical forces and the interplay of subatomic particles.
 
@@ -145,8 +146,7 @@ and $t \in \{1, 2, ... N_a\} $ representing the atom type with $N_a$ being the n
 	\centering
 	\includegraphics[width=\linewidth]{figures/molecule-3d-1}
 	\caption{A 3D structure of a small organic molecule. Carbon and hydrogen atoms are shown in gray and white, respectively. The red spheres show oxygen atoms and the blue one shows a nitrogen atom according to the common coloring convention. In size of the spheres is chosen such that covalently bonded atoms have no or almost no space between them.
-	% TODO: check if covalent bonds have been explained before
-	}
+}
 	\label{fig:molecule-3d}
 \end{figure}
 

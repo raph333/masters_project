@@ -72,9 +72,9 @@ Instead, using the template from Footnote~\ref{fn:chainer-schnet} to create eigh
 \section{Predicting molecular properties from 3D structure}
 \label{sec:alchemy}
 
-During the practical work for this thesis, I participated in the Tencent-Alchemy competition~\footnote{\url{https://alchemy.tencent.com}} using approach described above a baseline architecture. This competition provided a labeled training- and validation-set of as well as an unlabeled test-set of 3D molecular structures described in more detail in Section~\ref{sec:alchemy-dataset}. All remaining experiments in this thesis have been conducted with this dataset.
+During the practical work for this thesis, I participated in the \textit{Alchemy} competition~\footnote{\url{https://alchemy.tencent.com}}. This competition provided a labeled training- and validation-set of as well as an unlabeled test-set of 3D molecular structures described in more detail in Section~\ref{sec:alchemy-dataset}. All remaining experiments in this thesis have been conducted with this dataset.
 
-Despite many experiments (see Table~\ref{tab:alchemy-results}), I achieved the best results simply fine-tuning the model from Chen et. al.\cite{Chen2019} and finished 26th out of 53 participants~\footnote{\url{https://alchemy.tencent.com/\#leaderboard}}. The fact that half the participants did not beat the baseline published in the official competition paper, shows that the approach is indeed quite effective an warrants a closer examination why the peculiar approach of using complete graphs works quite well.
+Despite many experiments (see Table~\ref{tab:alchemy-results}), I achieved the best results simply fine-tuning the model from Chen et. al.\cite{Chen2019} and finished 26th out of 53 participants~\footnote{\url{https://alchemy.tencent.com/\#leaderboard}}. The fact that half the participants did not beat the baseline published in the official competition paper shows that the approach is indeed quite effective an warrants a closer examination why the works quite well.
 
 %As discussed in the introduction, a central concept of graph convolution (and regular convolution as well), is to compute a representation of a local neighborhood. In the case of graphs, a local neighborhood is a node and its neighbor nodes while on images, it is a small patch of pixels, such as 3x3 or 5x5.
 
@@ -176,17 +176,15 @@ Despite dropping all hydrogen atoms from the molecule structure, the information
 
 Recall the message function $M_t$ and the (node-)update-function $U_t$ defined in Equation~\ref{eq:message-function} and~\ref{eq:update-function}, respectively. In this general definition, each graph-convolution layer (each message passing step) $t$ has it's own $M_t$ and $U_t$. However, in most implementations of GCNNs, $M_t = M~~\forall~t$ and $U_t = U~~\forall~t$ which simplifies the two equations~\ref{eq:message-function} and~\ref{eq:update-function} to
 
-\begin{equation}
+\begin{equation}\label{eq:message-function-shared}
 m_v^{t+1} = \sum_{w \in N(v)} M(h_v^t, h_w^t, e_{vw})
 \end{equation}
-\label{eq:message-function-shared}
 
 and
 
-\begin{equation}
+\begin{equation}\label{eq:update-function-shared}
 h_v^{t+1} = U(h_v^t, m_v^{t+1}).
 \end{equation}
-\label{eq:update-function-shared}
 
 % TODO: cite
 
