@@ -20,7 +20,7 @@ Apart from the raw structural data, the dataset includes also calculated chemica
 
 The evaluation metric is a derivative of the mean absolute error (MAE).
 
-\begin{equation}
+\begin{equation}\label{eq:champs-score}
 	score = \frac{1}{8} ~ \sum_{t=1}^{8} ~ log(~\frac{1}{n_t} \sum_{i=1}^{n_t}|y_i~-~\hat{y_i}| ~)
 \end{equation}
 
