@@ -204,8 +204,7 @@ Another interesting observation is that the learning curves are identical not on
 
 One caveat worth mentioning is that only because independent weights were not found to be beneficial for the architecture at hand, this does not mean that they will never be beneficial in other architectures.
 
-Furthermore, while we can see that they do not decrease the loss, we still do not know why exactly that is the case. This question is not addressed frequently in the literature - rather the use of weight-sharing is most commonly accepted without much investigation into why it is used. % TODO: cite
-In contrast, we would not even think about sharing weights across regular convolution-layers for a computer vision task. It is far from obvious why there is no difference between shared and independent weights in MPNNs. Finding out why this is the case might also lead to insights about how to build better MPNN architectures.  
+Furthermore, while we can see that they do not decrease the loss, we still do not know why exactly that is the case. This question is not addressed frequently in the literature - rather the use of weight-sharing is most commonly accepted without much investigation into why it is used~\cite{Chen2019}~\cite{Schutt2017}. Other studies achieve good results without weight-sharing but do not comment on the reasoning for choosing this approach of whether the model would work equally well with weight sharing or not~\cite{Jørgensen2018}. It is far from obvious why there is no difference between shared and independent weights in MPNNs. Finding out why this is the case might also lead to insights about how to build better MPNN architectures.  
 
 Summing up, the results confirm the common practice of using weight-sharing across graph-convolution layers but the question why weight-sharing works well in MPNNs is still left open and worth investigating.
 

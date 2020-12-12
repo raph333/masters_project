@@ -39,7 +39,7 @@
 %\\[1.5em]
 University of Salzburg
 \\[0.5em]
-Salzburg, Salzburg, Austria
+Salzburg, Austria
 \\[1.5em]
 2020
 \par
@@ -102,9 +102,11 @@ All Rights Reserved
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
 
-\noindent This project investigates the application of deep neural networks to predicting molecular properties from structures of small organic molecules. The raw data consists of only atom coordinates in 3D space while the target variables are either atomic interactions (Section~\ref{sec:champs}) or quantum mechanical properties of molecules (Section~\ref{sec:alchemy}). Two machine learning competitions provided the datasets and the opportunity to benchmark the results against world class machine learning practitioners.
+\noindent This project investigates the application of deep neural networks to predict molecular properties from structures of small organic molecules. The raw data consists of only atom coordinates in 3D space while the target variables are either atomic interactions (Section~\ref{sec:champs}) or quantum mechanical properties of molecules (Section~\ref{sec:alchemy}). Two machine learning competitions provided the datasets and the opportunity to benchmark the results against world class machine learning practitioners.
 
-While numerous approaches can be chosen to tackle this challenge, this project uses the strategy of representing molecules as graphs and training deep neural networks to predict the target variables. The type of neural networks that take graph structured data as input are called graph neural networks in general but most of the models follow an architecture described as Message Passing Neural Networks (MPNNs)~\cite{Gilmer2017} or Graph convolutional neural networks~\cite{Schutt2017}. This model class has interesting commonalities with regular convolutional networks but also important differences. This thesis provides a high-level overview of this model class as well as an in-depth discussion of an example model. Several changes in model architecture are proposed, tested and discussed. The results suggest that one of the key challenges when applying MPNNs to molecular structures is the representation of the 3D geometry which is lacking in regular MPNNs. Moreover, the results suggest that pure deep learning approach of using raw data only as model input (which is common practice in computer vision and natural language processing) is superior to manual feature engineering in chemical applications as well.
+While numerous approaches can be chosen to tackle this challenge, the project at hand uses the strategy of representing molecules as graphs and training deep neural networks to predict the target variables. The type of neural networks that take graph structured data as input are called graph neural networks in general but most of the models follow an architecture described as Message Passing Neural Networks (MPNNs)~\cite{Gilmer2017} or Graph Convolutional Neural Networks~\cite{Schutt2017}. This model class has interesting commonalities with regular convolutional networks but also important differences. This thesis provides an overview of this model class as well as an in-depth discussion of an example model architecture. The investigation indicates that one of the key obstacles when applying MPNNs to molecular structures is the representation of the 3D geometry which is lacking in regular MPNNs. Several changes in model architecture to address this shortcoming are proposed and evaluated (Section~\ref{sec:root-node} and~\ref{sec:direction-vectors}). Moreover, the results provide evidence that pure deep learning approach of using raw data only as model input (which is common practice in computer vision and natural language processing) is superior to manual feature engineering in chemical applications as well (Section~\ref{sec:raw-data}). Finally, the experiments also show that the choice of input data representation can be more important than the choice of model architecture (Section~\ref{sec:neighborhood-expansion}).
+
+In summary, this work points out some challenges when using applying MPNNs for chemical applications and presents results that point towards potential improvements. 
 
 
 \clearpage
