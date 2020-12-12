@@ -91,8 +91,7 @@ All Rights Reserved
 %\chapter*{Acknowledgments}
 %\addcontentsline{toc}{chapter}{Acknowledgments}
 %
-%{\color{red}%
-%Insert thesis acknowledgments here}
+%Insert thesis acknowledgments here
 %
 %\clearpage
 
@@ -103,9 +102,10 @@ All Rights Reserved
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
 
-{\color{red}}
+\noindent This project investigates the application of deep neural networks to predicting molecular properties from structures of small organic molecules. The raw data consists of only atom coordinates in 3D space while the target variables are either atomic interactions (Section~\ref{sec:champs}) or quantum mechanical properties of molecules (Section~\ref{sec:alchemy}). Two machine learning competitions provided the datasets and the opportunity to benchmark the results against world class machine learning practitioners.
 
-\lipsum[1-6]
+While numerous approaches can be chosen to tackle this challenge, this project uses the strategy of representing molecules as graphs and training deep neural networks to predict the target variables. The type of neural networks that take graph structured data as input are called graph neural networks in general but most of the models follow an architecture described as Message Passing Neural Networks (MPNNs)~\cite{Gilmer2017} or Graph convolutional neural networks~\cite{Schutt2017}. This model class has interesting commonalities with regular convolutional networks but also important differences. This thesis provides a high-level overview of this model class as well as an in-depth discussion of an example model. Several changes in model architecture are proposed, tested and discussed. The results suggest that one of the key challenges when applying MPNNs to molecular structures is the representation of the 3D geometry which is lacking in regular MPNNs. Moreover, the results suggest that pure deep learning approach of using raw data only as model input (which is common practice in computer vision and natural language processing) is superior to manual feature engineering in chemical applications as well.
+
 
 \clearpage
 
