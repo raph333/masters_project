@@ -10,8 +10,8 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="206.32983mm"
-   height="279.17322mm"
-   viewBox="0 0 731.08996 989.19644"
+   height="266.27164mm"
+   viewBox="0 0 731.08996 943.48218"
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
@@ -76,7 +76,7 @@
      inkscape:pageshadow="2"
      inkscape:zoom="0.7"
      inkscape:cx="360.10353"
-     inkscape:cy="479.21277"
+     inkscape:cy="433.49851"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -538,7 +538,7 @@
          id="g3649" />
     </g>
     <g
-       transform="matrix(1.25,0,0,-1.25,22.09732,995.53184)"
+       transform="matrix(1.25,0,0,-1.25,24.954463,949.81755)"
        inkscape:label="optimization_variablility_mae"
        id="g4202">
       <g
@@ -968,12 +968,12 @@
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:40px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="-1.105805"
-       y="565.29749"
+       y="519.58319"
        id="text4579-3"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          x="-1.105805"
-         y="565.29749"
+         y="519.58319"
          id="tspan4587-6">b</tspan></text>
   </g>
 </svg>
