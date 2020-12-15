@@ -1,4 +1,4 @@
-\chapter{Results}
+\chapter{Results and Discussion}
 \label{chapter:Results}
 
 \section{Predicting atomic interactions from 3D structure}
@@ -123,7 +123,11 @@ As explained in the introduction, we can define the neighborhood of a node as al
 As Figure~\ref{fig:neighborhood-expansion} shows, the best performance is indeed achieved with the complete graph - connecting every atom with every other atom in the molecule with an edge. In general, the larger the neighborhood radius, the better the performance. This result is in line with the suspicion that the real reason for the good performance of Tencent Lab's model is the addition of new edges rather than the addition of the euclidean distance feature.
 The result is somewhat counterintuitive and in contrast with the principle of message passing. As described in the introduction, in theory, message passing updates node-representations based on the local neighborhood of each node. Eventually, after $t$ layers, each node representation would contain indirect contributions from all other nodes with $t$ or fewer edges apart. However, the results at hand show that the performance is best if the graph convolution considers all atoms at every layer. This contrast between theory and empiric results clearly shows that much remains to be discovered about the use of MPNNs for molecules.
 
+Naturally, in the wider MPNN literature this does not receive much attention as the use of complete graphs is not computationally feasible in most applications. It is only in the case of small molecule structures that it's possible to do so but even in this field, the question is not frequently addressed. As discussed in the introduction, complete graphs are used but not discussed in the baseline architecture of the \textit{Alchemy}-competition~\cite{Chen2019}. In the 3rd best solution - the only winning solution with a published paper and almost as good results as the best solution - does not explicitly state if a distance cutoff is being used for the \textit{Alchemy}-dataset (i.e. only defining an edge between atoms withing a given distance). However, given the approach in the baseline architecture, I suspect that they use complete graphs as well or at least a very large distance cutoff that approximates a complete graph. Furthermore, the winning solution of the kaggle-competition 'Predicting Molecule Properties'~\footnote{\url{https://www.kaggle.com/c/champs-scalar-coupling/discussion/106575}} also considers interaction between any to atoms at every step (they do use a traditional MPNN but nevertheless represent pairs of atoms in the model without a distance cutoff - which is equivalent to the use complete graphs in MPNNs).
+
 For small molecules and with considerable computational power available, one could simply accept this finding as it is and represent molecules as complete graphs. However, for larger molecules with hundreds of atoms, this would be computationally not feasible as the number of edges increases quadratically ($\frac{n(n - 1)}{2}$ edges for $n$ nodes). Therefore, the next experiments will aim at finding an alternative way that captures the advantage of the complete graph-approach without the excessively high computational cost.
+
+
 
 %Cite Alchemy paper and point out that the high-performing kaggle-teams all use fully connected graphs.
 %Does no one notice?
