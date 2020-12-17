@@ -78,11 +78,13 @@ h_v^{t+1} ~=~ U_t(~h_v^t, ~m_v^{t+1}~)
 The above two steps are comprised of three functions:
 
 \begin{enumerate}
-	\item The message function $M$ which computes the 'message' from node $w$ to node $v$ using the hidden representations of both nodes as well as the features of the connecting edge. A specific architecture may not use all the arguments of the message function in the general framework. For instance, the message function may not use the receiving node hidden states $h_v^t$ (note that it is used in the next step anyway) or the edge features.
+	\item The message function $M$ which computes the 'message' from node $w$ to node $v$ using the hidden representations of both nodes as well as the features of the connecting edge. A specific architecture may not use all the arguments of the message function in the general framework. For instance, the message function may not use the receiving node hidden states $h_v^t$ (note that it is used in the next step anyway) or the edge features. In the simplest case, the message function could just be a concatenation of the arguments such as, for example, $m_v^{t+1} = (h_w, e_{vw})$ (which is passed to the update function where all the computation happens)~\cite{Duvenaud2015}. A more complex message function could be an MPL which takes the concatenation $(h_v, h_w, e_{vw})$ as input~\cite{Battaglia2016}.
 	\item An aggregation function that aggregates all the messages from all the neighboring nodes $w \in N(v)$ of node $v$. Any function that is permutation invariant and works for any number of nodes, such as $sum$, $mean$, $min$ or $max$, can be used at this step. However, in practice, the reasonable options are mostly limited to summation and the arithmetic mean.	
 	In other papers, aggregation is described as a separate step and the aggregation function denoted with a specific symbol. Here, as well as in Gilmer et al.~\cite{Gilmer2017} we will simply use the summation and note that it could be replaced by the arithmetic mean if appropriate.
 	The aggregation is not a function with learned parameters and has to be chosen by the architect of the MPNN. Moreover, it can lead to considerably loss of information. However, this step in inevitable because the neighborhood of a given node can be any number of nodes and they do not have an inherent order as discussed in Section~\ref{sec:graph-challenges}.
-	\item The update function $U$ updates the hidden state $h^t$ based on  $m_v^{t+1}$, the aggregated messages from its neighboring nodes.
+	\item The update function $U$ updates the hidden state $h^t$ based on  $m_v^{t+1}$, the aggregated messages from its neighboring nodes. Examples update functions include for instance $h_v^{t+1} = \sigma(H_t^{deg(v)} m_v^{t+1})$ which essentially corresponds to passing the message for node $v$ through a 'one-layer neural network' whereas there is a separate such neural network for each message passing step $t$ and each node degree (number of neighbors) $deg(v)$~\cite{Duvenaud2015} (of course, this definition only makes sense in graphs where the maximum node degree is a reasonably low number~\footnote{
+		In most experiments in this theses (Section~\ref{sec:alchemy}), complete graphs are used where each node has the same degree $|G|$ (the number of nodes in the graph). For such a setting, this definition of the update function would of course not be applicable.
+	} and varies from node to node). Another example of an update function is an MLP which takes the concatenation $(h_v, x_v, m_v)$ as input~\cite{Battaglia2016}.
 \end{enumerate}
 
 Finally, if the target variable is a property of the whole graph, a readout function is required to map the node representations to the target.
@@ -92,7 +94,7 @@ Finally, if the target variable is a property of the whole graph, a readout func
 \end{equation}
 
 
-Because the readout function is a function of the all nodes in the graph, it has to handle variable numbers of nodes and be permutation invariant. Thus, just like the message-function defined in Equation~\ref{eq:message-function}, it has to include some sort of aggregation, such as a \textit{sum} or \textit{mean}.
+Because the readout function is a function of the all nodes in the graph, it has to handle variable numbers of nodes and be permutation invariant. Thus, just like the message-function defined in Equation~\ref{eq:message-function}, it has to include some sort of aggregation, such as a \textit{sum} or \textit{mean}. This aggregation could occur as the very last step such as in Schütt et. al. where all hidden node representations are passed separately through an MLP and then summed up~\cite{Schutt2017}. In contrast, in Chen et. al., the final step of the readout function is a MLP which takes the already aggregated node representations as input~\cite{Chen2019}.
 
 The details of how these functions are constructed are best explained using a specific example, such as the one explained in Chapter~\ref{sec:mpnn-architecture}.
 For now, it shall suffice to note that both functions $M$ and $U$ could, for instance be a simple  (multilayer perceptron) with only one hidden layer. In most architectures, the weights of both functions are shared such that $M_t$ and $U_t$ are the same for all $t$. However, this is not a necessity and one could also build a MPNN with different weights for at each message passing step. Section~\ref{sec:weight-sharing} presents an experiment comparing the two approaches.
@@ -110,8 +112,6 @@ With a block of $T$ message passing steps, one has successfully constructed a ma
 
 
 In summary, a MPNN is composed of two parts: message passing (graph convolution) layers and a readout function. The framework introduced here allows to describe highly different architectures using the same terminology. In Chapter~\ref{sec:mpnn-architecture}, the basic architecture of a the MPNN used in this thesis is described in detail. While several different models were trained and evaluated in this work, most of them based on this architecture.
-
-% TODO: subsection literature review
 
 
 \section{Predicting molecular properties from 3D structure with Message Passing Neural Networks}
