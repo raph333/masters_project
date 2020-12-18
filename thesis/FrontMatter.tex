@@ -21,8 +21,11 @@
 \normalfont\large
 %Thesis by
 %\\[0.25em]
-\sffamily\bfseries\Large
-\AuthorName
+%\sffamily\bfseries
+\Large{\AuthorName}
+\vspace{1cm}\\
+\normalsize{supervised by}\\
+\Large{Roland Kwitt, Phd.}
 %\\[0.4in]
 %\normalfont\normalsize
 %In Partial Fulfillment of the Requirements
@@ -99,14 +102,15 @@ All Rights Reserved
 %% ABSTRACT.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\chapter*{Abstract}
+\section*{\Huge{Abstract}}
 \addcontentsline{toc}{chapter}{Abstract}
 
-\noindent This project investigates the application of deep neural networks to predict molecular properties from structures of small organic molecules. The raw data consists of only atom coordinates in 3D space while the target variables are either atomic interactions (Section~\ref{sec:champs}) or quantum mechanical properties of molecules (Section~\ref{sec:alchemy}). Two machine learning competitions provided the datasets and the opportunity to benchmark the results against world class machine learning practitioners.
+\vspace{1cm}
+\noindent This thesis investigates the application of deep neural networks to predict molecular properties from structures of small organic molecules. The raw data consists of atom coordinates in 3D space while the target variables are either atomic interactions (Section~\ref{sec:champs}) or properties of molecules (Section~\ref{sec:alchemy}). Two machine learning competitions provided the datasets as well as the opportunity to benchmark the results against other machine learning practitioners.
 
-While numerous approaches can be chosen to tackle this challenge, the project at hand uses the strategy of representing molecules as graphs and training deep neural networks to predict the target variables. The type of neural networks that take graph structured data as input are called graph neural networks in general but most of the models follow an architecture described as Message Passing Neural Networks (MPNNs)~\cite{Gilmer2017} or Graph Convolutional Neural Networks~\cite{Schutt2017}. This model class has interesting commonalities with regular convolutional networks but also important differences. This thesis provides an overview of this model class as well as an in-depth discussion of an example model architecture. The investigation indicates that one of the key obstacles when applying MPNNs to molecular structures is the representation of the 3D geometry which is lacking in regular MPNNs. Several changes in model architecture to address this shortcoming are proposed and evaluated (Section~\ref{sec:root-node} and~\ref{sec:direction-vectors}). Moreover, the results provide evidence that pure deep learning approach of using raw data only as model input (which is common practice in computer vision and natural language processing) is superior to manual feature engineering in chemical applications as well (Section~\ref{sec:raw-data}). Finally, the experiments also show that the choice of input data representation can be more important than the choice of model architecture (Section~\ref{sec:neighborhood-expansion}).
+While numerous approaches can be chosen to tackle this challenge, the project at hand uses the strategy of representing molecules as graphs and training deep neural networks to predict the target variables. The type of neural networks that take graph structured data as input are called graph neural networks in general but most of the models follow an architecture described as Message Passing Neural Networks (MPNNs)~\cite{Gilmer2017} or Graph Convolutional Neural Networks~\cite{Schutt2017}. This model class has interesting commonalities with regular convolutional networks but also differs from them in important aspects. This thesis provides an overview of this model class presents an example model-architecture. The investigation indicates that the representation of the 3D geometry (which is lacking in regular MPNNs) is one of the key obstacles when applying MPNNs to molecular structures. Several changes in model architecture to address this shortcoming are proposed and evaluated (Section~\ref{sec:root-node} and~\ref{sec:direction-vectors}). Moreover, the results provide evidence that pure deep learning approach of using raw data only as model input (which is common practice in computer vision and natural language processing) is superior to manual feature engineering in chemical applications as well (Section~\ref{sec:raw-data}). Finally, the experiments also show that the choice of input data representation can be more important than the choice of model architecture (Section~\ref{sec:neighborhood-expansion}).
 
-In summary, this work points out some challenges when using applying MPNNs for chemical applications and presents results that point towards potential improvements. 
+In summary, this work shows some interesting challenges when using MPNNs in chemical applications and presents results that point towards potential improvements. 
 
 
 \clearpage
