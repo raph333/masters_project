@@ -34,7 +34,7 @@ There are 119487 3D structures of molecules in the dataset. These structures pro
 	Unfortunately, due to the issue described in Section~\ref{sec:diff-old-new-ds}, the test set labels could not be used for reliable evaluation. The remaining dataset consists of 99776 molecules in the training-set and 3951 molecules in the validation set.
 }. The task is to predict those twelve properties~\footnote{
 	The 12 target variables
-	(Dipole moment, Polarizability, HOMO, LUMO, gap, R\textsuperscript2, Zero point energy, Internal energy, Internal energy at 298.15 K, Enthalpy at 298.15 K, Free energy at 298.15 K, Heat capacity at 298.15 K) are shown in Table~2 of Chen et. al.~\cite{Chen2019}.
+	(Dipole moment, Polarizability, HOMO, LUMO, gap, R\textsuperscript2, Zero point energy, Internal energy, Internal energy at 298.15 K, Enthalpy at 298.15 K, Free energy at 298.15 K, Heat capacity at 298.15 K) are shown in Table~2 of Chen et al.~\cite{Chen2019}.
 } from the raw data.
 %The target properties have been calculated using computationally highly expensive quantum chemical computations using the python library \textit{PySCF}~\cite{Sun2017}.
 
@@ -54,13 +54,13 @@ The other approach is to calculate all sorts of chemical features using chemistr
 \subsection{\textit{SchNet}}
 \label{sec:schnet-architecture}
 
-As this model has not been used for many experiments, we shall refer to the literature instead. The implementation follows the architecture proposed by Schütt et. al.~\cite{Schutt2017}. Several changes were made in the DGL-implementation~\footnote{\url{https://www.kaggle.com/rpeer333/pytorch-dgl-schnet-a-graph-convolutional-net}} compared to the template \textit{Chainer}-implementation~\footnote{\url{https://www.kaggle.com/toshik/schnet-starter-kit}}. In particular, a graph state was added. This is similar to the concept of a root- or master-node shown in Section~\ref{sec:root-node}. Furthermore the residual short-cuts (first used in \textit{ResNets}~\cite{Sun2016}) in the graph convolution layers were replaced with dense short cuts analogous to the ones form \textit{DenseNets}~\cite{Huang2017}. Neither of those changes is responsible for the poor performance of the model as the results were the same with them.
+As this model has not been used for many experiments, we shall refer to the literature instead. The implementation follows the architecture proposed by Schütt et al.~\cite{Schutt2017}. Several changes were made in the DGL-implementation~\footnote{\url{https://www.kaggle.com/rpeer333/pytorch-dgl-schnet-a-graph-convolutional-net}} compared to the template \textit{Chainer}-implementation~\footnote{\url{https://www.kaggle.com/toshik/schnet-starter-kit}}. In particular, a graph state was added. This is similar to the concept of a root- or master-node shown in Section~\ref{sec:root-node}. Furthermore the residual short-cuts (first used in \textit{ResNets}~\cite{Sun2016}) in the graph convolution layers were replaced with dense short cuts analogous to the ones form \textit{DenseNets}~\cite{Huang2017}. Neither of those changes is responsible for the poor performance of the model as the results were the same with them.
 
 
 \subsection{Base MPNN architecture}
 \label{sec:mpnn-architecture}
 
-The basic architecture used as a starting point for most of the experiments in this thesis (Section~\ref{sec:alchemy}) comes from the MPNN variant from Chen et. al.~\cite{Chen2019} whose code is available on GitHub~\footnote{\url{https://github.com/tencent-alchemy/Alchemy}}. This model, in turn is based on the MPNN model proposed by Gilmer et. al.~\cite{Gilmer2017}.
+The basic architecture used as a starting point for most of the experiments in this thesis (Section~\ref{sec:alchemy}) comes from the MPNN variant from Chen et al.~\cite{Chen2019} whose code is available on GitHub~\footnote{\url{https://github.com/tencent-alchemy/Alchemy}}. This model, in turn is based on the MPNN model proposed by Gilmer et al.~\cite{Gilmer2017}.
 
 
 \paragraph{Node embedding}The networks starts with an embedding of the atom-type of each node. In this particular implementation, this is achieved by passing the one-hot encoded atom type through a regular linear layer. This first layer essentially extracts the n\textsuperscript{nt} column from the weight matrix when the n\textsuperscript{th} position of the input vector is one which is easy to see from the following example.
@@ -89,7 +89,7 @@ Thus, the first linear layer essentially corresponds to a mapping from a categor
 
 \paragraph{Message passing}
 
-The message passing function used in the experiments was the so called edge network message function which was found to be the best among several options by Gilmer et. al.~\cite{Gilmer2017}. The approach is described in more detail and nicely illustrated by Simonovsky et. at.~\cite{Simonovsky2017}. This message passing layer is implemented in the \textit{PyTorch Geometric} class NNConv~\footnote{\url{https://pytorch-geometric.readthedocs.io/en/latest/modules/nn.html\#torch_geometric.nn.conv.NNConv}}\label{fn:pytorch-geometric-nn-docs}.
+The message passing function used in the experiments was the so called edge network message function which was found to be the best among several options by Gilmer et al.~\cite{Gilmer2017}. The approach is described in more detail and nicely illustrated by Simonovsky et. at.~\cite{Simonovsky2017}. This message passing layer is implemented in the \textit{PyTorch Geometric} class NNConv~\footnote{\url{https://pytorch-geometric.readthedocs.io/en/latest/modules/nn.html\#torch_geometric.nn.conv.NNConv}}\label{fn:pytorch-geometric-nn-docs}.
 
 
 The message function has two components. The first one is a two-layer MLP (multi-layer perceptron)  $h_{\mathbf{\Theta}}$ taking the edge features as input and putting out a vector of dimension $d^2$ which is reshaped into a $d$ by $d$ matrix.
