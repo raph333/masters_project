@@ -28,7 +28,7 @@ Dataset and evaluation are described in Section~\ref{sec:champs-dataset}. Here, 
 \end{table}
 
 
-\subsection{Boosted Tree models with manually engineered features}
+\subsection{Boosted tree models with manually engineered features}
 \label{sec:champs-boosted-tree}
 
 Simple machine learning models based on manually engineered features, such as various boosted tree-models can give surprisingly good results with short training time. They do not reach the performance of well tuned MPNNs but easily surpass not yet fully optimized MPNNs. The next two subsections will briefly outline two experiments with manually engineered features used for a Light Gradient Boosted Model (\textit{LightGBM})~\cite{Ke2017}.
@@ -42,13 +42,13 @@ for the eight different J-coupling types to predict the J-coupling constant (see
 
 \noindent Several factors limit the effectiveness of this simple approach.
 
-\paragraph{Lack of geometric information} The features only specify an atoms distance from the center point and not it's position relative to the J-coupled atoms.
+\paragraph*{Lack of geometric information} The features only specify an atoms distance from the center point and not it's position relative to the J-coupled atoms.
 
-\paragraph{Features are not permutation invariant} As atoms in a molecule have no objective order that makes them comparable to other atoms in other molecules, the feature order is somewhat arbitrary limiting the model's ability to generalize~\footnote{
+\paragraph*{Features are not permutation invariant} As atoms in a molecule have no objective order that makes them comparable to other atoms in other molecules, the feature order is somewhat arbitrary limiting the model's ability to generalize~\footnote{
 	Granted, some patterns are shared between interactions. E.g. in the case of a J2XX interaction where the J-coupled molecules are two bonds apart, the atom closest to the center point is most likely the atom to which both J-coupled atoms are bound, making the first distance and the first atom-type feature comparable across interactions.
 }. In the general cases, the n\textsuperscript{th} closest atom in an arbitrary interaction is not equivalent to the n\textsuperscript{th} closest atom in another interaction.
 
-\paragraph{Relations between the features are not represented} Obviously, the features are not just 21 independent scalars. Instead, the closest atom's distance to the center point is related to this atom's type, etc. However, this relation cannot be represented in the input data. Instead, the features have to be input into the model as 21 independent variables which limits their usefulness dramatically.
+\paragraph*{Relations between the features are not represented} Obviously, the features are not just 21 independent scalars. Instead, the closest atom's distance to the center point is related to this atom's type, etc. However, this relation cannot be represented in the input data. Instead, the features have to be input into the model as 21 independent variables which limits their usefulness dramatically.
 
 
 \subsubsection{Distance, atom-type and angle features}
@@ -61,7 +61,7 @@ Adding this set of features to the ones described in the previous section gave 3
 The same issues would apply to any other manually engineered features. Thus, these results provide good motivation to explore a MPNN approach shown in the next section.
 
 
-\subsection{MPNNs for edge property prediction}
+\subsection{Message Passing Neural Networks for edge property prediction}
 \label{sec:schnet}
 
 The \textit{SchNet}~\cite{Schutt2017} model is described using the graph convolution terminology but it could equally well be described in the message passing framework proposed by Gilmer et al.~\cite{Gilmer2017}. The most relevant part of the architecture is the use of what they call \textit{continuous- filter convolutional layers}. In message passing terminology, this refers to the use of the distance as continuous edge feature. In the application of this model to the Kaggle-competition at hand, this feature is not thresholded. This means that an edge with distance as edge feature is defined between any two atoms in the molecule. In that manner, a complete graph is created where every atom is connected to every other atom in the molecule. It stands to reason that the success of the model might rely on the use of complete graphs rather than on the use of the continuous distance feature. The next section will show a similar example.
@@ -137,7 +137,7 @@ For small molecules and with considerable computational power available, one cou
 %Does no one notice?
 
 
-\subsection{Introducing a graph-state as added input in every message-passing step does not improve results}
+\subsection{Introducing a root-node does not improve results}
 \label{sec:root-node}
 
 
@@ -173,12 +173,12 @@ Another possible preprocessing step is to disregard hydrogen atoms. The rational
 	\label{fig:implicit-hydrogens}
 \end{figure}
 
-\paragraph{Further information: Why a hydrogen-less structure contains implicit information about hydrogen atoms}
+\paragraph*{Further information: Why a hydrogen-less structure contains implicit information about hydrogen atoms}
 Despite dropping all hydrogen atoms from the molecule structure, the information, how many hydrogen atoms there are and to which atoms they are bound is still implicitly contained in the structure. (For the same reason, hydrogen atoms are also excluded from standard molecule graphs such as the one shown in Figure~\ref{fig:caffeine}.) In short, it is a way of summarizing the raw data that speeds up training considerably while loosing some information. The reason it can be called 'implicit hydrogen representation' is that the information how many hydrogens (but not their exact position) is inherent in the structural information given all the other atoms and the bonds between them. The only piece of knowledge from organic chemistry required to understand this is that every given atom type, such as carbon or oxygen, only engages in a fixed number of bonds: four for carbon, two for oxygen, one for hydrogen, etc. (with double or triple bonds counting twice or trice, respectively). This number is called valence and is dependent on the number of electrons in the outer orbital - called valence electrons~\cite{Organic-chemistry}. In a molecular structure without hydrogen atoms, the number of bonds to heavy atoms (i.e. non-hydrogen atoms) is given for each atom as the number of it's neighbor nodes. The number of hydrogen atoms bound to any given atom is thus it's valence minus the number of neighbor nodes. It is for this reason that omitting hydrogens from the structure can be thought of as equivalent to adding the feature 'number of hydrogen atoms' to each heavy atom. Note that while this number is implicit in the structure, the exact position of the hydrogen atoms is lost when they are omitted from the structure.
 
 
 
-\subsection{Graph-convolution layers with independent weights give the same results as with shared weights}
+\subsection{Message passing functions with independent weights give the same results as with shared weights}
 \label{sec:weight-sharing}
 
 Recall the message function $M_t$ and the (node-)update-function $U_t$ defined in Equation~\ref{eq:message-function} and~\ref{eq:update-function}, respectively. In this general definition, each graph-convolution layer (each message passing step) $t$ has it's own $M_t$ and $U_t$. However, in most implementations of MPNNs, $M_t = M~~\forall~t$ and $U_t = U~~\forall~t$ which simplifies the two equations~\ref{eq:message-function} and~\ref{eq:update-function} to

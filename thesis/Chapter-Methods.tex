@@ -43,23 +43,23 @@ There are 119487 3D structures of molecules in the dataset. These structures pro
 %The target properties have been calculated using computationally highly expensive quantum chemical computations using the python library \textit{PySCF}~\cite{Sun2017}.
 
 
-\subsection{Features}
+\subsubsection{Features}
 \label{sec:features}
 
 There are two different approaches to go about the task. The pure deep learning approach is to use only coordinates and bonds and rely on the model to learn any features required to predict the target properties. After all, coordinates, atom types and bonds contain all the available information (actually the bonds could be reliably calculated from coordinates and atom types and thus, strictly speaking are also redundant information).
 
 The other approach is to calculate all sorts of chemical features using chemistry python libraries and feed them into the model alongside the raw data. These include node (atom) features (whether the atom is an electron donor or acceptor, whether it is part of an aromatic ring, it's hybridization type, etc.~\cite{Organic-chemistry}) as well as bond (edge) features. The fact that these features are calculated from the raw data without any additional information means that the model should also be able to learn them if required. Hence, calculating features and feeding them into the model should in theory be obsolete but could slightly improve predictions if the model is unable to learn those features. Section~\ref{sec:raw-data} present an experiment assessing the benefit of manually engineered features.
 
-\subsection{Benchmark and evaluation}
+\subsubsection{Benchmark and evaluation}
 
 The target variable in this dataset is a real-valued vector of length twelve. The error-metric used throughout this work is the mean absolute error (MAE) - which was also the metric in the Alchemy Contest. As the twelve quantum mechanical properties have vastly different ranges, they have to be normalized - otherwise the properties with larger ranges would contribute far more to the MAE than the properties with smaller ranges. Normalization was performed by subtracting the mean and dividing by the standard deviation.
 
-\subsection{Difference between competition data and full data in the \textit{Alchemy} dataset}
+\subsubsection{Difference between competition data and full data in the \textit{Alchemy} dataset}
 \label{sec:diff-old-new-ds}
 
 %This subsection explains why the MAE-values presented in this thesis cannot be compared the competition leader-board including my own score with rank 26.
 
-\paragraph{Overview} Unfortunately, the results obtained on the competition dataset cannot be directly compared to results achieved on the full dataset published after the \textit{Alchemy}-competition. This section presents the result of an investigation in to the data quality issues and explains why the test-set (in particular the target variables) could not be used for the experiments. If the reader is only interested in the main topic of the thesis rather than inconsistencies in the particular dataset at hand, this subsection may be skipped. On the other hand, if the reader intends to train a model on this dataset, then reading this section can save a lot of time.
+\paragraph*{Overview} Unfortunately, the results obtained on the competition dataset cannot be directly compared to results achieved on the full dataset published after the \textit{Alchemy}-competition. This section presents the result of an investigation in to the data quality issues and explains why the test-set (in particular the target variables) could not be used for the experiments. If the reader is only interested in the main topic of the thesis rather than inconsistencies in the particular dataset at hand, this subsection may be skipped. On the other hand, if the reader intends to train a model on this dataset, then reading this section can save a lot of time.
 
 Figure~\ref{fig:competition-vs-full-ds} shows the learning curves of models being trained on both the competition dataset and the full dataset. The MAE values are considerably lower on the competition dataset.
 
@@ -70,7 +70,7 @@ Figure~\ref{fig:competition-vs-full-ds} shows the learning curves of models bein
 	\label{fig:competition-vs-full-ds}
 \end{figure}
 
-\paragraph{Train-test split}
+\paragraph*{Train-test split}
 The competition data-set is split into training-set (called dev-set by the competition hosts), validation- and test-set with the ground truth being provided only for the first two sets. The split is not random. Instead, the validation- and test-set have an intentional bias towards larger molecules compared to the training-set. Building models that can extrapolate from smaller molecules to larger molecules is useful for pharmacological research~\cite{Chen2019}.
 %However, in order to focus on the core topic of GCNN for molecules, for most experiments presented in this thesis. I only use a simple random split where training-, validation- and test-set are randomly drawn without replacement from the same population.
 
@@ -80,7 +80,7 @@ The figure shows two counterintuitive results. First of all, the MAE on is highe
 %First of all, it is obvious that the validation MAE is lower on the randomly split data. This comes as no surprise because in the competition-data split, the validation molecules are systematically different (larger) from the training molecules. However, regardless of the kind of data-split, the MAE-values are still consistently lower on the competition data.
 
 
-\paragraph{Target variable normalization}
+\paragraph*{Target variable normalization}
 
 In the competition data-set, the values are already normalized and the raw values are not available. It is not clear whether the mean and standard deviation used for normalization where calculated separately for the training- and validation-set or if the they are based on all molecules. Furthermore, the order of the target variables is unknown (by design) and their names are replaced with the dummy-names property-1, property-2, etc.
 
@@ -88,11 +88,11 @@ The full dataset released after the competition contains the raw values and the 
 
 %The only observation that can be made is that the average range (maximum - minimum) of all target variables is lower in the competition data-set. This suggest that the normalization might have been conducted on per-set basis because the range within a subset of the data is necessarily smaller or equal than the range of the full dataset. However, the small difference of an average range of 8.66 in the competition dataset and 9.72 in the full dataset is insufficient to explain the difference in MAE between the two datasets. Furthermore, such a difference could just as well be a function of dataset-size as larger datasets have a higher probability of containing more extreme outliers which increases the range of the target variables.
 
-\paragraph{Molecule data}
+\paragraph*{Molecule data}
 
 The raw data and thus the input into the model is exactly the same in the full dataset as in the competition dataset. This has been thoroughly tested and verified.
 
-\paragraph{Conclusion}
+\paragraph*{Conclusion}
 
 With the input-data as well as the data-splits being identical, the reason for the difference in MAE can only be explained by the different values of the target variables. As discussed above, the absence of raw data in the competition dataset prevents a direct comparison of the target variables between the two datasets. Thus, no further information can be obtained to pinpoint the difference or to find a possible explanation. The only conclusion to be made is that for some reason the target variables in the new data prevent the net from learning to predict them as well as in the competition data. Therefore, only the training- and validation-set from the competition were used in the experiments. Furthermore, the same training-validation split as in the competition was chosen because the MAE of the competition-data with this split could not be achieved by any other splitting method. While it is unfortunate not to know the root of this counterintuitive finding, it will have to remain a mystery in order to focus on the core topic of this thesis which is MPNNs. 
 

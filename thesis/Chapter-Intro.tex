@@ -131,7 +131,7 @@ One way to address this issue is to create purely computational experiments. In 
 
 % dnns have the potential to extract valuable information from 3D structures using vast amounts of data with ground-truth without having to explicitly model the underlying physical forces and the interplay of subatomic particles.
 
-\subsection{Modeling molecules as graphs}
+\subsection{Representing molecules as graphs}
 \label{sec:molecules-as-graphs}
 
 Figure~\ref{fig:molecule-3d} shows an illustration of a 3D molecule structure. The raw data contains only coordinates and atom types. The presence or absence of bonds between atoms can be derived from the types of atoms and the distance between them. Thus, the raw data of a molecule is only an unordered set of tuples of the form $(a, \vec{c})$
@@ -178,7 +178,7 @@ All approaches that define the presence or absence of edges by certain rules suf
 These considerations highlight an importance difference between the theory of MPNNs and their application. In the theory, the starting point is graph structured data and all the effort goes into construction the best possible model architecture to extraction information from this data. For practical application, the data has to be modeled as graphs in a way that captures the available information in the best possible manner. Arguably, the choices made in this process may have more influence on the quality of the predictions than the choice of MPNN architecture. After all, if incomplete information is fed into the model, even the best model will yield disappointing results. In the next section, we will examine some challenges that arise when modeling molecules as graphs for MPNNs.
 
 
-\subsection{Limitations of Graph convolutional neural networks for molecular structures}
+\subsection{Limitations of Message Passing Neural Networks for molecular structures}
 \label{sec:limitations}
 
 \subsubsection{Lack of 3D structure representation}
