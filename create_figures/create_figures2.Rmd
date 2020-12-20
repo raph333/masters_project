@@ -71,7 +71,7 @@ p <- ggplot(data=df, aes(x=epoch, y=MAE, color=target_param, linetype=variable))
   theme(plot.title = element_text(hjust = 0.5, size=16)) +
   labs(title='Neighborhood expansion',
        y='MAE',
-       color='neighborhood radius',
+       color='neighborhood radius [Å]',
        linetype=element_blank())
 p
 # ggsave(file.path(figures_dir, paste0('neighborhood-expansion.pdf')), p)
@@ -91,9 +91,9 @@ p <- ggplot(data=df, aes(x=epoch, y=MAE, color=target_param, linetype=variable))
   scale_y_continuous(limits=c(0, 0.4)) +
   theme_bw() +
   theme(plot.title = element_text(hjust = 0.5, size=16)) +
-  labs(title='Neighborhood expansion',
+  labs(title='Neighborhood expansion with root node',
        y='MAE',
-       color='neighborhood radius',
+       color='neighborhood radius [Å]',
        linetype=element_blank())
 p
 # ggsave(file.path(figures_dir, paste0('neighborhood-expansion-root-weight.pdf')), p)
@@ -140,10 +140,10 @@ p
 df_raw <- read.csv(file.path(results_dir, 'lc-raw-data-processor.csv')) %>%
   select(-c(minutes, lr, target_param)) %>%
   process_single_lc() %>% 
-  mutate(experiment_name = 'raw')
+  mutate(experiment_name = 'raw data only')
 
 df_tencent <- df_shared %>% 
-  mutate(experiment_name = 'augmented with features')
+  mutate(experiment_name = 'raw data + enigneered features')
 
 df_comb <- rbind(df_raw, df_tencent)
 write.csv(df_comb, file.path(results_dir, 'lc-raw-data-processor-augmented.csv'))
@@ -172,10 +172,10 @@ p
 df_implicit_h <- read.csv(file.path(results_dir, 'lc-implicit-hydrogens.csv')) %>%
   select(-c(minutes, lr, target_param)) %>%
   process_single_lc() %>% 
-  mutate(experiment_name = 'implicit')
+  mutate(experiment_name = 'excluded')
 
 df_explicit_h <- df_shared %>% 
-  mutate(experiment_name = 'explict')
+  mutate(experiment_name = 'inlcluded')
 
 df_comb <- rbind(df_implicit_h, df_explicit_h)
 write.csv(df_comb, file.path(results_dir, 'lc-implicit-hydrogens-augmented.csv'))
@@ -185,8 +185,8 @@ p <- ggplot(data=df_comb, aes(x=epoch, y=MAE, linetype=variable, color=experimen
   theme_bw() + 
   scale_y_continuous(limits=c(0, 0.2)) +
   theme(plot.title = element_text(hjust = 0.5, size=16)) +
-  labs(title='Implicit vs. explicit hydrogen atoms',
-       color='hydrogen representation',
+  labs(title='Structures without hydrogen atoms',
+       color='hydrogen atoms',
        linetype=element_blank())
 
 # ggsave(file.path(figures_dir, 'implict-hydrogens.pdf'), p, width = 20, height = 13, units = "cm")
@@ -195,9 +195,6 @@ p
 
 
 ## relative direction vectors as additional edge features
-```{r}
-df_comb %>% filter(epoch == 149)
-```
 
 ```{r}
 
