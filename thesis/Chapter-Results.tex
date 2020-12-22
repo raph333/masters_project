@@ -167,14 +167,16 @@ Another possible preprocessing step is to disregard hydrogen atoms. The rational
 %455.46524214239895 ->
 %84.99518922386144
 
+\paragraph*{Further information: Why a hydrogen-less structure contains implicit information about hydrogen atoms}
+Despite dropping all hydrogen atoms from the molecule structure, the information, how many hydrogen atoms there are and to which atoms they are bound is still implicitly contained in the structure. (For the same reason, hydrogen atoms are also excluded from standard molecule graphs such as the one shown in Figure~\ref{fig:caffeine}.) In short, it is a way of summarizing the raw data that speeds up training considerably while loosing some information. The reason it can be called 'implicit hydrogen representation' is that the information how many hydrogens (but not their exact position) is inherent in the structural information given all the other atoms and the bonds between them.
+
 \begin{figure}[H]
 	\includegraphics[width=\linewidth]{figures/implict-hydrogens.pdf}
 	\caption{Input graphs with (explicit representation) and without hydrogen atoms (implicit representation). The model architecture is exactly the same for both learning curves such that the lack of hydrogen atoms is the only factor causing the considerable difference. The result shows the importance of including hydrogen atoms in the graph representation of organic molecules.}
 	\label{fig:implicit-hydrogens}
 \end{figure}
 
-\paragraph*{Further information: Why a hydrogen-less structure contains implicit information about hydrogen atoms}
-Despite dropping all hydrogen atoms from the molecule structure, the information, how many hydrogen atoms there are and to which atoms they are bound is still implicitly contained in the structure. (For the same reason, hydrogen atoms are also excluded from standard molecule graphs such as the one shown in Figure~\ref{fig:caffeine}.) In short, it is a way of summarizing the raw data that speeds up training considerably while loosing some information. The reason it can be called 'implicit hydrogen representation' is that the information how many hydrogens (but not their exact position) is inherent in the structural information given all the other atoms and the bonds between them. The only piece of knowledge from organic chemistry required to understand this is that every given atom type, such as carbon or oxygen, only engages in a fixed number of bonds: four for carbon, two for oxygen, one for hydrogen, etc. (with double or triple bonds counting twice or trice, respectively). This number is called valence and is dependent on the number of electrons in the outer orbital - called valence electrons~\cite{Organic-chemistry}. In a molecular structure without hydrogen atoms, the number of bonds to heavy atoms (i.e. non-hydrogen atoms) is given for each atom as the number of it's neighbor nodes. The number of hydrogen atoms bound to any given atom is thus it's valence minus the number of neighbor nodes. It is for this reason that omitting hydrogens from the structure can be thought of as equivalent to adding the feature 'number of hydrogen atoms' to each heavy atom. Note that while this number is implicit in the structure, the exact position of the hydrogen atoms is lost when they are omitted from the structure.
+The only piece of knowledge from organic chemistry required to understand this is that every given atom type, such as carbon or oxygen, only engages in a fixed number of bonds: four for carbon, two for oxygen, one for hydrogen, etc. (with double or triple bonds counting twice or trice, respectively). This number is called valence and is dependent on the number of electrons in the outer orbital - called valence electrons~\cite{Organic-chemistry}. In a molecular structure without hydrogen atoms, the number of bonds to heavy atoms (i.e. non-hydrogen atoms) is given for each atom as the number of it's neighbor nodes. The number of hydrogen atoms bound to any given atom is thus it's valence minus the number of neighbor nodes. It is for this reason that omitting hydrogens from the structure can be thought of as equivalent to adding the feature 'number of hydrogen atoms' to each heavy atom. Note that while this number is implicit in the structure, the exact position of the hydrogen atoms is lost when they are omitted from the structure.
 
 
 
@@ -231,15 +233,17 @@ The next experiment trains two almost identical MPNNs: one uses the same chemica
 }
 are computed from the structure without additional information. Hence, if they are relevant for predicting the target variable, they are exactly the kind of information that message passing should extract from the structure. If that's the case, the addition of the computed chemical features is expected to have no effect on the model's loss. Indeed, Figure~\ref{fig:raw-data} shows no difference between the two types of input data.
 
+Therefore, we can conclude that the message passing functions are able to extract relevant chemical information to predict the target variable. The results do not preclude that another architecture might benefit from the addition of manually engineered chemical features or that more sophisticated features might provide some benefit for the model at hand. Nevertheless, the results show that manual feature engineering is far from essential and strengthen the believe that the deep-learning approach of using raw data only is also preferable for chemical applications of MPNNs.
+
+All further experiments are conducted without calculated chemical features and only use the raw structural data instead.
+
 \begin{figure}[H]
 	\includegraphics[width=\linewidth]{figures/raw-data}
 	\caption{Raw data alone gives equally good results as raw data plus manually engineered features. As in all experiments in this thesis, each learning curve is an average of three independent learning curves using the simple optimization scheme described in Section~\ref{sec:training}.}
 	\label{fig:raw-data}
 \end{figure}
 
-Therefore, we can conclude that the message passing functions are able to extract relevant chemical information to predict the target variable. The results do not preclude that another architecture might benefit from the addition of manually engineered chemical features or that more sophisticated features might provide some benefit for the model at hand. Nevertheless, the results show that manual feature engineering is far from essential and strengthen the believe that the deep-learning approach of using raw data only is also preferable for chemical applications of MPNNs.
 
-All further experiments are conducted without calculated chemical features and only use the raw structural data instead.
 
 
 \subsection{Direction vectors as edge features have no impact}

@@ -153,6 +153,10 @@ When it comes to 3D structures there are really only two basic ways of represent
 
 The second approach of representing molecules for neural networks is to use graphs. The idea of using graphs to model molecules comes quite naturally when looking at the most common way of representing small molecules in text books: so called molecule graphs such as the one shown in Figure~\ref{fig:caffeine}. A molecule is usually defined as a number of atoms connected by covalent bonds. These kind of bonds involve the sharing of one or more electron-pairs between the bonded atoms and chemically very stable - it takes considerable energy or enzymes to break them up~\cite{Organic-chemistry}. In laymen's terms, covalent bonds can be regarded as 'stable under normal conditions'. In the commonly used molecule graph representation, atoms are shown as letters denoting their type and the covalent bonds are drawn as edges between them as shown in Figure~\ref{fig:caffeine}. Thus, defining a graph where atoms are the nodes and covalent bonds are the edges seems like the most natural way of modeling molecules. However, upon closer examination, the situation is somewhat more complicated.
 
+Atoms interact not only if they are covalently bonded. There is a wide array of non-covalent interactions that have a large influence on molecular properties such as Van der Waals forces (a simple example being positive and negative partial charges)~\cite{Organic-chemistry}. The strength of non-covalent interactions is a function of atom types, distance and the local environment in the 3D structure. Thus, only including covalent bonds leads to considerable loss of information. For instance, two atoms can be close in space and interact non-covalently even though the path length in the covalent graph may be quite large.
+
+With these considerations, another way of representing a molecule as graph is to simply define an edge between every pair of atoms if the distance between them is below a certain threshold. Yet another way of constructing the graph is to draw an edge between any given atom and it's k nearest neighbors.
+
 
 \begin{figure}[H]
 	\centering
@@ -164,10 +168,6 @@ The second approach of representing molecules for neural networks is to use grap
 	\label{fig:caffeine}
 \end{figure}
 
-
-Atoms interact not only if they are covalently bonded. There is a wide array of non-covalent interactions that have a large influence on molecular properties such as Van der Waals forces (a simple example being positive and negative partial charges)~\cite{Organic-chemistry}. The strength of non-covalent interactions is a function of atom types, distance and the local environment in the 3D structure. Thus, only including covalent bonds leads to considerable loss of information. For instance, two atoms can be close in space and interact non-covalently even though the path length in the covalent graph may be quite large.
-
-With these considerations, another way of representing a molecule as graph is to simply define an edge between every pair of atoms if the distance between them is below a certain threshold. Yet another way of constructing the graph is to draw an edge between any given atom and it's k nearest neighbors.
 
 All approaches that define the presence or absence of edges by certain rules suffer from inductive bias: we decide in advance which relations between nodes in the graph (atoms) are relevant and which are not. Hence, the model cannot learn this information from the raw data but is restrained by predefined rules. Ideally, of course, we would prefer to allow the model to learn everything from the raw data which is the reason behind the success of deep neural networks in other fields. One way to get rid of this inductive bias is to simply add an edge between any two atoms in the molecule - thus creating a complete graph - and to add the distance between the atoms as an edge feature. This way, the model can 'decide' whether a relation between two atoms is relevant based on the distance. The disadvantage of this approach is the high computational cost which prevents it from being applied to large molecules. This trade-off between inductive bias an computational feasibility lies at the core of one of the key experiments in the thesis described in Section~\ref{sec:neighborhood-expansion}.
 

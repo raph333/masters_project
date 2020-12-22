@@ -63,13 +63,6 @@ The target variable in this dataset is a real-valued vector of length twelve. Th
 
 Figure~\ref{fig:competition-vs-full-ds} shows the learning curves of models being trained on both the competition dataset and the full dataset. The MAE values are considerably lower on the competition dataset.
 
-
-\begin{figure}[H]
-	\includegraphics[width=\linewidth]{figures/competition-vs-full-ds}
-	\caption{Comparing the full (post-competition) and the competition dataset using various methods for splitting the data into training- and validation-set. Both data-sets are evaluated using a random split (70\% training, 15\% validation, 15\% testing) and the train-validation split as it was defined in the competition (with a bias towards higher weight molecules in the validation set). In addition, the competition data is also subjected to a random split where the fraction of the validation-set is exactly the same as in the competition-data-split. (This last experiment was conducted to make sure that the observed difference is due to the method of splitting and not due to the size of the validation set.)}
-	\label{fig:competition-vs-full-ds}
-\end{figure}
-
 \paragraph*{Train-test split}
 The competition data-set is split into training-set (called dev-set by the competition hosts), validation- and test-set with the ground truth being provided only for the first two sets. The split is not random. Instead, the validation- and test-set have an intentional bias towards larger molecules compared to the training-set. Building models that can extrapolate from smaller molecules to larger molecules is useful for pharmacological research~\cite{Chen2019}.
 %However, in order to focus on the core topic of GCNN for molecules, for most experiments presented in this thesis. I only use a simple random split where training-, validation- and test-set are randomly drawn without replacement from the same population.
@@ -78,6 +71,13 @@ Figure~\ref{fig:competition-vs-full-ds} shows learning curves for both competiti
 The figure shows two counterintuitive results. First of all, the MAE on is higher on the full dataset despite it's larger size. Naturally the larger dataset should give better or at least equally good results. Secondly, the impact of the splitting method varies between the two dataset. The expected result would have been a lower MAE on randomly split data because the training- and validation- molecules come from the same distribution. Having a strong bias towards higher weight molecules in the validation set is expected to increase the MAE. For the full dataset, this is indeed the case. However, for the competition dataset, the random split gives a higher MAE than the biased competition-split. As this result contradicts the expectation, it was heavily tested and validated.
 
 %First of all, it is obvious that the validation MAE is lower on the randomly split data. This comes as no surprise because in the competition-data split, the validation molecules are systematically different (larger) from the training molecules. However, regardless of the kind of data-split, the MAE-values are still consistently lower on the competition data.
+
+
+\begin{figure}[H]
+	\includegraphics[width=\linewidth]{figures/competition-vs-full-ds}
+	\caption{Comparing the full (post-competition) and the competition dataset using various methods for splitting the data into training- and validation-set. Both data-sets are evaluated using a random split (70\% training, 15\% validation, 15\% testing) and the train-validation split as it was defined in the competition (with a bias towards higher weight molecules in the validation set). In addition, the competition data is also subjected to a random split where the fraction of the validation-set is exactly the same as in the competition-data-split. (This last experiment was conducted to make sure that the observed difference is due to the method of splitting and not due to the size of the validation set.)}
+	\label{fig:competition-vs-full-ds}
+\end{figure}
 
 
 \paragraph*{Target variable normalization}
