@@ -155,7 +155,7 @@ The second approach of representing molecules for neural networks is to use grap
 
 Atoms interact not only if they are covalently bonded. There is a wide array of non-covalent interactions that have a large influence on molecular properties, such as Van der Waals forces (a simple example being positive and negative partial charges)~\cite{Organic-chemistry}. The strength of non-covalent interactions is a function of atom types, distance and the local environment in the 3D structure. Thus, only including covalent bonds leads to considerable loss of information. For instance, two atoms can be close in space and interact non-covalently, even though the path length in the covalent graph may be quite large.
 
-With these considerations, another way of representing a molecule as graph is to simply define an edge between every pair of atoms if the distance between them is below a certain threshold. Yet another way of constructing the graph is to draw an edge between any given atom and it's k nearest neighbors.
+With these considerations, another way of representing a molecule as graph is to simply define an edge between every pair of atoms if the distance between them is below a certain threshold. Yet another way of constructing the graph is to draw an edge between any given atom and its k nearest neighbors.
 
 
 \begin{figure}[H]
@@ -199,7 +199,7 @@ In most MPNN architectures, the euclidean distance is provided as an edge featur
 
 %It is straightforward to see that for most graphs with distance as edge feature, there are many 3D structures satisfying these constraints. In other words the mapping from 3D structure to graph with distances is unambiguous but the inverse operation is not.
 
-It does not take much chemical expertise to conjecture that not providing the full 3D structural information to the model limits it's capability to make accurate predictions. However, there is no easy way to avoid this dilemma and, to my knowledge, no satisfying solution has been found so far.
+It does not take much chemical expertise to conjecture that not providing the full 3D structural information to the model limits its capability to make accurate predictions. However, there is no easy way to avoid this dilemma and, to my knowledge, no satisfying solution has been found so far.
 
 \subsubsection{No down-sampling during feature extraction}
 

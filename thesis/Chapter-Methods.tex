@@ -138,7 +138,7 @@ Thus, the first linear layer essentially corresponds to a mapping from a categor
 
 \paragraph{Message passing}
 
-The message passing function used in the experiments was the so called edge network message function, which was found to be the best among several options by Gilmer et al.~\cite{Gilmer2017}. The approach is described in detail and nicely illustrated by Simonovsky et. at.~\cite{Simonovsky2017}. This message passing layer is implemented in the \textit{PyTorch Geometric} class NNConv~\footnote{\url{https://pytorch-geometric.readthedocs.io/en/latest/modules/nn.html\#torch_geometric.nn.conv.NNConv}}\label{fn:pytorch-geometric-nn-docs}.
+The message passing function used in the experiments was the so called edge network message function, which was found to be the best among several options by Gilmer et al.~\cite{Gilmer2017}. The approach is described in detail and nicely illustrated by Simonovsky et al.~\cite{Simonovsky2017}. This message passing layer is implemented in the \textit{PyTorch Geometric} class NNConv~\footnote{\url{https://pytorch-geometric.readthedocs.io/en/latest/modules/nn.html\#torch_geometric.nn.conv.NNConv}}\label{fn:pytorch-geometric-nn-docs}.
 
 
 The message function has two components. The first one is a two-layer MLP (multi-layer perceptron)  $h_{\mathbf{\Theta}}$ taking the edge features as input and outputting a vector of dimension $d^2$, which is reshaped into a $d$ by $d$ matrix.
