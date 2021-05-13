@@ -20,14 +20,15 @@ In a general model, the J-coupling type would be the most important feature as t
 
 Apart from the raw structural data, the dataset also includes calculated chemical features. However, these are all just functions of the structural data and the J-coupling type and thus not used in the experiments at hand. The same approach was also chosen for the main dataset described in the next section.
 
-The evaluation metric is based on the mean absolute error (MAE).
+The evaluation metric is based on the mean absolute error (MAE). As with the regular MAE, a lower score means better performance. The additional complexity serves the purpose of ensuring that all eight J-coupling types contribute roughly equally to the score.~\footnote{
+	To understand this equation, note that the central element is $|y_i~-~\hat{y_i}|$ which is the absolute error for an individual J-coupling interaction, with $y_i$ being the real J-coupling constant and $\hat{y_i}$ the prediction. Keeping in mind that there are eight different kinds of J-coupling in the dataset, $n_t$ denotes the number of J-coupling interactions of type $t$. Thus, $~\frac{1}{n_t} \sum_{i=1}^{n_t}|y_i~-~\hat{y_i}|$ is simply the mean absolute error (MAE) of all J-coupling interactions of type $t$. Now, it is easy to see that the whole term is just the arithmetic mean of the log-MAEs of all eight J-coupling types. This somewhat more elaborate score is required because the number of interactions per J-coupling type varies considerably in the dataset. For the simple MAE over all J-coupling interactions, the score would be largely dominated by the more frequent J-coupling types, thus favoring a model focusing predominantly on those types. Calculating the log-MAE for all types independently and then averaging ensures a more equal contribution of all eight J-coupling types to the score. Finally, the only question remaining is, why the log-MAE is used instead of the simple MAE. The reason for this choice is most likely that the eight J-coupling types have very different variances. Thus, naturally, the MAE will be larger for the J-coupling types with larger variance. To avoid the score being dominated too much by those terms, the logarithm decreases the difference in contribution between low-variance and high-variance J-coupling types. Again, this leads to a more equal influence of the eight J-coupling types on the final score and requires the final model do reasonably well an all of them.
+}\label{fn:score}
 
 \begin{equation}\label{eq:champs-score}
 	score = \frac{1}{8} ~ \sum_{t=1}^{8} ~ log(~\frac{1}{n_t} \sum_{i=1}^{n_t}|y_i~-~\hat{y_i}| ~)
 \end{equation}
 
-The term after the sum is the log MAE for a given J-coupling type - e.g., $1JHC$. The score is an average over all J-coupling types. In this way, the final score treats all J-coupling types as equally important independent of the number of interactions (which varies markedly from type to type).
-% and the variance of J-coupling constants within the types (which also vary markedly and and would lead to high variance types affecting the MAE more strongly than others if regular MAE was used).
+
 
 \subsection{The \textit{Alchemy} dataset}
 \label{sec:alchemy-dataset}
@@ -40,7 +41,7 @@ There are 119487 3D structures of molecules in the dataset. These structures pro
 } from the raw data.
 
 
-%The target properties have been calculated using computationally highly expensive quantum chemical computations using the python library \textit{PySCF}~\cite{Sun2017}.
+%The target properties have been calculated using computationally highly expensive quantum chemical computations using the Python library \textit{PySCF}~\cite{Sun2017}.
 
 
 \subsubsection{Features}
@@ -48,7 +49,7 @@ There are 119487 3D structures of molecules in the dataset. These structures pro
 
 There are two different approaches to predicting the target variables. The pure deep learning approach is to use only coordinates and bonds and rely on the model to learn any features required to predict the target properties. After all, coordinates, atom types and bonds contain all the available information (actually the bonds could be reliably calculated from coordinates and atom types and thus, strictly speaking are also redundant information).
 
-The other approach is to calculate all sorts of chemical features using chemistry python libraries and feed them into the model alongside the raw data. These include node (atom) features (whether the atom is an electron donor or acceptor, whether it is part of an aromatic ring, its hybridization type, etc.~\cite{Organic-chemistry}) as well as bond (edge) features. The fact that these features are calculated from the raw data without any additional information means that the model should also be able to learn them if required. Hence, calculating features and feeding them into the model should in theory be obsolete, but could slightly improve predictions if the model is unable to learn those features. Section~\ref{sec:raw-data} presents an experiment assessing the benefit of manually engineered features.
+The other approach is to calculate all sorts of chemical features using chemistry Python libraries and feed them into the model alongside the raw data. These include node (atom) features (whether the atom is an electron donor or acceptor, whether it is part of an aromatic ring, its hybridization type, etc.~\cite{Organic-chemistry}) as well as bond (edge) features. The fact that these features are calculated from the raw data without any additional information means that the model should also be able to learn them if required. Hence, calculating features and feeding them into the model should in theory be obsolete, but could slightly improve predictions if the model is unable to learn those features. Section~\ref{sec:raw-data} presents an experiment assessing the benefit of manually engineered features.
 
 \subsubsection{Benchmark and evaluation}
 
@@ -141,7 +142,7 @@ Thus, the first linear layer essentially corresponds to a mapping from a categor
 The message passing function used in the experiments was the so called edge network message function, which was found to be the best among several options by Gilmer et al.~\cite{Gilmer2017}. The approach is described in detail and nicely illustrated by Simonovsky et al.~\cite{Simonovsky2017}. This message passing layer is implemented in the \textit{PyTorch Geometric} class NNConv~\footnote{\url{https://pytorch-geometric.readthedocs.io/en/latest/modules/nn.html\#torch_geometric.nn.conv.NNConv}}\label{fn:pytorch-geometric-nn-docs}.
 
 
-The message function has two components. The first one is a two-layer MLP (multi-layer perceptron)  $h_{\mathbf{\Theta}}$ taking the edge features as input and outputting a vector of dimension $d^2$, which is reshaped into a $d$ by $d$ matrix.
+The message function has two components. The first one is a two-layer MLP (multi-layer perceptron)  $h_{\mathbf{\Theta}}$ taking the edge features as input and outputting a vector of dimension $d^2$, which is reshaped into a $d$ by $d$ matrix (recall that $d$ is the dimension of the node hidden state).
 
 \begin{equation}
 	\Theta_{vw} = reshape(~h_{\Theta}(e_{vw})~)
@@ -179,9 +180,9 @@ Oddly enough, in the simple case of Equation~\ref{eq:update-nnconv-simple}, the 
 
 \section{Software}
 
-Most of the models presented in this thesis (Section~\ref{sec:alchemy}) were implemented using the python deep learning library \textit{PyTorch}~\footnote{\url{https://pytorch.org/}} and its extension for graph neural networks, \textit{PyTorch Geometric}~\footnote{\url{https://pytorch-geometric.readthedocs.io/en/latest/}}. The \textit{SchNet} model (Section~\ref{sec:schnet}) was implemented using the python library DGL (deep graph library)~\footnote{\url{https://www.dgl.ai/}}. In my humble opinion, \textit{PyTorch Geometric} is by far superior to DGL. Its API is much more in line with \textit{PyTorch}, the documentation is clear and the code works reliably. On the other hand, DGL is not straightforward to use and the work on the \textit{SchNet} model was severely hampered by a memory leak. In order to fix this issue, all caches had to be cleared after each batch leading to extremely slow training and making it impossible to try different approaches within limited time. Summing up, \textit{PyTorch Geometric} seems to be the best \textit{PyTorch}-compatible library for MPNNs.
+Most of the models presented in this thesis (Section~\ref{sec:alchemy}) were implemented using the Python deep learning library \textit{PyTorch}~\footnote{\url{https://pytorch.org/}} and its extension for graph neural networks, \textit{PyTorch Geometric}~\footnote{\url{https://pytorch-geometric.readthedocs.io/en/latest/}}. The \textit{SchNet} model (Section~\ref{sec:schnet}) was implemented using the Python library DGL (deep graph library)~\footnote{\url{https://www.dgl.ai/}}. In my humble opinion, \textit{PyTorch Geometric} is by far superior to DGL. Its API is much more in line with \textit{PyTorch}, the documentation is clear and the code works reliably. On the other hand, DGL is not straightforward to use and the work on the \textit{SchNet} model was severely hampered by a memory leak. In order to fix this issue, all caches had to be cleared after each batch leading to extremely slow training and making it impossible to try different approaches within limited time. Summing up, \textit{PyTorch Geometric} seems to be the best \textit{PyTorch}-compatible library for MPNNs.
 
-The python library \textit{mlflow}~\footnote{\url{https://mlflow.org/}} was used extensively to track all parameters and results for each experiment. It essentially creates a small local database containing all information the user wishes to save for each experiment. The data can be browsed via a dashboard or accessed via a python API. This combination of automatic logging, a human readable dashboard and an API makes it the perfect tool for reproducible machine learning research and is highly recommended by the thesis author.
+The Python library \textit{mlflow}~\footnote{\url{https://mlflow.org/}} was used extensively to track all parameters and results for each experiment. It essentially creates a small local database containing all information the user wishes to save for each experiment. The data can be browsed via a dashboard or accessed via a Python API. This combination of automatic logging, a human readable dashboard and an API makes it the perfect tool for reproducible machine learning research and is highly recommended by the thesis author.
 
 The code of the models trained on the \textit{Alchemy} dataset is available at github: \url{https://github.com/raph333/masters\_project}.
 
@@ -190,7 +191,7 @@ The code of the models trained on the \textit{Alchemy} dataset is available at g
 \section{Training}
 \label{sec:training}
 
-All experiments presented in this thesis use Adaptive Moment Estimation (Adam) for gradient descent~\cite{Kingma2015}. For certain experiments, other optimizers might give slightly better results. However, comparison between differences in data processing and model architectures would be impeded by employing different optimization schemes because one would never know if the different outcomes are a result of the model or the optimization. For this reason, optimization strategies were kept as constant as possible for all experiments.
+All experiments presented in this thesis use Adaptive Moment Estimation (Adam) for optimization~\cite{Kingma2015}. For certain experiments, other optimizers might give slightly better results. However, comparison between differences in data processing and model architectures would be impeded by employing different optimization schemes because one would never know if the different outcomes are a result of the model or the optimization. For this reason, optimization strategies were kept as constant as possible for all experiments.
 
 The same considerations were applied to learning rates and learning rate scheduling. Two different optimization schemes were used for different purposes.
 To obtain the lowest possible test-set error, a learning rate schedule that reduces the learning rate after the validation error plateaus has found to be most effective~\footnote{\label{fn:reduce-on-plateu}
