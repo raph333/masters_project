@@ -203,9 +203,27 @@ For comparing different learning curves, a simpler, exponential learning rate de
 	The initial learning rate of 0.001 is reduced by a factor of 0.995 after every epoch and the experiment is run for 150 epochs.
 }. The advantage of this method is that at each epoch, all curves have the same learning rate making them comparable. The final validation error is usually higher than would be achieved with reduce-on-plateau learning rate scheduling (furthermore, it also requires a few trials to find suitable hyper-parameters). However, this drawback is accepted because the main point of the experiments is to compare different model architectures, parameters or data-transformations rather than to achieve the lowest possible error.
 
+%\begin{figure}[H]
+%	\includegraphics[width=0.9\linewidth]{figures/optimization-variabiliy}
+%	\caption{The two graphs show metrics from four identical training runs with the reduce-on-plateau learning rate schedule using the parameters given in Footnote~\ref{fn:reduce-on-plateu}. Despite the same parameters, the resulting learning rate schedule varies markedly, as shown in \textbf{(a)}. The reason for this behavior is that small stochastic variations of the validation error early in the optimization determine when the learning rate is lowered first, which, in turn, influences the entire further optimization process. As a consequence, the resulting learning curves of the validation error also show substantial variation, as shown in \textbf{(b)}. Therefore, this optimization strategy is not well suited for comparing different models because it is not possible to determine whether the difference is due to the models or just the normal variation of this optimization schedule.}
+%	\label{fig:optimization-variablility}
+%\end{figure}
+
+
 \begin{figure}[H]
-	\includegraphics[width=0.9\linewidth]{figures/optimization-variabiliy}
-	
+	\begin{subfigure}{\textwidth}
+		\centering
+		\includegraphics[width=0.9\textwidth]{figures/optimization-variablility-lr}
+		\caption{}
+		\label{fig:sub-a}
+	\end{subfigure}
+	\vfill
+	\begin{subfigure}{\textwidth}
+		\centering
+		\includegraphics[width=0.9\textwidth]{figures/optimization-variablility-mae}
+		\caption{}
+		\label{fig:sub-b}
+	\end{subfigure}
 	\caption{The two graphs show metrics from four identical training runs with the reduce-on-plateau learning rate schedule using the parameters given in Footnote~\ref{fn:reduce-on-plateu}. Despite the same parameters, the resulting learning rate schedule varies markedly, as shown in \textbf{(a)}. The reason for this behavior is that small stochastic variations of the validation error early in the optimization determine when the learning rate is lowered first, which, in turn, influences the entire further optimization process. As a consequence, the resulting learning curves of the validation error also show substantial variation, as shown in \textbf{(b)}. Therefore, this optimization strategy is not well suited for comparing different models because it is not possible to determine whether the difference is due to the models or just the normal variation of this optimization schedule.}
 	\label{fig:optimization-variablility}
 \end{figure}
