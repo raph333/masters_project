@@ -172,7 +172,8 @@ h_v^{t+1} = \Theta_{root}h_v^t~+~m_v^{t+1}
 
 Oddly enough, in the simple case of Equation~\ref{eq:update-nnconv-simple}, the updated node hidden state $h_v^{t+1}$ is not a function of the previous hidden state $h_v^t$. While that is counter-intuitive, it was shown to work well in practice. Section~\ref{sec:root-node} compares the same model with and without the root-node and finds no difference in performance.
 
-\paragraph{Readout function} Finally, the readout function is composed of a \textit{Set2Set}~\footnote{\url{https://pytorch-geometric.readthedocs.io/en/latest/modules/nn.html\#torch_geometric.nn.glob.Set2Set}} layer mapping the set of node hidden states to an aggregated representation. Then, the output from \textit{Set2Set} is mapped to the target variable with a two-layer MLP. The readout-function can be formalized as
+\paragraph{Readout function} Finally, the readout function is composed of a \textit{Set2Set}~\cite{Vinyals2015}~\footnote{\url{https://pytorch-geometric.readthedocs.io/en/latest/modules/nn.html\#torch_geometric.nn.glob.Set2Set}} layer mapping the set of node hidden states to an aggregated representation with the dimension $\mathbb{R}^{2d}$
+. Then, the output from \textit{Set2Set} is mapped to the target variable with a two-layer MLP. The readout-function can be formalized as
 
 \begin{equation}
 		\hat{y} = MLP(~Set2Set(~\{~h_v^T\ ~|~ v \in G~\}~)~)
